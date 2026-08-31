@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { StockMovementService } from './stock-movements.service';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
@@ -37,8 +38,30 @@ export class StockMovementsController {
     const organizationId = req.organizationId;
     const performedBy = req.user?.userId || 'system';
 
+    // Mapear el reason string al enum MovementReason
+    const validReasons = [
+      'COMPRA',
+      'PRODUCCION',
+      'DEVOLUCION_CLIENTE',
+      'ENTRADA_INICIAL',
+      'VENTA',
+      'MERMA',
+      'ROBO',
+      'OBSOLETO',
+      'CONSUMO_INTERNO',
+      'CONTEO_FISICO',
+      'ERROR_SISTEMA',
+      'TRANSFERENCIA_ENTRADA',
+      'TRANSFERENCIA_SALIDA',
+    ];
+
+    if (!validReasons.includes(dto.reason)) {
+      throw new BadRequestException(`Invalid reason: ${dto.reason}`);
+    }
+
     return this.stockMovementService.createStockMovement({
       ...dto,
+      reason: dto.reason as any,
       organizationId,
       performedBy,
     });

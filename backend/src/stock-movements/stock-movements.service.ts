@@ -1,37 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Batch, StockMovement, BatchStatus } from '@prisma/client';
-
-interface CreateBatchDto {
-  productId: string;
-  batchNumber: string;
-  serialNumber?: string;
-  manufacturingDate?: Date;
-  expirationDate?: Date;
-  initialQuantity: number;
-  unitCost: number;
-  location?: string;
-  organizationId: string;
-  performedBy: string;
-}
+import { Batch, StockMovement, BatchStatus, MovementType, MovementReason } from '@prisma/client';
 
 interface CreateStockMovementDto {
   productId: string;
-  type: 'INGRESO' | 'SALIDA' | 'AJUSTE' | 'TRANSFERENCIA';
-  reason:
-    | 'COMPRA'
-    | 'PRODUCCION'
-    | 'DEVOLUCION_CLIENTE'
-    | 'ENTRADA_INICIAL'
-    | 'VENTA'
-    | 'MERMA'
-    | 'ROBO'
-    | 'OBSOLETO'
-    | 'CONSUMO_INTERNO'
-    | 'CONTEO_FISICO'
-    | 'ERROR_SISTEMA'
-    | 'TRANSFERENCIA_ENTRADA'
-    | 'TRANSFERENCIA_SALIDA';
+  type: MovementType;
+  reason: MovementReason;
   quantity: number;
   batchId?: string;
   referenceType?: string;

@@ -119,7 +119,7 @@ export class BatchesService {
 
   async getBatchById(organizationId: string, id: string): Promise<Batch> {
     const batch = await this.prisma.batch.findUnique({
-      where: { id_organizationId: { id, organizationId } },
+      where: { id },
       include: {
         product: true,
         movements: {
@@ -129,7 +129,7 @@ export class BatchesService {
       },
     });
 
-    if (!batch) {
+    if (!batch || batch.organizationId !== organizationId) {
       throw new NotFoundException(`Batch ${id} not found`);
     }
 
@@ -142,15 +142,15 @@ export class BatchesService {
     dto: UpdateBatchDto,
   ): Promise<Batch> {
     const existing = await this.prisma.batch.findUnique({
-      where: { id_organizationId: { id, organizationId } },
+      where: { id },
     });
 
-    if (!existing) {
+    if (!existing || existing.organizationId !== organizationId) {
       throw new NotFoundException(`Batch ${id} not found`);
     }
 
     return this.prisma.batch.update({
-      where: { id_organizationId: { id, organizationId } },
+      where: { id },
       data: dto,
     });
   }
@@ -210,8 +210,11 @@ export class BatchesService {
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(today.getDate() + 30);
 
-    batches.forEach((batch) => {
-      stats.byStatus[batch.status]++;
+    batches.forEach((batch: any) => {
+      const status = batch.status as keyof typeof stats.byStatus;
+      if (status) {
+        stats.byStatus[status]++;
+      }
 
       if (batch.expirationDate) {
         if (batch.expirationDate < today) {
@@ -222,7 +225,7 @@ export class BatchesService {
       }
 
       stats.totalValue +=
-        Number(batch.currentQuantity) * Number(batch.unitCost);
+        Number(batch.currentQuantity) * Number(batch.unitCost || 0);
     });
 
     return stats;
