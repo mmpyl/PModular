@@ -1,7 +1,8 @@
-import { Role } from '@prisma/client';
+import { OrgRole } from '@prisma/client';
 
 export type JwtPayload = {
   sub: string;
   email: string;
-  roles: Role[];
+  organizationId?: string;
+  orgRole?: OrgRole;
 };
