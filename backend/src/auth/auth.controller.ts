@@ -1,9 +1,8 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { Role } from '@prisma/client';
-import { Roles } from './decorators/roles.decorator';
+import { OrgRoles } from './decorators/roles.decorator';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RolesGuard } from './guards/roles.guard';
+import { OrgRolesGuard } from './guards/org-roles.guard';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 
@@ -22,8 +21,8 @@ export class AuthController {
   }
 
   @Get('admin-check')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, OrgRolesGuard)
+  @OrgRoles('ADMIN', 'OWNER')
   adminCheck() {
     return { ok: true };
   }

@@ -10,7 +10,7 @@ import { JwtPayload } from './jwt-payload.type';
 
 type AuthResponse = {
   accessToken: string;
-  user: Omit<User, 'passwordHash'>;
+  user: Omit<User, 'password'>;
 };
 
 @Injectable()
@@ -28,7 +28,7 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<AuthResponse> {
     const user = await this.usersService.findByEmail(dto.email);
-    const isPasswordValid = user ? await bcrypt.compare(dto.password, user.passwordHash) : false;
+    const isPasswordValid = user ? await bcrypt.compare(dto.password, user.password) : false;
 
     if (!user || !isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -38,8 +38,8 @@ export class AuthService {
   }
 
   private async buildAuthResponse(user: User): Promise<AuthResponse> {
-    const payload: JwtPayload = { sub: user.id, email: user.email, roles: user.roles };
-    const { passwordHash, ...safeUser } = user;
+    const payload: JwtPayload = { sub: user.id, email: user.email };
+    const { password, ...safeUser } = user;
 
     return {
       accessToken: await this.jwtService.signAsync(payload, {
