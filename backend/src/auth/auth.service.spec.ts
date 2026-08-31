@@ -2,7 +2,6 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
@@ -12,13 +11,12 @@ describe('AuthService', () => {
   let usersService: jest.Mocked<UsersService>;
   let jwtService: jest.Mocked<JwtService>;
 
-  const passwordHash = bcrypt.hashSync('correct-password', 4);
-  const user: User = {
+  const password = bcrypt.hashSync('correct-password', 4);
+  const user = {
     id: 'user-1',
     email: 'demo@pymen.dev',
-    passwordHash,
-    roles: [Role.USER],
-    datosAdicionales: {},
+    password,
+    name: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -47,17 +45,17 @@ describe('AuthService', () => {
     jwtService = module.get(JwtService);
   });
 
-  it('devuelve accessToken y usuario sin passwordHash en un login válido', async () => {
+  it('devuelve accessToken y usuario sin password en un login válido', async () => {
     usersService.findByEmail.mockResolvedValue(user);
 
     const result = await service.login({ email: user.email, password: 'correct-password' });
 
     expect(jwtService.signAsync).toHaveBeenCalledWith(
-      { sub: user.id, email: user.email, roles: user.roles },
+      { sub: user.id, email: user.email },
       { expiresIn: '1h' },
     );
     expect(result.accessToken).toBe('signed-jwt');
-    expect(result.user).not.toHaveProperty('passwordHash');
+    expect(result.user).not.toHaveProperty('password');
   });
 
   it('rechaza login con contraseña incorrecta', async () => {
