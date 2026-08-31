@@ -54,6 +54,10 @@ model Organization {
   products       Product[]
   categories     Category[]
   units          UnitOfMeasure[]
+  warehouses     Warehouse[]
+  stockItems     StockItem[]
+  stockMovements StockMovement[]
+  adjustments    StockAdjustment[]
   
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
@@ -158,9 +162,10 @@ model Product {
   category       Category?    @relation(fields: [categoryId], references: [id])
   unit           UnitOfMeasure? @relation(fields: [unitId], references: [id])
   
-  // Futuras relaciones (Fase 2+)
-  // stockMovements StockMovement[]
-  // saleItems      SaleItem[]
+  // Fase 2: Inventario
+  stockItems     StockItem[]
+  stockMovements StockMovement[]
+  adjustmentItems StockAdjustmentItem[]
   
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -169,4 +174,142 @@ model Product {
   @@index([organizationId])
   @@index([categoryId])
   @@map("products")
+}
+
+// ==========================================
+// FASE 2: Módulo de Inventario
+// ==========================================
+
+enum MovementType {
+  IN_PURCHASE      // Entrada por compra
+  IN_ADJUSTMENT    // Entrada por ajuste (inventario positivo)
+  IN_RETURN        // Entrada por devolución
+  IN_TRANSFER      // Entrada por transferencia desde otra bodega
+  OUT_SALE         // Salida por venta
+  OUT_ADJUSTMENT   // Salida por ajuste (merma, pérdida)
+  OUT_TRANSFER     // Salida por transferencia a otra bodega
+}
+
+model Warehouse {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  code           String?
+  address        String?
+  isActive       Boolean      @default(true)
+  isDefault      Boolean      @default(false) // Bodega principal por defecto
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stockItems     StockItem[]
+  stockMovements StockMovement[]
+  adjustments    StockAdjustment[]
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, code]) // Código único por organización
+  @@index([organizationId])
+  @@map("warehouses")
+}
+
+model StockItem {
+  id             String       @id @default(uuid())
+  organizationId String
+  productId      String
+  warehouseId    String
+  
+  quantity       Int          @default(0) // Cantidad disponible
+  reserved       Int          @default(0) // Cantidad reservada (pedidos pendientes)
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse      Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  
+  movements      StockMovement[]
+  
+  @@unique([organizationId, productId, warehouseId]) // Único producto por bodega
+  @@index([organizationId])
+  @@index([productId])
+  @@index([warehouseId])
+  @@map("stock_items")
+}
+
+model StockMovement {
+  id             String       @id @default(uuid())
+  organizationId String
+  productId      String
+  warehouseId    String
+  movementType   MovementType
+  
+  quantity       Int          // Positivo para entradas, negativo para salidas
+  balanceAfter   Int          // Stock resultante después del movimiento
+  referenceId    String?      // ID de documento relacionado (venta, compra, etc.)
+  referenceType  String?      // Tipo de documento (SALE, PURCHASE, etc.)
+  notes          String?
+  
+  createdBy      String       // ID del usuario que registró el movimiento
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse      Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  stockItem      StockItem    @relation(fields: [organizationId, productId, warehouseId], references: [organizationId, productId, warehouseId])
+  
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([movementType])
+  @@index([referenceId])
+  @@map("stock_movements")
+}
+
+enum AdjustmentStatus {
+  PENDING        // Esperando aprobación
+  APPROVED       // Aprobado y procesado
+  REJECTED       // Rechazado
+}
+
+model StockAdjustment {
+  id             String           @id @default(uuid())
+  organizationId String
+  warehouseId    String
+  status         AdjustmentStatus @default(PENDING)
+  
+  reason         String
+  notes          String?
+  
+  requestedBy    String           // Usuario que solicitó el ajuste
+  approvedBy     String?          // Usuario que aprobó
+  approvedAt     DateTime?
+  
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  warehouse      Warehouse        @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  items          StockAdjustmentItem[]
+  
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([organizationId])
+  @@index([warehouseId])
+  @@index([status])
+  @@map("stock_adjustments")
+}
+
+model StockAdjustmentItem {
+  id                String            @id @default(uuid())
+  adjustmentId      String
+  productId         String
+  organizationId    String
+  
+  expectedQuantity  Int               // Cantidad según sistema
+  countedQuantity   Int               // Cantidad física contada
+  difference        Int               // Diferencia (counted - expected)
+  
+  adjustment        StockAdjustment   @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+  product           Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([adjustmentId])
+  @@index([productId])
+  @@map("stock_adjustment_items")
 }

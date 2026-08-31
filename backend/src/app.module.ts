@@ -9,6 +9,7 @@ import { MembershipsModule } from './memberships/memberships.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { UnitsOfMeasureModule } from './units-of-measure/units-of-measure.module';
+import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UnitsOfMeasureModule } from './units-of-measure/units-of-measure.module
     ProductsModule,
     CategoriesModule,
     UnitsOfMeasureModule,
+    InventoryModule,
   ],
 })
 export class AppModule {}
