@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { OrgRole } from '@prisma/client';
-import { ORG_ROLES_KEY } from '../decorators/roles.decorator';
+import { ORG_ROLES_KEY } from '../decorators/org-roles.decorator';
 import { JwtPayload } from '../jwt-payload.type';
 
 @Injectable()

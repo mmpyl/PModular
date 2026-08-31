@@ -9,6 +9,9 @@ import { MembershipsModule } from './memberships/memberships.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { UnitsOfMeasureModule } from './units-of-measure/units-of-measure.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { StockMovementsModule } from './stock-movements/stock-movements.module';
+import { BatchesModule } from './batches/batches.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { UnitsOfMeasureModule } from './units-of-measure/units-of-measure.module
     ProductsModule,
     CategoriesModule,
     UnitsOfMeasureModule,
+    InventoryModule,
+    StockMovementsModule,
+    BatchesModule,
   ],
 })
 export class AppModule {}
