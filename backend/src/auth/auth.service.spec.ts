@@ -1,0 +1,78 @@
+import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
+import { Role, User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { UsersService } from '../users/users.service';
+import { AuthService } from './auth.service';
+
+describe('AuthService', () => {
+  let service: AuthService;
+  let usersService: jest.Mocked<UsersService>;
+  let jwtService: jest.Mocked<JwtService>;
+
+  const passwordHash = bcrypt.hashSync('correct-password', 4);
+  const user: User = {
+    id: 'user-1',
+    email: 'demo@pymen.dev',
+    passwordHash,
+    roles: [Role.USER],
+    datosAdicionales: {},
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        {
+          provide: UsersService,
+          useValue: { create: jest.fn(), findByEmail: jest.fn() },
+        },
+        {
+          provide: JwtService,
+          useValue: { signAsync: jest.fn().mockResolvedValue('signed-jwt') },
+        },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue('1h') },
+        },
+      ],
+    }).compile();
+
+    service = module.get(AuthService);
+    usersService = module.get(UsersService);
+    jwtService = module.get(JwtService);
+  });
+
+  it('devuelve accessToken y usuario sin passwordHash en un login válido', async () => {
+    usersService.findByEmail.mockResolvedValue(user);
+
+    const result = await service.login({ email: user.email, password: 'correct-password' });
+
+    expect(jwtService.signAsync).toHaveBeenCalledWith(
+      { sub: user.id, email: user.email, roles: user.roles },
+      { expiresIn: '1h' },
+    );
+    expect(result.accessToken).toBe('signed-jwt');
+    expect(result.user).not.toHaveProperty('passwordHash');
+  });
+
+  it('rechaza login con contraseña incorrecta', async () => {
+    usersService.findByEmail.mockResolvedValue(user);
+
+    await expect(
+      service.login({ email: user.email, password: 'wrong-password' }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('rechaza login si el usuario no existe', async () => {
+    usersService.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      service.login({ email: 'nope@pymen.dev', password: 'whatever1' }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+});
