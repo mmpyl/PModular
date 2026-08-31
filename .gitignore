@@ -1,0 +1,51 @@
+```
+# Environment variables
+.env
+
+# Dependencies
+node_modules/
+
+# Prisma
+prisma/migrations/
+
+# TypeScript build output
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Python cache (if any Python files exist in backend)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local environment overrides
+.env.local
+.env.*
+
+# Package manager caches
+.npm/
+.yarn/
+.pnpm-store/
+```

@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,19 +10,163 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  USER
-}
+// ==========================================
+// FASE 0: Fundamento Multi-tenant & Usuarios
+// ==========================================
 
 model User {
-  id               String   @id @default(uuid())
-  email            String   @unique
-  passwordHash     String
-  roles            Role[]   @default([USER])
-  datosAdicionales Json     @default("{}")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id          String       @id @default(uuid())
+  email       String       @unique
+  password    String       // Hash
+  name        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // El rol global ha sido eliminado. 
+  // La pertenencia y roles ahora viven en Membership.
+  memberships Membership[]
 
   @@map("users")
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  VENDEDOR
+  INVENTARIO
+  // Se pueden agregar más según evolucione el sistema
+}
+
+model Organization {
+  id             String       @id @default(uuid())
+  name           String
+  businessTypeId String
+  businessType   BusinessType @relation(fields: [businessTypeId], references: [id])
+  
+  // Módulos activados para esta organización específica
+  // Si está vacío, se usan los defaultModules del BusinessType
+  enabledModules Json     @default("[]") 
+  
+  // Configuraciones específicas (moneda, zona horaria, impuestos por defecto, etc.)
+  settings       Json     @default("{}")
+  
+  memberships    Membership[]
+  products       Product[]
+  categories     Category[]
+  units          UnitOfMeasure[]
+  
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([businessTypeId])
+  @@map("organizations")
+}
+
+model Membership {
+  id             String       @id @default(uuid())
+  userId         String
+  organizationId String
+  role           OrgRole      @default(VENDEDOR)
+  
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("memberships")
+}
+
+// ==========================================
+// FASE 1: Catálogo Genérico & Configuración
+// ==========================================
+
+model BusinessType {
+  id            String   @id @default(uuid())
+  code          String   @unique   // Ej: "BODEGA", "FERRETERIA", "FARMACIA"
+  name          String
+  description   String?
+  
+  // Define qué módulos vienen activos por defecto al crear una org de este tipo
+  // Ej: ["inventario", "ventas", "lotes"]
+  defaultModules Json    @default("[]")   
+  
+  // Schema JSON que define los atributos dinámicos válidos para Products en este rubro
+  // Ej: { "requiresRecipe": {"type": "boolean"}, "batchNumber": {"type": "string"} }
+  productSchema Json     @default("{}")   
+  
+  organizations Organization[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("business_types")
+}
+
+model Category {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  parentId       String?      // Para categorías anidadas
+  parent         Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children       Category[]   @relation("CategoryHierarchy")
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products       Product[]
+  
+  @@unique([organizationId, name]) // Nombres únicos dentro de la misma organización
+  @@index([organizationId])
+  @@map("categories")
+}
+
+model UnitOfMeasure {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String       // Ej: "Unidad", "Kg", "Litro", "Caja"
+  symbol         String?      // Ej: "u", "kg", "L"
+  isFractionable Boolean      @default(false) // ¿Se puede vender fraccionado? (Ej: ferretería)
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products       Product[]
+  
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("units_of_measure")
+}
+
+model Product {
+  id             String       @id @default(uuid())
+  organizationId String
+  
+  name           String
+  sku            String?
+  description    String?
+  price          Decimal      @db.Decimal(10, 2)
+  cost           Decimal?     @db.Decimal(10, 2) // Costo promedio o último costo
+  
+  categoryId     String?
+  unitId         String?
+  
+  // Atributos dinámicos específicos del rubro
+  // Ej Farmacia: { "requiresRecipe": true, "laboratory": "Bayer" }
+  // Ej Ferretería: { "isBulk": true, "material": "Acero" }
+  attributes     Json         @default("{}") 
+  
+  isActive       Boolean      @default(true)
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category       Category?    @relation(fields: [categoryId], references: [id])
+  unit           UnitOfMeasure? @relation(fields: [unitId], references: [id])
+  
+  // Futuras relaciones (Fase 2+)
+  // stockMovements StockMovement[]
+  // saleItems      SaleItem[]
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, sku]) // SKU único por organización
+  @@index([organizationId])
+  @@index([categoryId])
+  @@map("products")
 }
