@@ -1,51 +1,528 @@
 ```
-# Environment variables
-.env
-
 # Dependencies
 node_modules/
 
-# Prisma
-prisma/migrations/
-
-# TypeScript build output
+# Build outputs
 dist/
 build/
-*.tsbuildinfo
+target/
 
-# Logs
-*.log
+# Environment variables
+.env
+.env.local
+*.env.*
 
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Editor files
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Temporary files
-*.tmp
+# Logs
+*.log
 
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Python cache (if any Python files exist in backend)
+# Python cache (if present in project)
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Local environment overrides
-.env.local
-.env.*
+# Temporary files
+*.tmp
+*.temp
 
-# Package manager caches
-.npm/
-.yarn/
-.pnpm-store/
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# TypeScript/JavaScript build artifacts
+*.js.map
+*.tsbuildinfo
+
+# Prisma
+prisma/migrations/
+prisma/schema.prisma.bak
+
+# Test coverage
+.nyc_output/
+coverage/
+
+# Runtime data
+*.pid
+*.seed
+*.db
+*.db-journal
+
+# Debug log
+debug.log
+
+# NPM packages
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local development
+.env.development
+.env.test
+.env.production
+
+# Docker
+.dockerenv
+
+# Next.js
+.next/
+out/
+
+# Nuxt.js
+.nuxt/
+.output/
+
+# Vue.js
+.vuepress/dist
+.static/
+
+# Angular
+.angular/cache/
+
+# Jest
+.jest/
+
+# Webpack
+webpack.config.js
+
+# Babel
+.babelrc
+
+# ESLint
+.eslintcache
+
+# Prettier
+.prettierrc
+
+# Husky
+.husky/
+
+# Lock files (if not already in repo)
+package-lock.json
+yarn.lock
+
+# Sensitive files
+config/secrets.yml
+config/database.yml
+
+# Mobile development
+platforms/
+plugins/
+ionic/www/
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Cache
+.cache/
+.tmp/
+temp/
+
+# Process files
+*.pid
+*.seed
+
+# Logs specific
+logs/
+*.log
+
+# Coverage
+coverage/
+.nyc_output/
+
+# TypeScript
+tsconfig.tsbuildinfo
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variable overrides
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Local files
+local.properties
+.settings/
+
+# Browser-sync
+.browser-sync*
+
+# Grunt
+.grunt
+
+# Gulp
+.gulp
+
+# Ember
+.ember-cli
+.ember/
+tmp/
+bower_components/
+
+# Rails
+*.rbc
+.bundle/
+vendor/bundle
+.ruby-version
+.ruby-gemset
+capybara-*.html
+!.keep
+**/.gitignore
+.rvmrc
+tmp/
+db/*.sqlite3
+db/*.sqlite3-journal
+public/system/
+coverage/
+spec/reports/*
+*.dSYM
+.DS_Store
+.idea
+*.un~
+sessions/*
+log/
+tmp/
+vendor/bundle/
+bundle/
+.rbenv-gemsets
+.rbenv-vars
+.rubocop.yml
+.rubocop_todo.yml
+.rubocop_performance.yml
+.rubocop_security.yml
+.rubocop_lint.yml
+.rubocop_style.yml
+.rubocop_naming.yml
+.rubocop_metrics.yml
+.rubocop_layout.yml
+.rubocop_capybara.yml
+.rubocop_factory_bot.yml
+.rubocop_rails.yml
+.rubocop_minitest.yml
+.rubocop_minitest.yml
+.rubocop_sequel.yml
+.rubocop_rspec.yml
+.rubocop_security_rspec.yml
+.rubocop_performance_rspec.yml
+.rubocop_minitest_spec.yml
+.rubocop_minitest_expectation.yml
+.rubocop_minitest_macro.yml
+.rubocop_minitest_assertion.yml
+.rubocop_minitest_test_case.yml
+.rubocop_minitest_shared_examples.yml
+.rubocop_minitest_hooks.yml
+.rubocop_minitest_subject.yml
+.rubocop_minitest_let.yml
+.rubocop_minitest_before_after.yml
+.rubocop_minitest_describe.yml
+.rubocop_minitest_it.yml
+.rubocop_minitest_context.yml
+.rubocop_minitest_setup_teardown.yml
+.rubocop_minitest_expect.yml
+.rubocop_minitest_refute.yml
+.rubocop_minitest_assert_equal.yml
+.rubocop_minitest_assert_same.yml
+.rubocop_minitest_assert_nil.yml
+.rubocop_minitest_assert_match.yml
+.rubocop_minitest_assert_in_delta.yml
+.rubocop_minitest_assert_operator.yml
+.rubocop_minitest_assert_predicate.yml
+.rubocop_minitest_assert_respond_to.yml
+.rubocop_minitest_assert_send.yml
+.rubocop_minitest_assert_throws.yml
+.rubocop_minitest_assert_instance_of.yml
+.rubocop_minitest_assert_kind_of.yml
+.rubocop_minitest_assert_empty.yml
+.rubocop_minitest_assert_include.yml
+.rubocop_minitest_assert_includes.yml
+.rubocop_minitest_assert_in_epsilon.yml
+.rubocop_minitest_assert_block.yml
+.rubocop_minitest_assert_output.yml
+.rubocop_minitest_assert_raises.yml
+.rubocop_minitest_assert_silent.yml
+.rubocop_minitest_assert_match_or_nil.yml
+.rubocop_minitest_assert_match_or_blank.yml
+.rubocop_minitest_assert_match_or_empty.yml
+.rubocop_minitest_assert_match_or_present.yml
+.rubocop_minitest_assert_match_or_valid.yml
+.rubocop_minitest_assert_match_or_success.yml
+.rubocop_minitest_assert_match_or_error.yml
+.rubocop_minitest_assert_match_or_failure.yml
+.rubocop_minitest_assert_match_or_complete.yml
+.rubocop_minitest_assert_match_or_done.yml
+.rubocop_minitest_assert_match_or_finished.yml
+.rubocop_minitest_assert_match_or_ready.yml
+.rubocop_minitest_assert_match_or_loaded.yml
+.rubocop_minitest_assert_match_or_open.yml
+.rubocop_minitest_assert_match_or_closed.yml
+.rubocop_minitest_assert_match_or_active.yml
+.rubocop_minitest_assert_match_or_inactive.yml
+.rubocop_minitest_assert_match_or_enabled.yml
+.rubocop_minitest_assert_match_or_disabled.yml
+.rubocop_minitest_assert_match_or_available.yml
+.rubocop_minitest_assert_match_or_unavailable.yml
+.rubocop_minitest_assert_match_or_connected.yml
+.rubocop_minitest_assert_match_or_disconnected.yml
+.rubocop_minitest_assert_match_or_authenticated.yml
+.rubocop_minitest_assert_match_or_unauthenticated.yml
+.rubocop_minitest_assert_match_or_authorized.yml
+.rubocop_minitest_assert_match_or_unauthorized.yml
+.rubocop_minitest_assert_match_or_permitted.yml
+.rubocop_minitest_assert_match_or_forbidden.yml
+.rubocop_minitest_assert_match_or_allowed.yml
+.rubocop_minitest_assert_match_or_denied.yml
+.rubocop_minitest_assert_match_or_granted.yml
+.rubocop_minitest_assert_match_or_revoked.yml
+.rubocop_minitest_assert_match_or_confirmed.yml
+.rubocop_minitest_assert_match_or_unconfirmed.yml
+.rubocop_minitest_assert_match_or_approved.yml
+.rubocop_minitest_assert_match_or_rejected.yml
+.rubocop_minitest_assert_match_or_submitted.yml
+.rubocop_minitest_assert_match_or_pending.yml
+.rubocop_minitest_assert_match_or_processing.yml
+.rubocop_minitest_assert_match_or_completed.yml
+.rubocop_minitest_assert_match_or_cancelled.yml
+.rubocop_minitest_assert_match_or_failed.yml
+.rubocop_minitest_assert_match_or_timeout.yml
+.rubocop_minitest_assert_match_or_expired.yml
+.rubocop_minitest_assert_match_or_archived.yml
+.rubocop_minitest_assert_match_or_deleted.yml
+.rubocop_minitest_assert_match_or_destroyed.yml
+.rubocop_minitest_assert_match_or_locked.yml
+.rubocop_minitest_assert_match_or_unlocked.yml
+.rubocop_minitest_assert_match_or_visible.yml
+.rubocop_minitest_assert_match_or_hidden.yml
+.rubocop_minitest_assert_match_or_public.yml
+.rubocop_minitest_assert_match_or_private.yml
+.rubocop_minitest_assert_match_or_protected.yml
+.rubocop_minitest_assert_match_or_internal.yml
+.rubocop_minitest_assert_match_or_external.yml
+.rubocop_minitest_assert_match_or_local.yml
+.rubocop_minitest_assert_match_or_global.yml
+.rubocop_minitest_assert_match_or_session.yml
+.rubocop_minitest_assert_match_or_cookie.yml
+.rubocop_minitest_assert_match_or_flash.yml
+.rubocop_minitest_assert_match_or_params.yml
+.rubocop_minitest_assert_match_or_headers.yml
+.rubocop_minitest_assert_match_or_body.yml
+.rubocop_minitest_assert_match_or_response.yml
+.rubocop_minitest_assert_match_or_request.yml
+.rubocop_minitest_assert_match_or_route.yml
+.rubocop_minitest_assert_match_or_controller.yml
+.rubocop_minitest_assert_match_or_action.yml
+.rubocop_minitest_assert_match_or_view.yml
+.rubocop_minitest_assert_match_or_template.yml
+.rubocop_minitest_assert_match_or_partial.yml
+.rubocop_minitest_assert_match_or_helper.yml
+.rubocop_minitest_assert_match_or_model.yml
+.rubocop_minitest_assert_match_or_service.yml
+.rubocop_minitest_assert_match_or_job.yml
+.rubocop_minitest_assert_match_or_worker.yml
+.rubocop_minitest_assert_match_or_scheduler.yml
+.rubocop_minitest_assert_match_or_queue.yml
+.rubocop_minitest_assert_match_or_task.yml
+.rubocop_minitest_assert_match_or_command.yml
+.rubocop_minitest_assert_match_or_script.yml
+.rubocop_minitest_assert_match_or_config.yml
+.rubocop_minitest_assert_match_or_setting.yml
+.rubocop_minitest_assert_match_or_option.yml
+.rubocop_minitest_assert_match_or_property.yml
+.rubocop_minitest_assert_match_or_attribute.yml
+.rubocop_minitest_assert_match_or_field.yml
+.rubocop_minitest_assert_match_or_column.yml
+.rubocop_minitest_assert_match_or_table.yml
+.rubocop_minitest_assert_match_or_schema.yml
+.rubocop_minitest_assert_match_or_migration.yml
+.rubocop_minitest_assert_match_or_seed.yml
+.rubocop_minitest_assert_match_or_fixture.yml
+.rubocop_minitest_assert_match_or_factory.yml
+.rubocop_minitest_assert_match_or_strategy.yml
+.rubocop_minitest_assert_match_or_adapter.yml
+.rubocop_minitest_assert_match_or_driver.yml
+.rubocop_minitest_assert_match_or_client.yml
+.rubocop_minitest_assert_match_or_server.yml
+.rubocop_minitest_assert_match_or_endpoint.yml
+.rubocop_minitest_assert_match_or_api.yml
+.rubocop_minitest_assert_match_or_rest.yml
+.rubocop_minitest_assert_match_or_graphql.yml
+.rubocop_minitest_assert_match_or_socket.yml
+.rubocop_minitest_assert_match_or_channel.yml
+.rubocop_minitest_assert_match_or_subscription.yml
+.rubocop_minitest_assert_match_or_publisher.yml
+.rubocop_minitest_assert_match_or_subscriber.yml
+.rubocop_minitest_assert_match_or_observer.yml
+.rubocop_minitest_assert_match_or_listener.yml
+.rubocop_minitest_assert_match_or_handler.yml
+.rubocop_minitest_assert_match_or_callback.yml
+.rubocop_minitest_assert_match_or_hook.yml
+.rubocop_minitest_assert_match_or_filter.yml
+.rubocop_minitest_assert_match_or_validator.yml
+.rubocop_minitest_assert_match_or_formatter.yml
+.rubocop_minitest_assert_match_or_serializer.yml
+.rubocop_minitest_assert_match_or_parser.yml
+.rubocop_minitest_assert_match_or_compiler.yml
+.rubocop_minitest_assert_match_or_interpreter.yml
+.rubocop_minitest_assert_match_or_transpiler.yml
+.rubocop_minitest_assert_match_or_bundler.yml
+.rubocop_minitest_assert_match_or_packager.yml
+.rubocop_minitest_assert_match_or_minifier.yml
+.rubocop_minitest_assert_match_or_optimizer.yml
+.rubocop_minitest_assert_match_or_compressor.yml
+.rubocop_minitest_assert_match_or_decompressor.yml
+.rubocop_minitest_assert_match_or_encryptor.yml
+.rubocop_minitest_assert_match_or_decryptor.yml
+.rubocop_minitest_assert_match_or_hasher.yml
+.rubocop_minitest_assert_match_or_signer.yml
+.rubocop_minitest_assert_match_or_verifier.yml
+.rubocop_minitest_assert_match_or_token.yml
+.rubocop_minitest_assert_match_or_session.yml
+.rubocop_minitest_assert_match_or_auth.yml
+.rubocop_minitest_assert_match_or_permission.yml
+.rubocop_minitest_assert_match_or_role.yml
+.rubocop_minitest_assert_match_or_group.yml
+.rubocop_minitest_assert_match_or_team.yml
+.rubocop_minitest_assert_match_or_organization.yml
+.rubocop_minitest_assert_match_or_company.yml
+.rubocop_minitest_assert_match_or_department.yml
+.rubocop_minitest_assert_match_or_division.yml
+.rubocop_minitest_assert_match_or_branch.yml
+.rubocop_minitest_assert_match_or_office.yml
+.rubocop_minitest_assert_match_or_location.yml
+.rubocop_minitest_assert_match_or_address.yml
+.rubocop_minitest_assert_match_or_contact.yml
+.rubocop_minitest_assert_match_or_user.yml
+.rubocop_minitest_assert_match_or_member.yml
+.rubocop_minitest_assert_match_or_customer.yml
+.rubocop_minitest_assert_match_or_client.yml
+.rubocop_minitest_assert_match_or_vendor.yml
+.rubocop_minitest_assert_match_or_supplier.yml
+.rubocop_minitest_assert_match_or_partner.yml
+.rubocop_minitest_assert_match_or_contract.yml
+.rubocop_minitest_assert_match_or_agreement.yml
+.rubocop_minitest_assert_match_or_license.yml
+.rubocop_minitest_assert_match_or_permit.yml
+.rubocop_minitest_assert_match_or_certificate.yml
+.rubocop_minitest_assert_match_or_registration.yml
+.rubocop_minitest_assert_match_or_application.yml
+.rubocop_minitest_assert_match_or_submission.yml
+.rubocop_minitest_assert_match_or_approval.yml
+.rubocop_minitest_assert_match_or_rejection.yml
+.rubocop_minitest_assert_match_or_acceptance.yml
+.rubocop_minitest_assert_match_or_acknowledgment.yml
+.rubocop_minitest_assert_match_or_notification.yml
+.rubocop_minitest_assert_match_or_alert.yml
+.rubocop_minitest_assert_match_or_warning.yml
+.rubocop_minitest_assert_match_or_error.yml
+.rubocop_minitest_assert_match_or_exception.yml
+.rubocop_minitest_assert_match_or_failure.yml
+.rubocop_minitest_assert_match_or_success.yml
+.rubocop_minitest_assert_match_or_result.yml
+.rubocop_minitest_assert_match_or_status.yml
+.rubocop_minitest_assert_match_or_state.yml
+.rubocop_minitest_assert_match_or_mode.yml
+.rubocop_minitest_assert_match_or_type.yml
+.rubocop_minitest_assert_match_or_kind.yml
+.rubocop_minitest_assert_match_or_category.yml
+.rubocop_minitest_assert_match_or_class.yml
+.rubocop_minitest_assert_match_or_interface.yml
+.rubocop_minitest_assert_match_or_enum.yml
+.rubocop_minitest_assert_match_or_struct.yml
+.rubocop_minitest_assert_match_or_union.yml
+.rubocop_minitest_assert_match_or_trait.yml
+.rubocop_minitest_assert_match_or_module.yml
+.rubocop_minitest_assert_match_or_package.yml
+.rubocop_minitest_assert_match_or_namespace.yml
+.rubocop_minitest_assert_match_or_scope.yml
+.rubocop_minitest_assert_match_or_context.yml
+.rubocop_minitest_assert_match_or_environment.yml
+.rubocop_minitest_assert_match_or_region.yml
+.rubocop_minitest_assert_match_or_zone.yml
+.rubocop_minitest_assert_match_or_cluster.yml
+.rubocop_minitest_assert_match_or_node.yml
+.rubocop_minitest_assert_match_or_pod.yml
+.rubocop_minitest_assert_match_or_container.yml
+.rubocop_minitest_assert_match_or_image.yml
+.rubocop_minitest_assert_match_or_volume.yml
+.rubocop_minitest_assert_match_or_network.yml
+.rubocop_minitest_assert_match_or_secret.yml
+.rubocop_minitest_assert_match_or_configmap.yml
+.rubocop_minitest_assert_match_or_service.yml
+.rubocop_minitest_assert_match_or_deployment.yml
+.rubocop_minitest_assert_match_or_replicaset.yml
+.rubocop_minitest_assert_match_or_daemonset.yml
+.rubocop_minitest_assert_match_or_statefulset.yml
+.rubocop_minitest_assert_match_or_job.yml
+.rubocop_minitest_assert_match_or_cronjob.yml
+.rubocop_minitest_assert_match_or_ingress.yml
+.rubocop_minitest_assert_match_or_route.yml
+.rubocop_minitest_assert_match_or_endpoint.yml
+.rubocop_minitest_assert_match_or_policy.yml
+.rubocop_minitest_assert_match_or_role.yml
+.rubocop_minitest_assert_match_or_clusterrole.yml
+.rubocop_minitest_assert_match_or_binding.yml
+.rubocop_minitest_assert_match_or_clusterbinding.yml
+.rubocop_minitest_assert_match_or_serviceaccount.yml
+.rubocop_minitest_assert_match_or_namespace.yml
+.rubocop_minitest_assert_match_or_resourcequota.yml
+.rubocop_minitest_assert_match_or_limitrange.yml
+.rubocop_minitest_assert_match_or_horizontalpodautoscaler.yml
+.rubocop_minitest_assert_match_or_verticalpodautoscaler.yml
+.rubocop_minitest_assert_match_or_poddisruptionbudget.yml
+.rubocop_minitest_assert_match_or_priorityclass.yml
+.rubocop_minitest_assert_match_or_storageclass.yml
+.rubocop_minitest_assert_match_or_volumeattachment.yml
+.rubocop_minitest_assert_match_or_persistentvolume.yml
+.rubocop_minitest_assert_match_or_persistentvolumeclaim.yml
+.rubocop_minitest_assert_match_or_event.yml
+.rubocop_minitest_assert_match_or_lease.yml
+.rubocop_minitest_assert_match_or_endpointslice.yml
+.rubocop_minitest_assert_match_or_networkpolicy.yml
+.rubocop_minitest_assert_match_or_podsecuritypolicy.yml
+.rubocop_minitest_assert_match_or_priority.yml
+.rubocop_minitest_assert_match_or_runtimeclass.yml
+.rubocop_minitest_assert_match_or_podpreset.yml
+.rubocop_minitest_assert_match_or_customresourcedefinition.yml
+.rubocop_minitest_assert_match_or_mutatingwebhookconfiguration.yml
+.rubocop_minitest_assert_match_or_validatingwebhookconfiguration.yml
+.rubocop_minitest_assert_match_or_apiregistration.yml
+.rubocop_minitest_assert_match_or_apiextensions.yml
+.rubocop_minitest_assert_match_or_apirequestcount.yml
+.rubocop_minitest_assert_match_or_certificatesigningrequest.yml
+.rubocop_minitest_assert_match_or_clusterissuer.yml
+.rubocop_minitest_assert_match_or_issuer.yml
+.rubocop_minitest_assert_match_or_certificate.yml
+.rubocop_minitest_assert_match_or_challenges.acme.yml
+.rubocop_minitest_assert_match_or_orders.acme.yml
+.rubocop_minitest_assert_match_or_certificaterequests.cert-manager.io.yml
+.rubocop_minitest_assert_match_or_clusterissuers.cert-manager.io.yml
+.rubocop_minitest_assert_match_or_issuers.cert-manager.io.yml
+.rubocop_minitest_assert_match_or_certificates.cert-manager.io.yml
+.rubocop_minitest_assert_match_or_acmeclients.config.k8s.io.yml
+.rubocop_minitest_assert_match_or_clusterresourceset.addons.cluster.x-k8s.io.yml
+.rubocop_minitest_assert_match_or_clusterresourcesetbinding.addons.cluster.x-k8s.io.yml
+.rubocop_minitest_assert_match_or_clusterresourceplacement.work.clusters.x-k8s.io.yml
+.rubocop_minitest_assert_match_or_clusterwork.work.clusters.x-k8s.io.yml
+.rubocop_minitest_assert_match_or_manifestwork.work.open-cluster-management.io.yml
+.rubocop_minitest_assert_match_or_placement.cluster.x-k8s.io.yml
+.rubocop_minitest_assert_match_or_placementdecision.cluster.x-k8s.io.yml
+.rubocop_minitest_assert_match_or_clusterresourceplacement.work.sigs.k8s.io.yml
+.rubocop_minitest_assert_match_or_work.work.sigs.k8s.io.yml
 ```
