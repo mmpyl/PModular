@@ -12,6 +12,8 @@ import { UnitsOfMeasureModule } from './units-of-measure/units-of-measure.module
 import { InventoryModule } from './inventory/inventory.module';
 import { StockMovementsModule } from './stock-movements/stock-movements.module';
 import { BatchesModule } from './batches/batches.module';
+import { SalesModule } from './sales/sales.module';
+import { CashRegistersModule } from './cash-registers/cash-registers.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { BatchesModule } from './batches/batches.module';
     InventoryModule,
     StockMovementsModule,
     BatchesModule,
+    SalesModule,
+    CashRegistersModule,
   ],
 })
 export class AppModule {}
