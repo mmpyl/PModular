@@ -13,10 +13,11 @@ import { BatchesService } from './batches.service';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { BatchStatus } from '@prisma/client';
 
 @Controller('batches')
-@UseGuards(TenantGuard, OrgRolesGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class BatchesController {
   constructor(private readonly batchesService: BatchesService) {}
 

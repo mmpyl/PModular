@@ -13,9 +13,10 @@ import { StockMovementService } from './stock-movements.service';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('stock-movements')
-@UseGuards(TenantGuard, OrgRolesGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class StockMovementsController {
   constructor(private readonly stockMovementService: StockMovementService) {}
 
