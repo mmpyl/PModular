@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query } from '@n
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 
 export interface CreateProductDto {
   name: string;
@@ -23,14 +24,14 @@ export class ProductsController {
   @Post()
   create(
     @Body() createProductDto: CreateProductDto,
-    @Query('organizationId') organizationId: string,
+    @CurrentOrg() organizationId: string,
   ) {
     return this.productsService.create(organizationId, createProductDto);
   }
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentOrg() organizationId: string,
     @Query('categoryId') categoryId?: string,
     @Query('search') search?: string,
   ) {
@@ -38,12 +39,12 @@ export class ProductsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Query('organizationId') organizationId: string) {
+  findOne(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     return this.productsService.findOne(organizationId, id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Query('organizationId') organizationId: string) {
+  remove(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     return this.productsService.remove(organizationId, id);
   }
 }
