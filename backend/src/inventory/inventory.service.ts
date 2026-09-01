@@ -190,4 +190,30 @@ export class InventoryService {
       },
     });
   }
+
+  async adjustStock(
+    organizationId: string,
+    productId: string,
+    quantityDelta: number,
+    reason: MovementReason,
+    performedBy: string,
+    notes?: string,
+    batchId?: string | null,
+  ): Promise<InventoryItem> {
+    await this.ensureInventoryItem(productId, organizationId);
+
+    return this.prisma.inventoryItem.update({
+      where: {
+        productId_organizationId: {
+          productId,
+          organizationId,
+        },
+      },
+      data: {
+        quantity: {
+          increment: quantityDelta,
+        },
+      },
+    });
+  }
 }
