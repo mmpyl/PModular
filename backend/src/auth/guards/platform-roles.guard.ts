@@ -1,15 +1,19 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { OrgRole, PlatformRole } from '@prisma/client';
-import { ORG_ROLES_KEY, PLATFORM_ROLES_KEY } from '../decorators/org-roles.decorator';
+import { PlatformRole } from '@prisma/client';
+import { PLATFORM_ROLES_KEY } from '../decorators/org-roles.decorator';
 import { JwtPayload } from '../jwt-payload.type';
 
+/**
+ * Guard para verificar roles de plataforma (acceso global fuera del contexto tenant)
+ * Se usa en endpoints administrativos que no requieren contexto de organización
+ */
 @Injectable()
-export class OrgRolesGuard implements CanActivate {
+export class PlatformRolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<OrgRole[]>(ORG_ROLES_KEY, [
+    const requiredRoles = this.reflector.getAllAndOverride<PlatformRole[]>(PLATFORM_ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -19,18 +23,12 @@ export class OrgRolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<{ user?: JwtPayload }>();
-    const userRole = request.user?.orgRole;
-    
-    // Si el usuario tiene rol de PLATFORM_ADMIN, permitir acceso a todos los endpoints de org
     const platformRole = request.user?.platformRole;
-    if (platformRole === 'PLATFORM_ADMIN') {
-      return true;
-    }
     
-    if (!userRole) {
+    if (!platformRole) {
       return false;
     }
 
-    return requiredRoles.includes(userRole);
+    return requiredRoles.includes(platformRole);
   }
 }

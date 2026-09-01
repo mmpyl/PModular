@@ -19,6 +19,10 @@ model User {
   email     String   @unique
   password  String // Hash
   name      String?
+  
+  // Rol de plataforma (opcional, para acceso global fuera del contexto tenant)
+  platformRole PlatformRole?
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -36,6 +40,12 @@ enum OrgRole {
   INVENTARIO
   CAJA
   // Se pueden agregar más según evolucione el sistema
+}
+
+// Rol de plataforma - acceso global fuera del contexto tenant
+enum PlatformRole {
+  PLATFORM_ADMIN
+  SUPPORT
 }
 
 model Organization {
