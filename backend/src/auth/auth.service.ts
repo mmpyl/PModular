@@ -75,11 +75,14 @@ export class AuthService {
       throw new ForbiddenException('You do not have access to this organization');
     }
 
-    return this.buildAuthResponse(
-      { id: userId, email: '', password: '', createdAt: new Date(), updatedAt: new Date() } as User,
-      membership.organizationId,
-      membership.role
-    );
+    // Obtener el usuario completo desde la base de datos
+    const user = await this.usersService.findById(userId);
+    
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return this.buildAuthResponse(user, membership.organizationId, membership.role);
   }
 
   private async buildAuthResponse(user: User, organizationId?: string, orgRole?: OrgRole): Promise<AuthResponse> {
