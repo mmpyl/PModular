@@ -1,22 +1,30 @@
-import { UnauthorizedException, Injectable } from '@nestjs/common';
+import { UnauthorizedException, Injectable, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+import { User, Membership, OrgRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
+import { MembershipsService } from '../memberships/memberships.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './jwt-payload.type';
 
 type AuthResponse = {
   accessToken: string;
   user: Omit<User, 'password'>;
+  organizationId?: string;
+  orgRole?: OrgRole;
+};
+
+type LoginResponse = AuthResponse & {
+  memberships?: Membership[];
 };
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
+    private readonly membershipsService: MembershipsService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
   ) {}
@@ -26,7 +34,7 @@ export class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  async login(dto: LoginDto): Promise<AuthResponse> {
+  async login(dto: LoginDto): Promise<LoginResponse> {
     const user = await this.usersService.findByEmail(dto.email);
     const isPasswordValid = user ? await bcrypt.compare(dto.password, user.password) : false;
 
@@ -34,11 +42,53 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.buildAuthResponse(user);
+    // Obtener membresías del usuario
+    const memberships = await this.membershipsService.findByUser(user.id);
+
+    // Si el usuario proporcionó organizationId en el login
+    if (dto.organizationId) {
+      const membership = memberships.find(m => m.organizationId === dto.organizationId);
+      if (!membership) {
+        throw new ForbiddenException('You do not have access to this organization');
+      }
+      return this.buildAuthResponse(user, membership.organizationId, membership.role);
+    }
+
+    // Si el usuario tiene exactamente una membresía, usarla automáticamente
+    if (memberships.length === 1) {
+      const membership = memberships[0];
+      return this.buildAuthResponse(user, membership.organizationId, membership.role);
+    }
+
+    // Si tiene múltiples membresías o ninguna, devolver token sin org + lista de membresías
+    const response = await this.buildAuthResponse(user);
+    return {
+      ...response,
+      memberships,
+    };
   }
 
-  private async buildAuthResponse(user: User): Promise<AuthResponse> {
-    const payload: JwtPayload = { sub: user.id, email: user.email };
+  async selectOrganization(userId: string, organizationId: string): Promise<AuthResponse> {
+    const membership = await this.membershipsService.findOne(userId, organizationId);
+    
+    if (!membership) {
+      throw new ForbiddenException('You do not have access to this organization');
+    }
+
+    return this.buildAuthResponse(
+      { id: userId, email: '', password: '', createdAt: new Date(), updatedAt: new Date() } as User,
+      membership.organizationId,
+      membership.role
+    );
+  }
+
+  private async buildAuthResponse(user: User, organizationId?: string, orgRole?: OrgRole): Promise<AuthResponse> {
+    const payload: JwtPayload = { 
+      sub: user.id, 
+      email: user.email,
+      ...(organizationId && { organizationId }),
+      ...(orgRole && { orgRole }),
+    };
     const { password, ...safeUser } = user;
 
     return {
@@ -46,6 +96,8 @@ export class AuthService {
         expiresIn: this.config.get<string>('JWT_EXPIRES_IN', '1h'),
       }),
       user: safeUser,
+      ...(organizationId && { organizationId }),
+      ...(orgRole && { orgRole }),
     };
   }
 }

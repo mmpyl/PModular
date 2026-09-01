@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
@@ -9,13 +9,10 @@ export class TenantGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     
-    // Intentar obtener organizationId del header X-Org-Id
-    const orgIdFromHeader = request.headers['x-org-id'] as string | undefined;
-    
     // Obtener token JWT
     const authHeader = request.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
-      return true; // Si no hay auth, dejar que otros guards lo manejen
+      throw new UnauthorizedException('Missing or invalid authorization header');
     }
 
     const token = authHeader.split(' ')[1];
@@ -23,22 +20,27 @@ export class TenantGuard implements CanActivate {
     try {
       const payload = await this.jwtService.verifyAsync(token);
       
-      // Si el payload ya tiene organizationId, usarlo
-      if (payload.organizationId) {
-        request.headers['x-org-id'] = payload.organizationId;
-        return true;
+      // El JWT DEBE tener organizationId para acceder a recursos tenant-specific
+      if (!payload.organizationId) {
+        throw new ForbiddenException('Organization context required. Please select an organization first.');
       }
 
-      // Si viene header X-Org-Id, validarlo contra las membresías del usuario
-      if (orgIdFromHeader) {
-        // Aquí se podría validar que el usuario pertenece a esa organización
-        // Esto se hará en el AuthService al generar el token
-        request.headers['x-org-id'] = orgIdFromHeader;
-        return true;
+      // Si viene header X-Org-Id, debe coincidir con el del JWT
+      const orgIdFromHeader = request.headers['x-org-id'] as string | undefined;
+      if (orgIdFromHeader && orgIdFromHeader !== payload.organizationId) {
+        throw new ForbiddenException('X-Org-Id header does not match the organization in your token');
       }
 
+      // Establecer organizationId en el request para uso posterior
+      request.headers['x-org-id'] = payload.organizationId;
+      (request as any).organizationId = payload.organizationId;
+      (request as any).orgRole = payload.orgRole;
+      
       return true;
     } catch (error) {
+      if (error instanceof UnauthorizedException || error instanceof ForbiddenException) {
+        throw error;
+      }
       throw new UnauthorizedException('Invalid token');
     }
   }
