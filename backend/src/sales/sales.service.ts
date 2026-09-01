@@ -35,7 +35,7 @@ export class SalesService {
 
         subtotal += lineSubtotal;
         taxAmount += lineTaxAmount;
-        total += lineTotal - lineDiscount;
+        total += lineTotal;
 
         // Verificar stock si hay batchId específico
         let batchId = item.batchId || null;
