@@ -8,11 +8,11 @@ export enum EntityType {
 
 export class CreateBusinessEntityDto {
   @IsEnum(EntityType)
-  entityType: EntityType;
+  entityType!: EntityType;
 
   @IsString()
   @MinLength(2)
-  name: string;
+  name!: string;
 
   @IsString()
   @IsOptional()

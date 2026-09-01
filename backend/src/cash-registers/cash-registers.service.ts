@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { CashRegistersRepository } from '../repositories/cash-registers.repository';
-import { CreateCashRegisterDto, UpdateCashRegisterDto, OpenCashRegisterDto, CloseCashRegisterDto, CreateCashRegisterMovementDto } from '../dto/create-cash-register.dto';
+import { CashRegistersRepository } from './repositories/cash-registers.repository';
+import { CreateCashRegisterDto, UpdateCashRegisterDto, OpenCashRegisterDto, CloseCashRegisterDto, CreateCashRegisterMovementDto } from './dto/create-cash-register.dto';
 
 @Injectable()
 export class CashRegistersService {

@@ -5,9 +5,8 @@ import {
   CreatePurchaseOrderDto,
   UpdatePurchaseOrderDto,
   ReceivePurchaseOrderDto,
-  PurchaseOrderStatus,
 } from './dto/create-purchase-order.dto';
-import { MovementReason, MovementType } from '@prisma/client';
+import { MovementReason, MovementType, PurchaseOrderStatus } from '@prisma/client';
 
 @Injectable()
 export class PurchaseOrdersService {
@@ -280,6 +279,10 @@ export class PurchaseOrdersService {
       where: { id: orderId },
       include: { items: true },
     });
+
+    if (!updatedOrder) {
+      throw new NotFoundException(`Purchase order with ID ${orderId} not found`);
+    }
 
     const allItemsReceived = updatedOrder.items.every(
       (item) => item.quantityReceived >= item.quantityOrdered,

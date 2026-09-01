@@ -223,7 +223,7 @@ export class CashRegistersRepository {
       throw new Error('Debe cerrar la caja antes de eliminarla');
     }
 
-    if (cashRegister?.movements.length > 0) {
+    if (cashRegister?.movements && cashRegister.movements.length > 0) {
       throw new Error('No se puede eliminar una caja con movimientos registrados');
     }
 
