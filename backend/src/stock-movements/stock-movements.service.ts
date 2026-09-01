@@ -45,56 +45,129 @@ export class StockMovementService {
     // Determinar si es positivo o negativo
     const isPositive = type === 'INGRESO';
 
-    // Crear el movimiento
-    const movement = await this.prisma.stockMovement.create({
-      data: {
-        organizationId,
-        productId,
-        type: type as any,
-        reason: reason as any,
-        quantity,
-        isPositive,
-        batchId,
-        referenceType,
-        referenceId,
-        notes,
-        performedBy,
-      },
-    });
-
-    // Actualizar el lote si se proporcionó
-    if (batchId) {
-      const batch = await this.prisma.batch.findUnique({
-        where: { id: batchId },
+    // ==========================================
+    // VALIDACIÓN DE STOCK PARA SALIDAS
+    // ==========================================
+    if (!isPositive) {
+      // Obtener configuración de allowNegativeStock de la organización
+      const org = await this.prisma.organization.findUnique({
+        where: { id: organizationId },
       });
 
-      if (!batch) {
-        throw new NotFoundException(`Batch ${batchId} not found`);
+      if (!org) {
+        throw new NotFoundException(`Organization ${organizationId} not found`);
       }
 
-      const newQuantity = isPositive
-        ? Number(batch.currentQuantity) + Number(quantity)
-        : Number(batch.currentQuantity) - Number(quantity);
+      const settings = org.settings as any || {};
+      const allowNegativeStock = settings.allowNegativeStock ?? false;
 
-      // Actualizar estado del lote si se agota
-      let newStatus = batch.status;
-      if (newQuantity <= 0) {
-        newStatus = BatchStatus.AGOTADO;
-      } else if (batch.expirationDate && batch.expirationDate < new Date()) {
-        newStatus = BatchStatus.VENCIDO;
+      if (!allowNegativeStock) {
+        if (batchId) {
+          // Validar stock a nivel de lote específico
+          const batch = await this.prisma.batch.findUnique({
+            where: { id: batchId },
+          });
+
+          if (!batch) {
+            throw new NotFoundException(`Batch ${batchId} not found`);
+          }
+
+          if (Number(batch.currentQuantity) < Number(quantity)) {
+            throw new BadRequestException(
+              `Insufficient stock in batch ${batch.batchNumber}. Available: ${batch.currentQuantity}, Requested: ${quantity}`,
+            );
+          }
+        } else {
+          // Validar stock total del producto en la organización
+          const inventoryItem = await this.prisma.inventoryItem.findUnique({
+            where: {
+              productId_organizationId: {
+                productId,
+                organizationId,
+              },
+            },
+          });
+
+          const availableStock = inventoryItem ? Number(inventoryItem.quantity) - Number(inventoryItem.reserved) : 0;
+
+          if (availableStock < Number(quantity)) {
+            throw new BadRequestException(
+              `Insufficient stock for product ${product.name}. Available: ${availableStock}, Requested: ${quantity}`,
+            );
+          }
+        }
       }
-
-      await this.prisma.batch.update({
-        where: { id: batchId },
-        data: {
-          currentQuantity: Math.max(0, newQuantity),
-          status: newStatus,
-        },
-      });
     }
 
-    // Recalcular inventario
-    await this.recalculateInventory(productId, organizationId);
+    // ==========================================
+    // TRANSACCIÓN ATÓMICA PARA MOVIMIENTO + ACTUALIZACIÓN
+    // ==========================================
+    const movement = await this.prisma.$transaction(async (tx) => {
+      // Obtener configuración de allowNegativeStock dentro de la transacción
+      const org = await tx.organization.findUnique({
+        where: { id: organizationId },
+      });
+
+      if (!org) {
+        throw new NotFoundException(`Organization ${organizationId} not found`);
+      }
+
+      const settings = org.settings as any || {};
+      const allowNegativeStock = settings.allowNegativeStock ?? false;
+
+      // Crear el movimiento
+      const createdMovement = await tx.stockMovement.create({
+        data: {
+          organizationId,
+          productId,
+          type: type as any,
+          reason: reason as any,
+          quantity,
+          isPositive,
+          batchId,
+          referenceType,
+          referenceId,
+          notes,
+          performedBy,
+        },
+      });
+
+      // Actualizar el lote si se proporcionó
+      if (batchId) {
+        const batch = await tx.batch.findUnique({
+          where: { id: batchId },
+        });
+
+        if (!batch) {
+          throw new NotFoundException(`Batch ${batchId} not found`);
+        }
+
+        const newQuantity = isPositive
+          ? Number(batch.currentQuantity) + Number(quantity)
+          : Number(batch.currentQuantity) - Number(quantity);
+
+        // Actualizar estado del lote si se agota
+        let newStatus = batch.status;
+        if (newQuantity <= 0) {
+          newStatus = BatchStatus.AGOTADO;
+        } else if (batch.expirationDate && batch.expirationDate < new Date()) {
+          newStatus = BatchStatus.VENCIDO;
+        }
+
+        await tx.batch.update({
+          where: { id: batchId },
+          data: {
+            currentQuantity: allowNegativeStock ? newQuantity : Math.max(0, newQuantity),
+            status: newStatus,
+          },
+        });
+      }
+
+      // Recalcular inventario
+      await this.recalculateInventoryWithTx(productId, organizationId, tx);
+
+      return createdMovement;
+    });
 
     return movement;
   }
@@ -184,6 +257,54 @@ export class StockMovementService {
 
     // Actualizar o crear item de inventario
     await this.prisma.inventoryItem.upsert({
+      where: {
+        productId_organizationId: {
+          productId,
+          organizationId,
+        },
+      },
+      update: {
+        quantity: totalQuantity,
+        averageCost,
+      },
+      create: {
+        productId,
+        organizationId,
+        quantity: totalQuantity,
+        reserved: 0,
+        averageCost,
+      },
+    });
+  }
+
+  private async recalculateInventoryWithTx(
+    productId: string,
+    organizationId: string,
+    tx: any,
+  ): Promise<void> {
+    // Obtener todos los lotes activos
+    const batches = await tx.batch.findMany({
+      where: {
+        productId,
+        organizationId,
+        status: {
+          in: ['ACTIVO', 'RETENIDO'],
+        },
+      },
+    });
+
+    const totalQuantity = batches.reduce(
+      (sum: number, batch: any) => sum + Number(batch.currentQuantity),
+      0,
+    );
+    const totalValue = batches.reduce(
+      (sum: number, batch: any) => sum + Number(batch.currentQuantity) * Number(batch.unitCost),
+      0,
+    );
+    const averageCost = totalQuantity > 0 ? totalValue / totalQuantity : 0;
+
+    // Actualizar o crear item de inventario
+    await tx.inventoryItem.upsert({
       where: {
         productId_organizationId: {
           productId,
