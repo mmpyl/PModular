@@ -34,6 +34,7 @@ enum OrgRole {
   ADMIN
   VENDEDOR
   INVENTARIO
+  CAJA
   // Se pueden agregar más según evolucione el sistema
 }
 

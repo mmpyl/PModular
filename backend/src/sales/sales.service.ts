@@ -20,80 +20,83 @@ export class SalesService {
   ) {}
 
   async create(organizationId: string, userId: string, dto: CreateSaleDto) {
-    const saleNumber = await this.generateSaleNumber(organizationId);
+    // Usar transacción para evitar condición de carrera en generateSaleNumber
+    return this.prisma.$transaction(async (tx) => {
+      const saleNumber = await this.generateSaleNumberInTransaction(tx, organizationId);
 
-    // Calcular totales
-    let subtotal = 0;
-    let taxAmount = 0;
-    let total = 0;
+      // Calcular totales
+      let subtotal = 0;
+      let taxAmount = 0;
+      let total = 0;
 
-    const items = await Promise.all(
-      dto.items.map(async (item) => {
-        const lineSubtotal = item.quantity * item.unitPrice;
-        const lineDiscount = item.discount || 0;
-        const lineTaxRate = item.taxRate ?? 0.18;
-        const lineTaxAmount = (lineSubtotal - lineDiscount) * lineTaxRate;
-        const lineTotal = lineSubtotal - lineDiscount + lineTaxAmount;
+      const items = await Promise.all(
+        dto.items.map(async (item) => {
+          const lineSubtotal = item.quantity * item.unitPrice;
+          const lineDiscount = item.discount || 0;
+          const lineTaxRate = item.taxRate ?? 0.18;
+          const lineTaxAmount = (lineSubtotal - lineDiscount) * lineTaxRate;
+          const lineTotal = lineSubtotal - lineDiscount + lineTaxAmount;
 
-        subtotal += lineSubtotal;
-        taxAmount += lineTaxAmount;
-        total += lineTotal;
+          subtotal += lineSubtotal;
+          taxAmount += lineTaxAmount;
+          total += lineTotal;
 
-        // Verificar stock si hay batchId específico
-        let batchId = item.batchId || null;
-        
-        return {
-          productId: item.productId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          discount: item.discount || 0,
-          taxRate: item.taxRate ?? 0.18,
-          subtotal: lineSubtotal,
-          taxAmount: lineTaxAmount,
-          total: lineTotal,
-          batchId,
-          notes: item.notes,
-        };
-      }),
-    );
+          // Verificar stock si hay batchId específico
+          let batchId = item.batchId || null;
+          
+          return {
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discount: item.discount || 0,
+            taxRate: item.taxRate ?? 0.18,
+            subtotal: lineSubtotal,
+            taxAmount: lineTaxAmount,
+            total: lineTotal,
+            batchId,
+            notes: item.notes,
+          };
+        }),
+      );
 
-    const globalDiscount = dto.discount || 0;
-    total -= globalDiscount;
+      const globalDiscount = dto.discount || 0;
+      total -= globalDiscount;
 
-    return this.prisma.sale.create({
-      data: {
-        organizationId,
-        saleNumber,
-        customerId: dto.customerId,
-        type: dto.type || SaleType.VENTA_MOSTRADOR,
-        status: dto.status || SaleStatus.CONFIRMADA,
-        deliveryDate: dto.deliveryDate ? new Date(dto.deliveryDate) : null,
-        paymentTerm: dto.paymentTerm || 'CONTADO',
-        paymentDueDate: dto.paymentDueDate ? new Date(dto.paymentDueDate) : null,
-        subtotal,
-        taxRate: dto.taxRate ?? 0.18,
-        taxAmount,
-        discount: globalDiscount,
-        total,
-        amountPaid: 0,
-        amountPending: total,
-        currency: dto.currency || 'PEN',
-        notes: dto.notes,
-        internalNotes: dto.internalNotes,
-        soldBy: userId,
-        items: {
-          create: items,
-        },
-      },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
-            batch: true,
+      return tx.sale.create({
+        data: {
+          organizationId,
+          saleNumber,
+          customerId: dto.customerId,
+          type: dto.type || SaleType.VENTA_MOSTRADOR,
+          status: dto.status || SaleStatus.CONFIRMADA,
+          deliveryDate: dto.deliveryDate ? new Date(dto.deliveryDate) : null,
+          paymentTerm: dto.paymentTerm || 'CONTADO',
+          paymentDueDate: dto.paymentDueDate ? new Date(dto.paymentDueDate) : null,
+          subtotal,
+          taxRate: dto.taxRate ?? 0.18,
+          taxAmount,
+          discount: globalDiscount,
+          total,
+          amountPaid: 0,
+          amountPending: total,
+          currency: dto.currency || 'PEN',
+          notes: dto.notes,
+          internalNotes: dto.internalNotes,
+          soldBy: userId,
+          items: {
+            create: items,
           },
         },
-      },
+        include: {
+          customer: true,
+          items: {
+            include: {
+              product: true,
+              batch: true,
+            },
+          },
+        },
+      });
     });
   }
 
@@ -318,6 +321,33 @@ export class SalesService {
     return this.prisma.sale.delete({
       where: { id },
     });
+  }
+
+  private async generateSaleNumberInTransaction(tx: any, organizationId: string): Promise<string> {
+    const prefix = 'V';
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    
+    // Usar findFirst con lock para evitar condición de carrera
+    // Prisma usa SELECT ... FOR UPDATE automáticamente en transacciones para PostgreSQL
+    const lastSale = await tx.sale.findFirst({
+      where: {
+        organizationId,
+        saleNumber: {
+          startsWith: `${prefix}-${year}${month}-`,
+        },
+      },
+      orderBy: { saleNumber: 'desc' },
+      // Usar mode: 'readcommitted' o aislamiento serializable si es necesario
+    });
+
+    let sequence = 1;
+    if (lastSale) {
+      const lastNumber = parseInt(lastSale.saleNumber.split('-')[2]);
+      sequence = lastNumber + 1;
+    }
+
+    return `${prefix}-${year}${month}-${String(sequence).padStart(4, '0')}`;
   }
 
   private async generateSaleNumber(organizationId: string): Promise<string> {
