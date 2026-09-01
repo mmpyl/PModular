@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { InventoryService } from '../inventory/inventory.service';
+import { StockMovementService } from '../stock-movements/stock-movements.service';
 import {
   CreatePurchaseOrderDto,
   UpdatePurchaseOrderDto,
@@ -13,6 +14,7 @@ export class PurchaseOrdersService {
   constructor(
     private prisma: PrismaService,
     private inventoryService: InventoryService,
+    private stockMovementService: StockMovementService,
   ) {}
 
   async create(organizationId: string, userId: string, dto: CreatePurchaseOrderDto) {
@@ -182,97 +184,56 @@ export class PurchaseOrdersService {
       throw new BadRequestException('Cannot receive a cancelled order');
     }
 
-    // Procesar cada ítem recibido
-    for (const receiveItem of dto.items) {
-      const orderItem = order.items.find(
-        (item) => item.id === receiveItem.itemId,
-      );
-
-      if (!orderItem) {
-        throw new NotFoundException(
-          `Item ${receiveItem.itemId} not found in order`,
+    // Usar transacción para asegurar consistencia en todas las operaciones de stock
+    await this.prisma.$transaction(async (tx) => {
+      // Procesar cada ítem recibido
+      for (const receiveItem of dto.items) {
+        const orderItem = order.items.find(
+          (item) => item.id === receiveItem.itemId,
         );
-      }
 
-      const quantityReceived = receiveItem.quantityReceived;
+        if (!orderItem) {
+          throw new NotFoundException(
+            `Item ${receiveItem.itemId} not found in order`,
+          );
+        }
 
-      // Actualizar cantidad recibida en el ítem
-      await this.prisma.purchaseOrderItem.update({
-        where: { id: receiveItem.itemId },
-        data: {
-          quantityReceived: {
-            increment: quantityReceived,
-          },
-          batchNumber: receiveItem.batchNumber || orderItem.batchNumber,
-          expirationDate: receiveItem.expirationDate
-            ? new Date(receiveItem.expirationDate)
-            : orderItem.expirationDate,
-        },
-      });
+        const quantityReceived = receiveItem.quantityReceived;
 
-      // Crear lote si existe número de lote
-      let batchId: string | null = null;
-      if (receiveItem.batchNumber) {
-        const batch = await this.prisma.batch.upsert({
-          where: {
-            productId_batchNumber_organizationId: {
-              productId: orderItem.productId,
-              batchNumber: receiveItem.batchNumber,
-              organizationId,
-            },
-          },
-          update: {
-            currentQuantity: {
+        // Actualizar cantidad recibida en el ítem
+        await tx.purchaseOrderItem.update({
+          where: { id: receiveItem.itemId },
+          data: {
+            quantityReceived: {
               increment: quantityReceived,
             },
-          },
-          create: {
-            productId: orderItem.productId,
-            organizationId,
-            batchNumber: receiveItem.batchNumber,
-            serialNumber: null,
-            manufacturingDate: null,
+            batchNumber: receiveItem.batchNumber || orderItem.batchNumber,
             expirationDate: receiveItem.expirationDate
               ? new Date(receiveItem.expirationDate)
-              : null,
-            status: 'ACTIVO',
-            initialQuantity: quantityReceived,
-            currentQuantity: quantityReceived,
-            unitCost: orderItem.unitCost,
-            location: null,
+              : orderItem.expirationDate,
           },
         });
-        batchId = batch.id;
-      }
 
-      // Crear movimiento de stock
-      await this.prisma.stockMovement.create({
-        data: {
+        // Delegar al StockMovementService que maneja consistentemente lotes e inventario
+        await this.stockMovementService.adjustStock(
+          orderItem.productId,
           organizationId,
-          productId: orderItem.productId,
-          type: MovementType.INGRESO,
-          reason: MovementReason.COMPRA,
-          quantity: quantityReceived,
-          isPositive: true,
-          batchId,
-          referenceType: 'PURCHASE_ORDER',
-          referenceId: orderId,
-          notes: `Recepción de orden ${order.orderNumber}`,
-          performedBy: userId,
-        },
-      });
-
-      // Actualizar inventario
-      await this.inventoryService.adjustStock(
-        organizationId,
-        orderItem.productId,
-        quantityReceived,
-        'COMPRA',
-        userId,
-        `Recepción de orden ${order.orderNumber}`,
-        batchId,
-      );
-    }
+          quantityReceived, // Positivo para ingreso
+          MovementReason.COMPRA,
+          userId,
+          {
+            batchNumber: receiveItem.batchNumber || undefined,
+            expirationDate: receiveItem.expirationDate
+              ? new Date(receiveItem.expirationDate)
+              : orderItem.expirationDate,
+            unitCost: orderItem.unitCost,
+            referenceType: 'PURCHASE_ORDER',
+            referenceId: orderId,
+            notes: `Recepción de orden ${order.orderNumber}`,
+          },
+        );
+      }
+    });
 
     // Actualizar estado de la orden
     const updatedOrder = await this.prisma.purchaseOrder.findUnique({

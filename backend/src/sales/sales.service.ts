@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { InventoryService } from '../inventory/inventory.service';
+import { StockMovementService } from '../stock-movements/stock-movements.service';
 import {
   CreateSaleDto,
   UpdateSaleDto,
@@ -15,6 +16,7 @@ export class SalesService {
   constructor(
     private prisma: PrismaService,
     private inventoryService: InventoryService,
+    private stockMovementService: StockMovementService,
   ) {}
 
   async create(organizationId: string, userId: string, dto: CreateSaleDto) {
@@ -181,102 +183,36 @@ export class SalesService {
       throw new BadRequestException('Sale must be confirmed before completing');
     }
 
-    // Procesar cada ítem de la venta
-    for (const saleItem of sale.items) {
-      const quantity = saleItem.quantity;
+    // Usar transacción para asegurar consistencia en todas las operaciones de stock
+    await this.prisma.$transaction(async (tx) => {
+      // Procesar cada ítem de la venta
+      for (const saleItem of sale.items) {
+        const quantity = saleItem.quantity;
 
-      // Determinar qué lote usar (FIFO si no hay batchId específico)
-      let batchId = saleItem.batchId;
-      
-      if (!batchId) {
-        // Buscar el lote más antiguo con stock disponible (FIFO)
-        const oldestBatch = await this.prisma.batch.findFirst({
-          where: {
-            productId: saleItem.productId,
-            organizationId,
-            currentQuantity: { gte: quantity },
-            status: 'ACTIVO',
+        // Delegar al StockMovementService que maneja consistentemente lotes e inventario
+        const result = await this.stockMovementService.adjustStock(
+          saleItem.productId,
+          organizationId,
+          -quantity, // Negativo para salida
+          MovementReason.VENTA,
+          userId,
+          {
+            batchId: saleItem.batchId || null,
+            referenceType: 'SALE',
+            referenceId: id,
+            notes: `Venta ${sale.saleNumber}`,
           },
-          orderBy: { expirationDate: 'asc' },
-        });
+        );
 
-        if (oldestBatch) {
-          batchId = oldestBatch.id;
+        // Actualizar batchId en el ítem de venta si se asignó uno automáticamente
+        if (result.batch && result.batch.id !== saleItem.batchId) {
+          await tx.saleItem.update({
+            where: { id: saleItem.id },
+            data: { batchId: result.batch.id },
+          });
         }
       }
-
-      // Validar que haya stock suficiente
-      if (!batchId) {
-        throw new BadRequestException(
-          `Insufficient stock for product ${saleItem.productId}. Required: ${quantity}`,
-        );
-      }
-
-      // Verificar stock del lote seleccionado
-      const batch = await this.prisma.batch.findUnique({
-        where: { id: batchId },
-      });
-
-      if (!batch || batch.currentQuantity < quantity) {
-        throw new BadRequestException(
-          `Insufficient stock in batch ${batchId}. Available: ${batch?.currentQuantity || 0}, Required: ${quantity}`,
-        );
-      }
-
-      // Decrementar stock del lote
-      await this.prisma.batch.update({
-        where: { id: batchId },
-        data: {
-          currentQuantity: {
-            decrement: quantity,
-          },
-        },
-      });
-
-      // Marcar lote como agotado si llega a cero
-      if (Number(batch.currentQuantity) - Number(quantity) <= 0) {
-        await this.prisma.batch.update({
-          where: { id: batchId },
-          data: { status: 'AGOTADO' },
-        });
-      }
-
-      // Crear movimiento de stock
-      await this.prisma.stockMovement.create({
-        data: {
-          organizationId,
-          productId: saleItem.productId,
-          type: MovementType.SALIDA,
-          reason: MovementReason.VENTA,
-          quantity: quantity,
-          isPositive: false,
-          batchId,
-          referenceType: 'SALE',
-          referenceId: id,
-          notes: `Venta ${sale.saleNumber}`,
-          performedBy: userId,
-        },
-      });
-
-      // Actualizar inventario
-      await this.inventoryService.adjustStock(
-        organizationId,
-        saleItem.productId,
-        Number(quantity) * -1, // Negativo para salida
-        'VENTA',
-        userId,
-        `Venta ${sale.saleNumber}`,
-        batchId,
-      );
-
-      // Actualizar batchId en el ítem de venta
-      if (batchId && batchId !== saleItem.batchId) {
-        await this.prisma.saleItem.update({
-          where: { id: saleItem.id },
-          data: { batchId },
-        });
-      }
-    }
+    });
 
     // Actualizar estado de la venta
     return this.prisma.sale.update({
