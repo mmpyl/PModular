@@ -25,6 +25,9 @@ model User {
   // El rol global ha sido eliminado. 
   // La pertenencia y roles ahora viven en Membership.
   memberships Membership[]
+  
+  // Sesiones de caja activas
+  cashSessions CashRegisterSession[] @relation(name: "UserCashRegisterSessions")
 
   @@map("users")
 }
@@ -57,6 +60,13 @@ model Organization {
   inventoryItems InventoryItem[]
   stockMovements StockMovement[]
   batches        Batch[]
+  
+  // Fase 3: Ventas/POS + Caja
+  customers      Customer[]
+  cashRegisters  CashRegister[]
+  sales          Sale[]
+  saleItems      SaleItem[]
+  payments       Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -165,6 +175,9 @@ model Product {
   stockMovements StockMovement[]
   inventory      InventoryItem[]
   batches        Batch[]
+  
+  // FASE 3: Ventas
+  saleItems      SaleItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -299,6 +312,9 @@ model Batch {
   organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   inventoryItem InventoryItem   @relation(fields: [productId, organizationId], references: [productId, organizationId])
   movements     StockMovement[]
+  
+  // FASE 3: Ventas - trazabilidad de lotes en ventas
+  saleItems     SaleItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -316,4 +332,355 @@ enum BatchStatus {
   RETENIDO // En cuarentena, esperando aprobación de calidad
   VENCIDO
   AGOTADO
+}
+
+// ==========================================
+// FASE 3: Ventas/POS + Caja
+// ==========================================
+
+model Customer {
+  id             String @id @default(uuid())
+  organizationId String
+
+  // Datos básicos
+  name      String
+  email     String?
+  phone     String?
+  document  String? // DNI, RUT, NIT, etc.
+  address   String?
+  city      String?
+  country   String?
+
+  // Datos adicionales dinámicos
+  attributes Json @default("{}")
+
+  isActive Boolean @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sales        Sale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, document])
+  @@index([organizationId])
+  @@index([email])
+  @@map("customers")
+}
+
+model CashRegister {
+  id             String @id @default(uuid())
+  organizationId String
+
+  name        String // Ej: "Caja Principal", "Caja 2"
+  code        String?
+  description String?
+
+  // Estado actual
+  status CashRegisterStatus @default(CERRADA)
+  
+  // Usuario asignado actualmente
+  currentUserId String?
+
+  // Balance
+  openingBalance  Decimal @default(0) @db.Decimal(12, 2) // Saldo inicial
+  closingBalance  Decimal? @db.Decimal(12, 2) // Saldo al cerrar
+  expectedBalance Decimal? @db.Decimal(12, 2) // Saldo esperado según movimientos
+
+  // Fechas de sesión actual
+  openedAt DateTime?
+  closedAt DateTime?
+
+  // Usuario que abrió/cerró
+  openedByUserId String?
+  closedByUserId String?
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade, name: "OrganizationCashRegisters")
+  sessions     CashRegisterSession[]
+  payments     Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([status])
+  @@map("cash_registers")
+}
+
+enum CashRegisterStatus {
+  ABIERTA
+  CERRADA
+  BLOQUEADA
+}
+
+model CashRegisterSession {
+  id             String @id @default(uuid())
+  cashRegisterId String
+  organizationId String
+
+  // Usuario que opera la caja
+  userId String
+
+  // Balance
+  openingBalance Decimal @db.Decimal(12, 2)
+  closingBalance Decimal? @db.Decimal(12, 2)
+  
+  // Movimientos
+  totalSales     Decimal @default(0) @db.Decimal(12, 2)
+  totalIncome    Decimal @default(0) @db.Decimal(12, 2) // Ingresos extra (ej: abonos de clientes)
+  totalExpense   Decimal @default(0) @db.Decimal(12, 2) // Egresos extra (ej: pagos menores, retiros)
+  totalRefunds   Decimal @default(0) @db.Decimal(12, 2) // Devoluciones
+  totalDiscounts Decimal @default(0) @db.Decimal(12, 2) // Descuentos aplicados
+
+  // Estado
+  status CashRegisterSessionStatus @default(ABIERTA)
+
+  // Observaciones
+  openingNote  String?
+  closingNote  String?
+  discrepancyNote String? // Nota si hay diferencia entre esperado y real
+
+  // Fechas
+  openedAt DateTime @default(now())
+  closedAt DateTime?
+
+  cashRegister CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade, name: "OrganizationCashRegisterSessions")
+  user         User          @relation(fields: [userId], references: [id], name: "UserCashRegisterSessions")
+  
+  movements    CashMovement[] @relation(name: "SessionCashMovements")
+  sales        Sale[]
+
+  @@index([cashRegisterId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([status])
+  @@map("cash_register_sessions")
+}
+
+enum CashRegisterSessionStatus {
+  ABIERTA
+  CERRADA
+  CANCELADA
+}
+
+model CashMovement {
+  id             String @id @default(uuid())
+  sessionId      String
+  organizationId String
+
+  type CashMovementType
+
+  amount Decimal @db.Decimal(12, 2)
+  
+  reason String // Descripción del motivo
+  
+  // Referencia opcional
+  referenceType String? // Ej: "EXPENSE_CATEGORY", "INCOME_CATEGORY"
+  referenceId   String?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  session    Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade, name: "SessionCashMovements")
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, name: "OrganizationCashMovements")
+
+  @@index([sessionId])
+  @@index([organizationId])
+  @@index([type])
+  @@map("cash_movements")
+}
+
+enum CashMovementType {
+  INGRESO_EXTRA   // Ingreso no relacionado con venta (ej: abono de cliente)
+  EGRESO          // Gasto menor, retiro, pago
+  APERTURA        // Saldo inicial
+  CIERRE          // Ajuste final
+  RETIRO_PARCIAL  // Retiro parcial de caja (envío a banco)
+}
+
+// Alias para la tabla cash_register_sessions - necesario para que CashMovement pueda relacionarse
+// Prisma requiere que el modelo relacionado tenga la misma @@map que la tabla real
+model Session {
+  id             String @id @default(uuid()) @map("id_session")
+  cashRegisterId String @map("cashRegisterId_session")
+  organizationId String @map("organizationId_session")
+  userId         String @map("userId_session")
+  openingBalance Decimal @db.Decimal(12, 2) @map("openingBalance_session")
+  closingBalance Decimal? @db.Decimal(12, 2) @map("closingBalance_session")
+  totalSales     Decimal @default(0) @db.Decimal(12, 2) @map("totalSales_session")
+  totalIncome    Decimal @default(0) @db.Decimal(12, 2) @map("totalIncome_session")
+  totalExpense   Decimal @default(0) @db.Decimal(12, 2) @map("totalExpense_session")
+  totalRefunds   Decimal @default(0) @db.Decimal(12, 2) @map("totalRefunds_session")
+  totalDiscounts Decimal @default(0) @db.Decimal(12, 2) @map("totalDiscounts_session")
+  status         CashRegisterSessionStatus @default(ABIERTA) @map("status_session")
+  openingNote    String? @map("openingNote_session")
+  closingNote    String? @map("closingNote_session")
+  discrepancyNote String? @map("discrepancyNote_session")
+  openedAt       DateTime @default(now()) @map("openedAt_session")
+  closedAt       DateTime? @map("closedAt_session")
+
+  cashRegister CashRegister       @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade, name: "OrganizationSessions")
+  user         User               @relation(fields: [userId], references: [id], name: "UserSessions")
+  movements    CashMovement[]     @relation(name: "SessionCashMovements")
+  sales        Sale[]
+
+  @@map("sessions")
+}
+
+model Sale {
+  id             String @id @default(uuid())
+  organizationId String
+
+  // Número de comprobante
+  invoiceNumber String? // Número de factura/ticket
+  invoiceSeries String? // Serie de facturación
+
+  // Cliente (opcional para ventas sin cliente registrado)
+  customerId String?
+
+  // Caja/sesión donde se realizó
+  cashRegisterSessionId String
+
+  // Estado de la venta
+  status SaleStatus @default(COMPLETADA)
+
+  // Totales
+  subtotal    Decimal @db.Decimal(12, 2)
+  discount    Decimal @default(0) @db.Decimal(12, 2) // Descuento global
+  tax         Decimal @default(0) @db.Decimal(12, 2) // Impuestos
+  total       Decimal @db.Decimal(12, 2)
+  amountPaid  Decimal @db.Decimal(12, 2) // Total pagado
+  change      Decimal @default(0) @db.Decimal(12, 2) // Vuelto/cambio
+
+  // Tipo de venta
+  saleType SaleType @default(MOSTRADOR)
+
+  // Notas
+  notes String?
+  cancellationReason String? // Motivo de cancelación (si aplica)
+
+  // Fechas
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cancelledAt DateTime?
+
+  // Relaciones
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?           @relation(fields: [customerId], references: [id])
+  session      CashRegisterSession @relation(fields: [cashRegisterSessionId], references: [id])
+  items        SaleItem[]
+  payments     Payment[]
+
+  @@index([organizationId])
+  @@index([customerId])
+  @@index([cashRegisterSessionId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("sales")
+}
+
+enum SaleStatus {
+  COMPLETADA
+  PENDIENTE_PAGO
+  CANCELADA
+  DEVOLUCION_PARCIAL
+  DEVOLUCION_TOTAL
+}
+
+enum SaleType {
+  MOSTRADOR      // Venta en punto de venta
+  DELIVERY       // Delivery
+  PEDIDO         // Pedido para retirar después
+  RESERVA        // Reserva con pago parcial
+}
+
+model SaleItem {
+  id             String @id @default(uuid())
+  saleId         String
+  organizationId String
+
+  // Producto vendido
+  productId String
+  productName String // Copia del nombre al momento de la venta (histórico)
+  
+  // Cantidad y precio
+  quantity Decimal @db.Decimal(15, 4)
+  unitPrice Decimal @db.Decimal(12, 2)
+  discount  Decimal @default(0) @db.Decimal(12, 2) // Descuento por ítem
+  tax       Decimal @default(0) @db.Decimal(12, 2) // Impuesto por ítem
+  subtotal  Decimal @db.Decimal(12, 2)
+  total     Decimal @db.Decimal(12, 2)
+
+  // Lote asignado (para trazabilidad)
+  batchId String?
+
+  // Notas del ítem
+  notes String?
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+  batch Batch? @relation(fields: [batchId], references: [id])
+
+  @@index([saleId])
+  @@index([organizationId])
+  @@index([productId])
+  @@map("sale_items")
+}
+
+model Payment {
+  id             String @id @default(uuid())
+  saleId         String
+  organizationId String
+
+  // Método de pago
+  method PaymentMethod
+
+  // Monto pagado
+  amount Decimal @db.Decimal(12, 2)
+
+  // Referencia externa (ej: último 4 dígitos de tarjeta, código de transferencia)
+  reference String?
+
+  // Estado
+  status PaymentStatus @default(APROBADO)
+
+  // Caja asociada
+  cashRegisterId String?
+
+  // Notas
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cashRegister CashRegister? @relation(fields: [cashRegisterId], references: [id])
+
+  @@index([saleId])
+  @@index([organizationId])
+  @@index([method])
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  TARJETA_CREDITO
+  TARJETA_DEBITO
+  TRANSFERENCIA
+  QR // Pago QR (Yape, Plin, Pix, etc.)
+  CHEQUE
+  CUENTA_CORRIENTE // Crédito directo a cliente
+  OTRO
+}
+
+enum PaymentStatus {
+  APROBADO
+  PENDIENTE
+  RECHAZADO
+  ANULADO
 }
