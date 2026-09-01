@@ -1,27 +1,44 @@
 ```
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
+# Dependencies
+node_modules/
+
+# Build outputs
 dist/
 build/
 target/
 
-# Dependencies
-node_modules/
-venv/
-.venv/
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
 .env
 .env.local
 .env.*
 
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Editors
+# IDE files
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Temporary files
+*.tmp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Prisma
+prisma/migrations/
 ```
