@@ -6,3 +6,11 @@ export type JwtPayload = {
   organizationId?: string;
   orgRole?: OrgRole;
 };
+
+export type CurrentUser = {
+  id: string;
+  email: string;
+  name?: string | null;
+  organizationId?: string;
+  orgRole?: OrgRole;
+};

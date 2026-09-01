@@ -32,15 +32,15 @@ export enum PaymentTerm {
 
 export class PurchaseOrderItemDto {
   @IsString()
-  productId: string;
+  productId!: string;
 
   @IsNumber()
   @Min(0)
-  quantityOrdered: number;
+  quantityOrdered!: number;
 
   @IsNumber()
   @Min(0)
-  unitCost: number;
+  unitCost!: number;
 
   @IsNumber()
   @Min(0)
@@ -67,7 +67,7 @@ export class PurchaseOrderItemDto {
 
 export class CreatePurchaseOrderDto {
   @IsString()
-  supplierId: string;
+  supplierId!: string;
 
   @IsEnum(PurchaseOrderStatus)
   @IsOptional()
@@ -114,7 +114,7 @@ export class CreatePurchaseOrderDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PurchaseOrderItemDto)
-  items: PurchaseOrderItemDto[];
+  items!: PurchaseOrderItemDto[];
 }
 
 export class UpdatePurchaseOrderDto {
@@ -173,7 +173,7 @@ export class ReceivePurchaseOrderDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ReceiveOrderItemDto)
-  items: ReceiveOrderItemDto[];
+  items!: ReceiveOrderItemDto[];
 
   @IsString()
   @IsOptional()
@@ -182,11 +182,11 @@ export class ReceivePurchaseOrderDto {
 
 export class ReceiveOrderItemDto {
   @IsString()
-  itemId: string;
+  itemId!: string;
 
   @IsNumber()
   @Min(0)
-  quantityReceived: number;
+  quantityReceived!: number;
 
   @IsString()
   @IsOptional()

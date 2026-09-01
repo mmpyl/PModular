@@ -38,7 +38,7 @@ export class SalesRepository {
   }
 
   async create(data: CreateSaleDto, userId: string, organizationId: string): Promise<Sale> {
-    const { items, payments, ...saleData } = data;
+    const { items, ...saleData } = data;
 
     // Calcular totales
     let subtotal = 0;
@@ -76,7 +76,7 @@ export class SalesRepository {
         ...saleData,
         organizationId,
         userId,
-        status: 'PENDIENTE',
+        status: 'CONFIRMADA',
         subtotal,
         taxAmount,
         discount,
@@ -84,17 +84,6 @@ export class SalesRepository {
         items: {
           create: saleItems,
         },
-        payments: payments
-          ? {
-              create: payments.map((payment) => ({
-                method: payment.method,
-                amount: payment.amount,
-                reference: payment.reference,
-                notes: payment.notes,
-                organizationId,
-              })),
-            }
-          : undefined,
       },
       include: {
         items: {
@@ -150,11 +139,15 @@ export class SalesRepository {
         status: 'COMPLETADA',
         payments: {
           create: payments.map((payment) => ({
-            method: payment.method,
+            method: payment.method as any,
             amount: payment.amount,
             reference: payment.reference,
             notes: payment.notes,
             organizationId,
+            referenceType: 'SALE',
+            referenceId: id,
+            processedBy: userId,
+            status: 'COMPLETADO' as any,
           })),
         },
       },
@@ -229,8 +222,8 @@ export class SalesRepository {
       where: { id, organizationId },
     });
 
-    if (sale?.status !== 'PENDIENTE') {
-      throw new Error('Solo se pueden eliminar ventas pendientes');
+    if (sale?.status !== 'CONFIRMADA') {
+      throw new Error('Solo se pueden eliminar ventas confirmadas');
     }
 
     return this.prisma.sale.delete({

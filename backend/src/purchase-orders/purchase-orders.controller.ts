@@ -19,7 +19,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { CurrentOrg } from '../auth/decorators/org-roles.decorator';
-import { CurrentUser } from '../auth/jwt-payload.type';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('purchase-orders')
 @UseGuards(JwtAuthGuard, TenantGuard)

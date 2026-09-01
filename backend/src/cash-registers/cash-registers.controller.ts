@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { CashRegistersService } from './cash-registers.service';
 import {
@@ -20,32 +21,53 @@ import {
 } from './dto/create-cash-register.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+interface AuthRequest extends Request {
+  user: {
+    sub: string;
+    email: string;
+    organizationId?: string;
+    orgRole?: string;
+  };
+}
+
 @Controller('cash-registers')
 @UseGuards(JwtAuthGuard)
 export class CashRegistersController {
   constructor(private readonly cashRegistersService: CashRegistersService) {}
 
   @Post()
-  create(@Body() createCashRegisterDto: CreateCashRegisterDto, @Request() req) {
+  create(@Body() createCashRegisterDto: CreateCashRegisterDto, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.create(createCashRegisterDto, organizationId);
   }
 
   @Get()
-  findAll(@Request() req) {
+  findAll(@Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.findAll(organizationId);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
+  findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.findOne(id, organizationId);
   }
 
   @Get(':id/movements')
-  getMovements(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
+  getMovements(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.getMovements(id, organizationId);
   }
 
@@ -53,9 +75,12 @@ export class CashRegistersController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCashRegisterDto: UpdateCashRegisterDto,
-    @Request() req,
+    @Request() req: AuthRequest,
   ) {
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.update(id, updateCashRegisterDto, organizationId);
   }
 
@@ -63,10 +88,13 @@ export class CashRegistersController {
   open(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() openCashRegisterDto: OpenCashRegisterDto,
-    @Request() req,
+    @Request() req: AuthRequest,
   ) {
     const userId = req.user.sub;
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.open(id, openCashRegisterDto, userId, organizationId);
   }
 
@@ -74,10 +102,13 @@ export class CashRegistersController {
   close(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() closeCashRegisterDto: CloseCashRegisterDto,
-    @Request() req,
+    @Request() req: AuthRequest,
   ) {
     const userId = req.user.sub;
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.close(id, closeCashRegisterDto, userId, organizationId);
   }
 
@@ -85,16 +116,22 @@ export class CashRegistersController {
   addMovement(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() createMovementDto: CreateCashRegisterMovementDto,
-    @Request() req,
+    @Request() req: AuthRequest,
   ) {
     const userId = req.user.sub;
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.addMovement(id, createMovementDto, userId, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
     return this.cashRegistersService.remove(id, organizationId);
   }
 }
