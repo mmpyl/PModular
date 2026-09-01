@@ -184,13 +184,16 @@ export class SalesService {
     }
 
     // Usar transacción para asegurar consistencia en todas las operaciones de stock
-    await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       // Procesar cada ítem de la venta
       for (const saleItem of sale.items) {
         const quantity = saleItem.quantity;
 
         // Delegar al StockMovementService que maneja consistentemente lotes e inventario
-        const result = await this.stockMovementService.adjustStock(
+        // Nota: adjustStock usa su propia transacción, pero necesitamos pasar el tx
+        // Para esto, usaremos una versión interna que acepta el transaction client
+        const result = await this.stockMovementService.adjustStockInTransaction(
+          tx,
           saleItem.productId,
           organizationId,
           -quantity, // Negativo para salida
@@ -212,7 +215,6 @@ export class SalesService {
           });
         }
       }
-    });
 
       // Actualizar estado de la venta
       return tx.sale.update({

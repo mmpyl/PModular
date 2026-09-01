@@ -18,7 +18,17 @@ interface CreateStockMovementDto {
 interface StockAdjustmentResult {
   movement: StockMovement;
   inventoryItem: InventoryItem;
-  batch?: Batch;
+  batch: Batch | null;
+}
+
+interface AdjustStockOptions {
+  batchId?: string | null;
+  referenceType?: string;
+  referenceId?: string;
+  notes?: string;
+  unitCost?: number;
+  batchNumber?: string;
+  expirationDate?: Date;
 }
 
 @Injectable()
@@ -36,15 +46,34 @@ export class StockMovementService {
     quantityDelta: number,
     reason: MovementReason,
     performedBy: string,
-    options?: {
-      batchId?: string | null;
-      referenceType?: string;
-      referenceId?: string;
-      notes?: string;
-      unitCost?: number;
-      batchNumber?: string;
-      expirationDate?: Date;
-    },
+    options?: AdjustStockOptions,
+  ): Promise<StockAdjustmentResult> {
+    return this.prisma.$transaction((tx) =>
+      this.adjustStockInTransaction(
+        tx,
+        productId,
+        organizationId,
+        quantityDelta,
+        reason,
+        performedBy,
+        options,
+      ),
+    );
+  }
+
+  /**
+   * Versión interna de adjustStock que opera dentro de una transacción existente.
+   * Permite que servicios externos (ventas, compras) incluyan operaciones de stock
+   * en sus propias transacciones sin crear transacciones anidadas.
+   */
+  async adjustStockInTransaction(
+    tx: any,
+    productId: string,
+    organizationId: string,
+    quantityDelta: number,
+    reason: MovementReason,
+    performedBy: string,
+    options?: AdjustStockOptions,
   ): Promise<StockAdjustmentResult> {
     const isPositive = quantityDelta > 0;
     const quantity = Math.abs(quantityDelta);
@@ -58,9 +87,8 @@ export class StockMovementService {
       expirationDate,
     } = options || {};
 
-    // Usar transacción para asegurar consistencia
-    return this.prisma.$transaction(async (tx) => {
-      // Asegurar que existe el item de inventario
+    // Ejecutar la lógica dentro de la transacción proporcionada
+    // Asegurar que existe el item de inventario
       let inventoryItem = await tx.inventoryItem.upsert({
         where: {
           productId_organizationId: {
@@ -78,13 +106,13 @@ export class StockMovementService {
         },
       });
 
-      let batch: Batch | undefined;
+      let batch: Batch | null = null;
       let finalBatchId = providedBatchId;
 
       // Manejar lote
       if (isPositive && batchNumber) {
         // Para ingresos con número de lote, crear o actualizar lote
-        batch = await tx.batch.upsert({
+        const upsertedBatch = await tx.batch.upsert({
           where: {
             productId_batchNumber_organizationId: {
               productId,
@@ -112,16 +140,19 @@ export class StockMovementService {
             location: null,
           },
         });
+        batch = upsertedBatch;
         finalBatchId = batch.id;
       } else if (finalBatchId) {
         // Para egresos o ingresos con batchId existente
-        batch = await tx.batch.findUnique({
+        const foundBatch = await tx.batch.findUnique({
           where: { id: finalBatchId },
         });
 
-        if (!batch) {
+        if (!foundBatch) {
           throw new NotFoundException(`Batch ${finalBatchId} not found`);
         }
+
+        batch = foundBatch;
 
         if (!isPositive && Number(batch.currentQuantity) < quantity) {
           throw new BadRequestException(
@@ -210,7 +241,6 @@ export class StockMovementService {
         inventoryItem,
         batch,
       };
-    });
   }
 
   async createStockMovement(dto: CreateStockMovementDto): Promise<StockMovement> {
@@ -346,8 +376,14 @@ export class StockMovementService {
   /**
    * Método público para recalcular inventario desde lotes activos.
    * Usado principalmente para operaciones fuera de transacción o para corregir inconsistencias.
+   * @deprecated Use adjustStock() which automatically recalculates inventory after each movement.
    */
   async recalculateInventory(productId: string, organizationId: string): Promise<InventoryItem> {
+    console.warn(
+      `DEPRECATED: StockMovementService.recalculateInventory() called for product ${productId}. ` +
+      'This should not be needed as adjustStock() already recalculates inventory automatically.',
+    );
+    
     // Obtener todos los lotes activos
     const batches = await this.prisma.batch.findMany({
       where: {

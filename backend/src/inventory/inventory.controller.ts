@@ -9,6 +9,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
+import { StockMovementService } from '../stock-movements/stock-movements.service';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -17,7 +18,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('inventory')
 @UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class InventoryController {
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(
+    private readonly inventoryService: InventoryService,
+    private readonly stockMovementService: StockMovementService,
+  ) {}
 
   @Get()
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO', 'VENDEDOR')
@@ -67,10 +71,15 @@ export class InventoryController {
   ) {
     const organizationId = req.organizationId;
     
-    // Asegura que exista el item de inventario
-    await this.inventoryService.ensureInventoryItem(productId, organizationId);
+    // DEPRECATED: This endpoint is kept for backward compatibility.
+    // The inventory should be automatically consistent after using StockMovementService.adjustStock().
+    // Use this only for manual correction of inconsistencies.
+    console.warn(
+      `Manual inventory recalculation triggered for product ${productId}. ` +
+      'This should not be needed if all stock operations use StockMovementService.adjustStock().',
+    );
     
-    return this.inventoryService.recalculateInventory(productId, organizationId);
+    return this.stockMovementService.recalculateInventory(productId, organizationId);
   }
 
   @Get('alerts/low-stock')

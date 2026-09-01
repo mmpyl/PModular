@@ -1,43 +1,55 @@
 ```
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
-dist/
-build/
-target/
-
 # Dependencies
-.venv/
-.env
-.env.local
-*.env.*
+node_modules/
 
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Environment
+# Environment variables
 .env
 .env.local
 .env.*
 
-# Editors
+# IDE and editor settings
 .vscode/
 .idea/
+
+# Logs
+*.log
+
+# Temporary and compiled files
+*.tmp
+*.swp
+*.swo
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py.class
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# System files
+.DS_Store
+Thumbs.db
 
 # Coverage reports
 coverage/
 htmlcov/
 .coverage
 
-# Python specific
-.mypy_cache/
-.pytest_cache/
+# TypeScript
+*.tsbuildinfo
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# Prisma
+node_modules/.prisma/
+
 ```
