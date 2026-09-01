@@ -95,10 +95,10 @@ export class InventoryService {
     dto: UpdateInventoryDto,
   ): Promise<any> {
     const existing = await this.prisma.inventoryItem.findUnique({
-      where: { id },
+      where: { id, organizationId },
     });
 
-    if (!existing || existing.organizationId !== organizationId) {
+    if (!existing) {
       throw new NotFoundException(`Inventory item ${id} not found`);
     }
 

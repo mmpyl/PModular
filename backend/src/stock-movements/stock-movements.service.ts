@@ -65,7 +65,7 @@ export class StockMovementService {
     // Actualizar el lote si se proporcionó
     if (batchId) {
       const batch = await this.prisma.batch.findUnique({
-        where: { id: batchId },
+        where: { id: batchId, organizationId },
       });
 
       if (!batch) {

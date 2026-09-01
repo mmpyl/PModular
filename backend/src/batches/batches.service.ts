@@ -119,7 +119,7 @@ export class BatchesService {
 
   async getBatchById(organizationId: string, id: string): Promise<Batch> {
     const batch = await this.prisma.batch.findUnique({
-      where: { id },
+      where: { id, organizationId },
       include: {
         product: true,
         movements: {
@@ -129,7 +129,7 @@ export class BatchesService {
       },
     });
 
-    if (!batch || batch.organizationId !== organizationId) {
+    if (!batch) {
       throw new NotFoundException(`Batch ${id} not found`);
     }
 
@@ -142,10 +142,10 @@ export class BatchesService {
     dto: UpdateBatchDto,
   ): Promise<Batch> {
     const existing = await this.prisma.batch.findUnique({
-      where: { id },
+      where: { id, organizationId },
     });
 
-    if (!existing || existing.organizationId !== organizationId) {
+    if (!existing) {
       throw new NotFoundException(`Batch ${id} not found`);
     }
 
