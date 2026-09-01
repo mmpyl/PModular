@@ -15,6 +15,7 @@ import { BatchesModule } from './batches/batches.module';
 import { BusinessEntitiesModule } from './business-entities/business-entities.module';
 import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { SalesModule } from './sales/sales.module';
+import { CashRegistersModule } from './cash-registers/cash-registers.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { SalesModule } from './sales/sales.module';
     BusinessEntitiesModule,
     PurchaseOrdersModule,
     SalesModule,
+    CashRegistersModule,
   ],
 })
 export class AppModule {}

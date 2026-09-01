@@ -61,6 +61,8 @@ model Organization {
   purchaseOrders    PurchaseOrder[]
   sales             Sale[]
   payments          Payment[]
+  cashRegisters     CashRegister[]
+  cashRegisterMovements CashRegisterMovement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -443,6 +445,7 @@ model PurchaseOrder {
   organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items          PurchaseOrderItem[]
   stockMovements StockMovement[]
+  payments       Payment[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -545,10 +548,11 @@ model Sale {
   // Usuario que realizó la venta
   soldBy         String
   
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items          SaleItem[]
   stockMovements StockMovement[]
   payments       Payment[]
+  cashRegisterMovements CashRegisterMovement[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -639,8 +643,9 @@ model Payment {
   // Usuario que registró el pago
   processedBy    String
   
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  sale           Sale?      @relation(fields: [referenceId], references: [id])
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sale           Sale?              @relation(fields: [referenceId], references: [id], map: "payments_sale_fkey")
+  purchaseOrder  PurchaseOrder?     @relation(fields: [referenceId], references: [id], map: "payments_purchase_order_fkey")
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -649,4 +654,93 @@ model Payment {
   @@index([referenceType, referenceId])
   @@index([paymentDate])
   @@map("payments")
+}
+
+// ==========================================
+// FASE 3: Ventas/POS + Caja
+// ==========================================
+
+enum CashRegisterStatus {
+  ABIERTA
+  CERRADA
+  EN_PAUSA
+}
+
+enum CashRegisterMovementType {
+  APERTURA
+  CIERRE
+  INGRESO_VENTA
+  RETIRO
+  AJUSTE
+  PAGO_PROVEEDOR
+}
+
+model CashRegister {
+  id             String @id @default(uuid())
+  organizationId String
+  
+  name           String
+  code           String
+  description    String?
+  
+  status         CashRegisterStatus @default(CERRADA)
+  
+  // Usuario actual a cargo
+  currentUserId  String?
+  
+  // Balance
+  openingBalance     Decimal @default(0) @db.Decimal(12, 2)
+  expectedClosingBalance Decimal @default(0) @db.Decimal(12, 2)
+  actualClosingBalance Decimal? @db.Decimal(12, 2)
+  difference         Decimal? @db.Decimal(12, 2)
+  
+  // Fechas
+  openedAt   DateTime?
+  closedAt   DateTime?
+  
+  // Notas de cierre
+  closingNotes String?
+  
+  organization  Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "cash_registers_organization_fkey")
+  movements     CashRegisterMovement[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([status])
+  @@map("cash_registers")
+}
+
+model CashRegisterMovement {
+  id             String @id @default(uuid())
+  organizationId String
+  cashRegisterId String
+  
+  type           CashRegisterMovementType
+  amount         Decimal @db.Decimal(12, 2)
+  isPositive     Boolean // true = ingreso, false = retiro
+  
+  paymentMethod  PaymentMethod? // Método de pago (para ventas)
+  description    String
+  notes          String?
+  
+  // Referencias externas
+  referenceType  String? // "SALE", "PURCHASE_ORDER"
+  referenceId    String?
+  
+  performedBy    String // userId
+  
+  cashRegister   CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "cash_register_movements_organization_fkey")
+  sale           Sale?        @relation(fields: [referenceId], references: [id], map: "cash_register_movements_sale_fkey")
+  
+  createdAt DateTime @default(now())
+  
+  @@index([cashRegisterId])
+  @@index([organizationId])
+  @@index([type])
+  @@index([referenceType, referenceId])
+  @@map("cash_register_movements")
 }
