@@ -8,7 +8,7 @@ import {
   SaleStatus,
   SaleType,
 } from './dto/create-sale.dto';
-import { MovementReason, MovementType, PaymentMethod, PaymentStatus } from '@prisma/client';
+import { MovementReason, MovementType, PaymentMethod, PaymentStatus, SaleStatus as PrismaSaleStatus } from '@prisma/client';
 
 @Injectable()
 export class SalesService {
@@ -158,10 +158,10 @@ export class SalesService {
     if (
       existing &&
       [
-        SaleStatus.COMPLETADA,
-        SaleStatus.CANCELADA,
-        SaleStatus.DEVUELTA_TOTAL,
-      ].includes(existing.status)
+        PrismaSaleStatus.COMPLETADA,
+        PrismaSaleStatus.CANCELADA,
+        PrismaSaleStatus.DEVUELTA_TOTAL,
+      ].includes(existing.status as any)
     ) {
       throw new BadRequestException(
         'Cannot update a completed, cancelled or fully returned sale',
@@ -205,28 +205,40 @@ export class SalesService {
         }
       }
 
-      // Si hay batchId, decrementar su stock
-      if (batchId) {
+      // Validar que haya stock suficiente
+      if (!batchId) {
+        throw new BadRequestException(
+          `Insufficient stock for product ${saleItem.productId}. Required: ${quantity}`,
+        );
+      }
+
+      // Verificar stock del lote seleccionado
+      const batch = await this.prisma.batch.findUnique({
+        where: { id: batchId },
+      });
+
+      if (!batch || batch.currentQuantity < quantity) {
+        throw new BadRequestException(
+          `Insufficient stock in batch ${batchId}. Available: ${batch?.currentQuantity || 0}, Required: ${quantity}`,
+        );
+      }
+
+      // Decrementar stock del lote
+      await this.prisma.batch.update({
+        where: { id: batchId },
+        data: {
+          currentQuantity: {
+            decrement: quantity,
+          },
+        },
+      });
+
+      // Marcar lote como agotado si llega a cero
+      if (Number(batch.currentQuantity) - Number(quantity) <= 0) {
         await this.prisma.batch.update({
           where: { id: batchId },
-          data: {
-            currentQuantity: {
-              decrement: quantity,
-            },
-          },
+          data: { status: 'AGOTADO' },
         });
-
-        // Marcar lote como agotado si llega a cero
-        const batch = await this.prisma.batch.findUnique({
-          where: { id: batchId },
-        });
-
-        if (batch && batch.currentQuantity <= 0) {
-          await this.prisma.batch.update({
-            where: { id: batchId },
-            data: { status: 'AGOTADO' },
-          });
-        }
       }
 
       // Crear movimiento de stock
@@ -292,11 +304,11 @@ export class SalesService {
   ) {
     const sale = await this.findOne(organizationId, saleId);
 
-    if (sale.amountPending <= 0) {
+    if (Number(sale.amountPending) <= 0) {
       throw new BadRequestException('Sale is already fully paid');
     }
 
-    const paymentAmount = Math.min(dto.amount, sale.amountPending);
+    const paymentAmount = Math.min(dto.amount, Number(sale.amountPending));
 
     // Crear pago
     const payment = await this.prisma.payment.create({
@@ -316,8 +328,8 @@ export class SalesService {
     });
 
     // Actualizar montos de la venta
-    const newAmountPaid = sale.amountPaid + paymentAmount;
-    const newAmountPending = sale.amountPending - paymentAmount;
+    const newAmountPaid = Number(sale.amountPaid) + paymentAmount;
+    const newAmountPending = Number(sale.amountPending) - paymentAmount;
 
     const updatedSale = await this.prisma.sale.update({
       where: { id: saleId },
@@ -344,23 +356,23 @@ export class SalesService {
 
     if (
       [
-        SaleStatus.CANCELADA,
-        SaleStatus.DEVUELTA_TOTAL,
-      ].includes(sale.status)
+        PrismaSaleStatus.CANCELADA,
+        PrismaSaleStatus.DEVUELTA_TOTAL,
+      ].includes(sale.status as any)
     ) {
       throw new BadRequestException('Sale is already cancelled or fully returned');
     }
 
     return this.prisma.sale.update({
       where: { id },
-      data: { status: SaleStatus.CANCELADA },
+      data: { status: PrismaSaleStatus.CANCELADA },
     });
   }
 
   async remove(organizationId: string, id: string) {
     const sale = await this.findOne(organizationId, id);
 
-    if (![SaleStatus.BORRADOR].includes(sale.status)) {
+    if (![PrismaSaleStatus.BORRADOR].includes(sale.status as any)) {
       throw new BadRequestException('Can only delete draft sales');
     }
 

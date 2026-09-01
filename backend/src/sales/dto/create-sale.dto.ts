@@ -10,6 +10,7 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { SaleStatus as PrismaSaleStatus } from '@prisma/client';
 
 export enum SaleStatus {
   BORRADOR = 'BORRADOR',
