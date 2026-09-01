@@ -25,4 +25,8 @@ export class UsersService {
   findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findByEmail(email.toLowerCase());
   }
+
+  findById(id: string): Promise<User | null> {
+    return this.usersRepository.findById(id);
+  }
 }

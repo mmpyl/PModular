@@ -37,7 +37,7 @@ export class StockMovementsController {
     },
   ) {
     const organizationId = req.organizationId;
-    const performedBy = req.user?.userId || 'system';
+    const performedBy = req.user?.sub || 'system';
 
     // Mapear el reason string al enum MovementReason
     const validReasons = [
@@ -109,7 +109,7 @@ export class StockMovementsController {
     },
   ) {
     const organizationId = req.organizationId;
-    const performedBy = req.user?.userId || 'system';
+    const performedBy = req.user?.sub || 'system';
 
     return this.stockMovementService.registerInitialStock(
       dto.productId,
