@@ -20,6 +20,9 @@ import {
   CreateCashRegisterMovementDto,
 } from './dto/create-cash-register.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { TenantGuard } from '../auth/guards/tenant.guard';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 
 interface AuthRequest extends Request {
   user: {
@@ -31,11 +34,12 @@ interface AuthRequest extends Request {
 }
 
 @Controller('cash-registers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class CashRegistersController {
   constructor(private readonly cashRegistersService: CashRegistersService) {}
 
   @Post()
+  @OrgRoles('OWNER', 'ADMIN')
   create(@Body() createCashRegisterDto: CreateCashRegisterDto, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
     if (!organizationId) {
@@ -45,6 +49,7 @@ export class CashRegistersController {
   }
 
   @Get()
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   findAll(@Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
     if (!organizationId) {
@@ -54,6 +59,7 @@ export class CashRegistersController {
   }
 
   @Get(':id')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
     if (!organizationId) {
@@ -63,6 +69,7 @@ export class CashRegistersController {
   }
 
   @Get(':id/movements')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   getMovements(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
     if (!organizationId) {
@@ -72,6 +79,7 @@ export class CashRegistersController {
   }
 
   @Patch(':id')
+  @OrgRoles('OWNER', 'ADMIN')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCashRegisterDto: UpdateCashRegisterDto,
@@ -85,6 +93,7 @@ export class CashRegistersController {
   }
 
   @Post(':id/open')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   open(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() openCashRegisterDto: OpenCashRegisterDto,
@@ -99,6 +108,7 @@ export class CashRegistersController {
   }
 
   @Post(':id/close')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   close(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() closeCashRegisterDto: CloseCashRegisterDto,
@@ -113,6 +123,7 @@ export class CashRegistersController {
   }
 
   @Post(':id/movements')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   addMovement(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() createMovementDto: CreateCashRegisterMovementDto,
@@ -127,6 +138,7 @@ export class CashRegistersController {
   }
 
   @Delete(':id')
+  @OrgRoles('OWNER', 'ADMIN')
   remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
     if (!organizationId) {

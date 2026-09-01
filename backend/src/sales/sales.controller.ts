@@ -18,15 +18,18 @@ import {
 } from './dto/create-sale.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/org-roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('sales')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post()
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
   create(
     @Body() dto: CreateSaleDto,
     @CurrentOrg() orgId: string,
@@ -36,6 +39,7 @@ export class SalesController {
   }
 
   @Get()
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO')
   findAll(
     @CurrentOrg() orgId: string,
     @Query('status') status?: SaleStatus,
@@ -45,11 +49,13 @@ export class SalesController {
   }
 
   @Get(':id')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO')
   findOne(@Param('id') id: string, @CurrentOrg() orgId: string) {
     return this.salesService.findOne(orgId, id);
   }
 
   @Patch(':id')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
   update(
     @Param('id') id: string,
     @Body() dto: UpdateSaleDto,
@@ -59,6 +65,7 @@ export class SalesController {
   }
 
   @Post(':id/complete')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
   complete(
     @Param('id') id: string,
     @CurrentOrg() orgId: string,
@@ -68,6 +75,7 @@ export class SalesController {
   }
 
   @Post(':id/payment')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
   processPayment(
     @Param('id') id: string,
     @Body() dto: ProcessPaymentDto,
@@ -78,11 +86,13 @@ export class SalesController {
   }
 
   @Post(':id/cancel')
+  @OrgRoles('OWNER', 'ADMIN')
   cancel(@Param('id') id: string, @CurrentOrg() orgId: string) {
     return this.salesService.cancel(orgId, id);
   }
 
   @Delete(':id')
+  @OrgRoles('OWNER', 'ADMIN')
   remove(@Param('id') id: string, @CurrentOrg() orgId: string) {
     return this.salesService.remove(orgId, id);
   }
