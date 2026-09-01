@@ -214,21 +214,22 @@ export class SalesService {
       }
     });
 
-    // Actualizar estado de la venta
-    return this.prisma.sale.update({
-      where: { id },
-      data: {
-        status: SaleStatus.COMPLETADA,
-      },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
-            batch: true,
+      // Actualizar estado de la venta
+      return tx.sale.update({
+        where: { id },
+        data: {
+          status: SaleStatus.COMPLETADA,
+        },
+        include: {
+          customer: true,
+          items: {
+            include: {
+              product: true,
+              batch: true,
+            },
           },
         },
-      },
+      });
     });
   }
 

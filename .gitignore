@@ -9,8 +9,6 @@ build/
 target/
 
 # Dependencies
-node_modules/
-venv/
 .venv/
 .env
 .env.local
@@ -20,6 +18,11 @@ venv/
 *.log
 *.tmp
 *.swp
+
+# Environment
+.env
+.env.local
+.env.*
 
 # Editors
 .vscode/
