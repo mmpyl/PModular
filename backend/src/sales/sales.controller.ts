@@ -69,11 +69,12 @@ export class SalesController {
   @Post(':id/payment')
   processPayment(
     @Param('id') id: string,
-    @Body() dto: ProcessPaymentDto,
+    @Body() dto: ProcessPaymentDto & { cashRegisterId?: string },
     @CurrentOrg() orgId: string,
     @CurrentUser() user: any,
   ) {
-    return this.salesService.processPayment(orgId, user.sub, id, dto);
+    const { cashRegisterId, ...paymentData } = dto;
+    return this.salesService.processPayment(orgId, user.sub, id, paymentData, cashRegisterId);
   }
 
   @Post(':id/cancel')

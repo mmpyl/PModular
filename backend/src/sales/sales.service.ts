@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { InventoryService } from '../inventory/inventory.service';
+import { CashRegistersService } from '../cash-registers/cash-registers.service';
 import {
   CreateSaleDto,
   UpdateSaleDto,
@@ -8,13 +9,14 @@ import {
   SaleStatus,
   SaleType,
 } from './dto/create-sale.dto';
-import { MovementReason, MovementType, PaymentMethod, PaymentStatus } from '@prisma/client';
+import { MovementReason, MovementType, PaymentMethod, PaymentStatus, CashRegisterMovementType } from '@prisma/client';
 
 @Injectable()
 export class SalesService {
   constructor(
     private prisma: PrismaService,
     private inventoryService: InventoryService,
+    private cashRegistersService: CashRegistersService,
   ) {}
 
   async create(organizationId: string, userId: string, dto: CreateSaleDto) {
@@ -289,6 +291,7 @@ export class SalesService {
     userId: string,
     saleId: string,
     dto: ProcessPaymentDto,
+    cashRegisterId?: string,
   ) {
     const sale = await this.findOne(organizationId, saleId);
 
@@ -335,6 +338,37 @@ export class SalesService {
         payments: true,
       },
     });
+
+    // Si se proporciona caja, registrar movimiento en caja
+    if (cashRegisterId) {
+      const cashRegister = await this.prisma.cashRegister.findUnique({
+        where: { id: cashRegisterId, organizationId },
+      });
+
+      if (!cashRegister) {
+        throw new NotFoundException(`Caja con ID ${cashRegisterId} no encontrada`);
+      }
+
+      if (cashRegister.status !== 'ABIERTA' && cashRegister.status !== 'EN_PAUSA') {
+        throw new BadRequestException('La caja debe estar abierta para registrar pagos');
+      }
+
+      // Registrar movimiento en caja
+      await this.prisma.cashRegisterMovement.create({
+        data: {
+          organizationId,
+          cashRegisterId,
+          type: CashRegisterMovementType.INGRESO_VENTA,
+          amount: paymentAmount,
+          isPositive: true,
+          paymentMethod: dto.method as PaymentMethod,
+          description: `Pago venta ${sale.saleNumber}`,
+          referenceType: 'SALE',
+          referenceId: saleId,
+          performedBy: userId,
+        },
+      });
+    }
 
     return { payment, sale: updatedSale };
   }

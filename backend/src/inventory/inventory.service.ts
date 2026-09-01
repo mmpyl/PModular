@@ -108,6 +108,85 @@ export class InventoryService {
     });
   }
 
+  /**
+   * Ajusta el stock de un producto
+   * @param organizationId - ID de la organización
+   * @param productId - ID del producto
+   * @param quantityChange - Cantidad a ajustar (positivo para ingreso, negativo para salida)
+   * @param reason - Razón del movimiento (enum MovementReason)
+   * @param performedBy - ID del usuario que realiza el ajuste
+   * @param notes - Notas adicionales
+   * @param batchId - ID del lote afectado (opcional)
+   */
+  async adjustStock(
+    organizationId: string,
+    productId: string,
+    quantityChange: number,
+    reason: keyof typeof MovementReason,
+    performedBy: string,
+    notes?: string,
+    batchId?: string | null,
+  ): Promise<InventoryItem> {
+    const isPositive = quantityChange >= 0;
+    const absQuantity = Math.abs(quantityChange);
+
+    // Determinar el tipo de movimiento según la razón
+    let movementType: MovementType;
+    switch (reason) {
+      case 'COMPRA':
+      case 'PRODUCCION':
+      case 'DEVOLUCION_CLIENTE':
+      case 'ENTRADA_INICIAL':
+        movementType = MovementType.INGRESO;
+        break;
+      case 'VENTA':
+      case 'MERMA':
+      case 'ROBO':
+      case 'OBSOLETO':
+      case 'CONSUMO_INTERNO':
+        movementType = MovementType.SALIDA;
+        break;
+      case 'CONTEO_FISICO':
+      case 'ERROR_SISTEMA':
+        movementType = MovementType.AJUSTE;
+        break;
+      default:
+        movementType = isPositive ? MovementType.INGRESO : MovementType.SALIDA;
+    }
+
+    // Crear movimiento de stock
+    await this.prisma.stockMovement.create({
+      data: {
+        organizationId,
+        productId,
+        type: movementType,
+        reason: MovementReason[reason],
+        quantity: absQuantity,
+        isPositive,
+        batchId: batchId || null,
+        notes,
+        performedBy,
+      },
+    });
+
+    // Actualizar inventario
+    const inventoryItem = await this.ensureInventoryItem(productId, organizationId);
+    
+    return this.prisma.inventoryItem.update({
+      where: {
+        productId_organizationId: {
+          productId,
+          organizationId,
+        },
+      },
+      data: {
+        quantity: {
+          increment: quantityChange,
+        },
+      },
+    });
+  }
+
   async recalculateInventory(productId: string, organizationId: string): Promise<InventoryItem> {
     // Recalcula cantidad total y costo promedio basado en lotes activos
     const batches = await this.prisma.batch.findMany({
