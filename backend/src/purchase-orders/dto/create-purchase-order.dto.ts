@@ -11,21 +11,13 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export enum SaleStatus {
+export enum PurchaseOrderStatus {
   BORRADOR = 'BORRADOR',
+  ENVIADA = 'ENVIADA',
   CONFIRMADA = 'CONFIRMADA',
-  EN_PROCESO = 'EN_PROCESO',
+  PARCIALMENTE_RECIBIDA = 'PARCIALMENTE_RECIBIDA',
   COMPLETADA = 'COMPLETADA',
   CANCELADA = 'CANCELADA',
-  DEVUELTA_PARCIAL = 'DEVUELTA_PARCIAL',
-  DEVUELTA_TOTAL = 'DEVUELTA_TOTAL',
-}
-
-export enum SaleType {
-  VENTA_MOSTRADOR = 'VENTA_MOSTRADOR',
-  PEDIDO = 'PEDIDO',
-  RESERVA = 'RESERVA',
-  ENTREGA_DOMICILIO = 'ENTREGA_DOMICILIO',
 }
 
 export enum PaymentTerm {
@@ -38,17 +30,17 @@ export enum PaymentTerm {
   PERSONALIZADO = 'PERSONALIZADO',
 }
 
-export class SaleItemDto {
+export class PurchaseOrderItemDto {
   @IsString()
   productId: string;
 
   @IsNumber()
   @Min(0)
-  quantity: number;
+  quantityOrdered: number;
 
   @IsNumber()
   @Min(0)
-  unitPrice: number;
+  unitCost: number;
 
   @IsNumber()
   @Min(0)
@@ -62,29 +54,28 @@ export class SaleItemDto {
 
   @IsString()
   @IsOptional()
-  batchId?: string;
+  batchNumber?: string;
+
+  @IsDateString()
+  @IsOptional()
+  expirationDate?: string;
 
   @IsString()
   @IsOptional()
   notes?: string;
 }
 
-export class CreateSaleDto {
+export class CreatePurchaseOrderDto {
   @IsString()
-  @IsOptional()
-  customerId?: string;
+  supplierId: string;
 
-  @IsEnum(SaleType)
+  @IsEnum(PurchaseOrderStatus)
   @IsOptional()
-  type?: SaleType;
-
-  @IsEnum(SaleStatus)
-  @IsOptional()
-  status?: SaleStatus;
+  status?: PurchaseOrderStatus;
 
   @IsDateString()
   @IsOptional()
-  deliveryDate?: string;
+  expectedDeliveryDate?: string;
 
   @IsEnum(PaymentTerm)
   @IsOptional()
@@ -115,29 +106,33 @@ export class CreateSaleDto {
   @IsString()
   @IsOptional()
   internalNotes?: string;
+
+  @IsString()
+  @IsOptional()
+  externalReference?: string;
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => SaleItemDto)
-  items: SaleItemDto[];
+  @Type(() => PurchaseOrderItemDto)
+  items: PurchaseOrderItemDto[];
 }
 
-export class UpdateSaleDto {
-  @IsEnum(SaleStatus)
+export class UpdatePurchaseOrderDto {
+  @IsEnum(PurchaseOrderStatus)
   @IsOptional()
-  status?: SaleStatus;
+  status?: PurchaseOrderStatus;
 
   @IsString()
   @IsOptional()
-  customerId?: string;
-
-  @IsEnum(SaleType)
-  @IsOptional()
-  type?: SaleType;
+  supplierId?: string;
 
   @IsDateString()
   @IsOptional()
-  deliveryDate?: string;
+  expectedDeliveryDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  receivedDate?: string;
 
   @IsEnum(PaymentTerm)
   @IsOptional()
@@ -168,29 +163,36 @@ export class UpdateSaleDto {
   @IsString()
   @IsOptional()
   internalNotes?: string;
+
+  @IsString()
+  @IsOptional()
+  externalReference?: string;
 }
 
-export class ProcessPaymentDto {
-  @IsNumber()
-  @Min(0)
-  amount: number;
-
-  @IsString()
-  method: string;
-
-  @IsString()
-  @IsOptional()
-  transactionId?: string;
-
-  @IsString()
-  @IsOptional()
-  bankName?: string;
-
-  @IsString()
-  @IsOptional()
-  cardLastFour?: string;
+export class ReceivePurchaseOrderDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ReceiveOrderItemDto)
+  items: ReceiveOrderItemDto[];
 
   @IsString()
   @IsOptional()
   notes?: string;
+}
+
+export class ReceiveOrderItemDto {
+  @IsString()
+  itemId: string;
+
+  @IsNumber()
+  @Min(0)
+  quantityReceived: number;
+
+  @IsString()
+  @IsOptional()
+  batchNumber?: string;
+
+  @IsDateString()
+  @IsOptional()
+  expirationDate?: string;
 }

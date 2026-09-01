@@ -6,68 +6,83 @@ import {
   Patch,
   Param,
   Delete,
-  ParseUUIDPipe,
+  Query,
   UseGuards,
-  Request,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
-import { CreateSaleDto, UpdateSaleDto, CompleteSaleDto } from './dto/create-sale.dto';
+import {
+  CreateSaleDto,
+  UpdateSaleDto,
+  ProcessPaymentDto,
+  SaleStatus,
+} from './dto/create-sale.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { TenantGuard } from '../auth/guards/tenant.guard';
+import { CurrentOrg } from '../auth/decorators/org-roles.decorator';
 
 @Controller('sales')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantGuard)
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post()
-  create(@Body() createSaleDto: CreateSaleDto, @Request() req) {
-    const userId = req.user.sub;
-    const organizationId = req.user.organizationId;
-    return this.salesService.create(createSaleDto, userId, organizationId);
+  create(
+    @Body() dto: CreateSaleDto,
+    @CurrentOrg() orgId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.salesService.create(orgId, user.sub, dto);
   }
 
   @Get()
-  findAll(@Request() req) {
-    const organizationId = req.user.organizationId;
-    return this.salesService.findAll(organizationId);
+  findAll(
+    @CurrentOrg() orgId: string,
+    @Query('status') status?: SaleStatus,
+    @Query('customerId') customerId?: string,
+  ) {
+    return this.salesService.findAll(orgId, status, customerId);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
-    const organizationId = req.user.organizationId;
-    return this.salesService.findOne(id, organizationId);
+  findOne(@Param('id') id: string, @CurrentOrg() orgId: string) {
+    return this.salesService.findOne(orgId, id);
   }
 
   @Patch(':id')
   update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateSaleDto: UpdateSaleDto,
-    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: UpdateSaleDto,
+    @CurrentOrg() orgId: string,
   ) {
-    const organizationId = req.user.organizationId;
-    return this.salesService.update(id, updateSaleDto, organizationId);
+    return this.salesService.update(orgId, id, dto);
   }
 
   @Post(':id/complete')
   complete(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() completeSaleDto: CompleteSaleDto,
-    @Request() req,
+    @Param('id') id: string,
+    @CurrentOrg() orgId: string,
+    @CurrentUser() user: any,
   ) {
-    const userId = req.user.sub;
-    const organizationId = req.user.organizationId;
-    return this.salesService.complete(id, completeSaleDto, userId, organizationId);
+    return this.salesService.complete(orgId, user.sub, id);
+  }
+
+  @Post(':id/payment')
+  processPayment(
+    @Param('id') id: string,
+    @Body() dto: ProcessPaymentDto,
+    @CurrentOrg() orgId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.salesService.processPayment(orgId, user.sub, id, dto);
   }
 
   @Post(':id/cancel')
-  cancel(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
-    const organizationId = req.user.organizationId;
-    return this.salesService.cancel(id, organizationId);
+  cancel(@Param('id') id: string, @CurrentOrg() orgId: string) {
+    return this.salesService.cancel(orgId, id);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req) {
-    const organizationId = req.user.organizationId;
-    return this.salesService.remove(id, organizationId);
+  remove(@Param('id') id: string, @CurrentOrg() orgId: string) {
+    return this.salesService.remove(orgId, id);
   }
 }
