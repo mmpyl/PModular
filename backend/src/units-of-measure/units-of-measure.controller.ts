@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
 import { UnitsOfMeasureService } from './units-of-measure.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 
 export interface CreateUnitOfMeasureDto {
   name: string;
@@ -17,23 +18,23 @@ export class UnitsOfMeasureController {
   @Post()
   create(
     @Body() createUnitDto: CreateUnitOfMeasureDto,
-    @Query('organizationId') organizationId: string,
+    @CurrentOrg() organizationId: string,
   ) {
     return this.unitsOfMeasureService.create(organizationId, createUnitDto);
   }
 
   @Get()
-  findAll(@Query('organizationId') organizationId: string) {
+  findAll(@CurrentOrg() organizationId: string) {
     return this.unitsOfMeasureService.findAll(organizationId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Query('organizationId') organizationId: string) {
+  findOne(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     return this.unitsOfMeasureService.findOne(organizationId, id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Query('organizationId') organizationId: string) {
+  remove(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     return this.unitsOfMeasureService.remove(organizationId, id);
   }
 }

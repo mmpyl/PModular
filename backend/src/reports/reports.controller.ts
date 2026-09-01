@@ -10,6 +10,7 @@ import { ReportsService } from './reports.service';
 import { DateRangeDto } from './dto/reports.dto';
 import { Request } from 'express';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 
 @Controller('reports')
 @UseGuards(TenantGuard)
@@ -21,10 +22,9 @@ export class ReportsController {
    */
   @Get('sales/summary')
   async getSalesSummary(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getSalesSummary(organizationId, query);
   }
 
@@ -33,10 +33,9 @@ export class ReportsController {
    */
   @Get('sales/by-category')
   async getSalesByCategory(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getSalesByCategory(organizationId, query);
   }
 
@@ -45,11 +44,10 @@ export class ReportsController {
    */
   @Get('sales/top-products')
   async getTopProducts(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
     @Query('limit') limit?: number,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getTopProducts(
       organizationId,
       query,
@@ -61,8 +59,7 @@ export class ReportsController {
    * Resumen de inventario
    */
   @Get('inventory/summary')
-  async getInventorySummary(@Req() req: Request) {
-    const organizationId = req.headers['x-organization-id'] as string;
+  async getInventorySummary(@CurrentOrg() organizationId: string) {
     return this.reportsService.getInventorySummary(organizationId);
   }
 
@@ -70,8 +67,7 @@ export class ReportsController {
    * Inventario por categoría
    */
   @Get('inventory/by-category')
-  async getInventoryByCategory(@Req() req: Request) {
-    const organizationId = req.headers['x-organization-id'] as string;
+  async getInventoryByCategory(@CurrentOrg() organizationId: string) {
     return this.reportsService.getInventoryByCategory(organizationId);
   }
 
@@ -80,10 +76,9 @@ export class ReportsController {
    */
   @Get('stock-movements/summary')
   async getStockMovementSummary(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getStockMovementSummary(organizationId, query);
   }
 
@@ -92,10 +87,9 @@ export class ReportsController {
    */
   @Get('purchases/summary')
   async getPurchaseSummary(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getPurchaseSummary(organizationId, query);
   }
 
@@ -104,10 +98,9 @@ export class ReportsController {
    */
   @Get('purchases/by-supplier')
   async getPurchasesBySupplier(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getPurchasesBySupplier(organizationId, query);
   }
 
@@ -116,10 +109,9 @@ export class ReportsController {
    */
   @Get('cash-register/summary')
   async getCashRegisterSummary(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getCashRegisterSummary(organizationId, query);
   }
 
@@ -127,8 +119,7 @@ export class ReportsController {
    * Métricas principales para dashboard
    */
   @Get('dashboard/metrics')
-  async getDashboardMetrics(@Req() req: Request) {
-    const organizationId = req.headers['x-organization-id'] as string;
+  async getDashboardMetrics(@CurrentOrg() organizationId: string) {
     return this.reportsService.getDashboardMetrics(organizationId);
   }
 
@@ -137,10 +128,9 @@ export class ReportsController {
    */
   @Get('inventory/expiring-batches')
   async getExpiringBatches(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query('daysThreshold') daysThreshold?: number,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getExpiringBatches(
       organizationId,
       daysThreshold ? parseInt(daysThreshold.toString(), 10) : 30,
@@ -152,10 +142,9 @@ export class ReportsController {
    */
   @Get('inventory/low-stock')
   async getLowStockProducts(
-    @Req() req: Request,
+    @CurrentOrg() organizationId: string,
     @Query('threshold') threshold?: number,
   ) {
-    const organizationId = req.headers['x-organization-id'] as string;
     return this.reportsService.getLowStockProducts(
       organizationId,
       threshold ? parseInt(threshold.toString(), 10) : 10,
