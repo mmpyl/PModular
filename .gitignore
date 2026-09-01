@@ -1,46 +1,78 @@
 ```
 # Dependencies
 node_modules/
+.pnpm-store/
+.yarn/
 
 # Build outputs
 dist/
 build/
-target/
+.next/
+.nuxt/
+out/
 
-# Environment variables
+# Runtime data
 .env
 .env.local
-*.env.*
+.env.*
+.prisma/
 
-# IDE files
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Logs
-*.log
-
-# Python cache (if present in project)
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Temporary files
-*.tmp
-
-# Coverage reports
-coverage/
-htmlcov/
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
 .coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
 
-# Database (Prisma related)
-prisma/migrations/
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
 *.db
 *.db-journal
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# Environment specific
+.env.test
+.env.development
+.env.production
+.env.local
+.env.staging
+.env.backup
+
+# Prisma
+prisma/migrations/
+prisma/schema.prisma.bak
+prisma/generated/
 ```

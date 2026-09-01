@@ -640,6 +640,7 @@ model Payment {
   processedBy    String
   
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sale           Sale?      @relation(fields: [referenceId], references: [id])
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
