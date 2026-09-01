@@ -12,9 +12,10 @@ import { InventoryService } from './inventory.service';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('inventory')
-@UseGuards(TenantGuard, OrgRolesGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
