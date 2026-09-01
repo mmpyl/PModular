@@ -50,13 +50,17 @@ model Organization {
   // Configuraciones específicas (moneda, zona horaria, impuestos por defecto, etc.)
   settings Json @default("{}")
 
-  memberships    Membership[]
-  products       Product[]
-  categories     Category[]
-  units          UnitOfMeasure[]
-  inventoryItems InventoryItem[]
-  stockMovements StockMovement[]
-  batches        Batch[]
+  memberships       Membership[]
+  products          Product[]
+  categories        Category[]
+  units             UnitOfMeasure[]
+  inventoryItems    InventoryItem[]
+  stockMovements    StockMovement[]
+  batches           Batch[]
+  businessEntities  BusinessEntity[]
+  purchaseOrders    PurchaseOrder[]
+  sales             Sale[]
+  payments          Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -162,9 +166,11 @@ model Product {
   unit         UnitOfMeasure? @relation(fields: [unitId], references: [id])
 
   // FASE 2: Gestión de Inventario y Stock
-  stockMovements StockMovement[]
-  inventory      InventoryItem[]
-  batches        Batch[]
+  stockMovements    StockMovement[]
+  inventory         InventoryItem[]
+  batches           Batch[]
+  purchaseOrderItems PurchaseOrderItem[]
+  saleItems         SaleItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -260,7 +266,9 @@ model StockMovement {
 
   createdAt DateTime @default(now())
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseOrder   PurchaseOrder? @relation(fields: [referenceId], references: [id], map: "stock_movements_purchase_order_fkey")
+  sale            Sale? @relation(fields: [referenceId], references: [id], map: "stock_movements_sale_fkey")
 
   @@index([organizationId])
   @@index([productId])
@@ -299,6 +307,7 @@ model Batch {
   organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   inventoryItem InventoryItem   @relation(fields: [productId, organizationId], references: [productId, organizationId])
   movements     StockMovement[]
+  saleItems     SaleItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -316,4 +325,327 @@ enum BatchStatus {
   RETENIDO // En cuarentena, esperando aprobación de calidad
   VENCIDO
   AGOTADO
+}
+
+// ==========================================
+// FASE 4: Compras + Proveedores + Clientes
+// ==========================================
+
+enum EntityType {
+  PROVEEDOR
+  CLIENTE
+  AMBOS
+}
+
+model BusinessEntity {
+  id             String @id @default(uuid())
+  organizationId String
+
+  // Tipo de entidad
+  entityType EntityType @default(AMBOS)
+
+  // Datos fiscales básicos
+  name           String  // Razón social o nombre comercial
+  taxId          String? // RUC, NIT, DNI, según país
+  email          String?
+  phone          String?
+  mobile         String?
+  
+  // Dirección
+  address        String?
+  city           String?
+  state          String?
+  postalCode     String?
+  country        String  @default("PE") // Perú por defecto
+  
+  // Contacto principal
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  
+  // Información adicional
+  notes          String?
+  attributes     Json @default("{}") // Atributos dinámicos específicos
+  
+  isActive       Boolean @default(true)
+  
+  // Relaciones
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseOrders PurchaseOrder[]
+  sales          Sale[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([entityType])
+  @@index([taxId])
+  @@map("business_entities")
+}
+
+enum PurchaseOrderStatus {
+  BORRADOR
+  ENVIADA
+  CONFIRMADA
+  PARCIALMENTE_RECIBIDA
+  COMPLETADA
+  CANCELADA
+}
+
+enum PaymentTerm {
+  CONTADO
+  CREDITO_7_DIAS
+  CREDITO_15_DIAS
+  CREDITO_30_DIAS
+  CREDITO_60_DIAS
+  CREDITO_90_DIAS
+  PERSONALIZADO
+}
+
+model PurchaseOrder {
+  id             String @id @default(uuid())
+  organizationId String
+  
+  orderNumber    String // Número de orden generado internamente
+  supplierId     String
+  supplier       BusinessEntity @relation(fields: [supplierId], references: [id])
+  
+  status         PurchaseOrderStatus @default(BORRADOR)
+  
+  // Fechas
+  orderDate      DateTime @default(now())
+  expectedDeliveryDate DateTime?
+  receivedDate   DateTime?
+  
+  // Términos de pago
+  paymentTerm    PaymentTerm @default(CONTADO)
+  paymentDueDate DateTime?
+  
+  // Totales
+  subtotal       Decimal @default(0) @db.Decimal(12, 2)
+  taxRate        Decimal @default(0.18) @db.Decimal(5, 4) // IGV 18% por defecto
+  taxAmount      Decimal @default(0) @db.Decimal(12, 2)
+  discount       Decimal @default(0) @db.Decimal(12, 2)
+  total          Decimal @default(0) @db.Decimal(12, 2)
+  
+  currency       String @default("PEN") // Soles peruanos
+  
+  // Notas
+  notes          String?
+  internalNotes  String?
+  
+  // Referencia externa (orden del proveedor, cotización, etc.)
+  externalReference String?
+  
+  // Usuario que creó la orden
+  createdBy      String
+  
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items          PurchaseOrderItem[]
+  stockMovements StockMovement[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([organizationId, orderNumber])
+  @@index([organizationId])
+  @@index([supplierId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id            String @id @default(uuid())
+  purchaseOrderId String
+  
+  productId     String
+  product       Product @relation(fields: [productId], references: [id])
+  
+  // Cantidad
+  quantityOrdered   Decimal @db.Decimal(15, 4)
+  quantityReceived  Decimal @default(0) @db.Decimal(15, 4)
+  
+  // Precios
+  unitCost      Decimal @db.Decimal(12, 4)
+  discount      Decimal @default(0) @db.Decimal(12, 4)
+  taxRate       Decimal @default(0.18) @db.Decimal(5, 4)
+  
+  // Totales por línea
+  subtotal      Decimal @db.Decimal(12, 2)
+  taxAmount     Decimal @db.Decimal(12, 2)
+  total         Decimal @db.Decimal(12, 2)
+  
+  // Trazabilidad
+  batchNumber   String? // Lote asignado al recibir
+  expirationDate DateTime?
+  
+  notes         String?
+  
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  
+  @@index([purchaseOrderId])
+  @@index([productId])
+  @@map("purchase_order_items")
+}
+
+enum SaleStatus {
+  BORRADOR
+  CONFIRMADA
+  EN_PROCESO
+  COMPLETADA
+  CANCELADA
+  DEVUELTA_PARCIAL
+  DEVUELTA_TOTAL
+}
+
+enum SaleType {
+  VENTA_MOSTRADOR
+  PEDIDO
+  RESERVA
+  ENTREGA_DOMICILIO
+}
+
+model Sale {
+  id             String @id @default(uuid())
+  organizationId String
+  
+  saleNumber     String // Número de venta/factura
+  customerId     String?
+  customer       BusinessEntity? @relation(fields: [customerId], references: [id])
+  
+  type           SaleType @default(VENTA_MOSTRADOR)
+  status         SaleStatus @default(CONFIRMADA)
+  
+  // Fechas
+  saleDate       DateTime @default(now())
+  deliveryDate   DateTime?
+  
+  // Términos de pago
+  paymentTerm    PaymentTerm @default(CONTADO)
+  paymentDueDate DateTime?
+  
+  // Totales
+  subtotal       Decimal @default(0) @db.Decimal(12, 2)
+  taxRate        Decimal @default(0.18) @db.Decimal(5, 4)
+  taxAmount      Decimal @default(0) @db.Decimal(12, 2)
+  discount       Decimal @default(0) @db.Decimal(12, 2)
+  total          Decimal @default(0) @db.Decimal(12, 2)
+  
+  // Pagos recibidos (para control de saldo pendiente)
+  amountPaid     Decimal @default(0) @db.Decimal(12, 2)
+  amountPending  Decimal @default(0) @db.Decimal(12, 2)
+  
+  currency       String @default("PEN")
+  
+  // Notas
+  notes          String?
+  internalNotes  String?
+  
+  // Usuario que realizó la venta
+  soldBy         String
+  
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items          SaleItem[]
+  stockMovements StockMovement[]
+  payments       Payment[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([organizationId, saleNumber])
+  @@index([organizationId])
+  @@index([customerId])
+  @@index([status])
+  @@index([saleDate])
+  @@map("sales")
+}
+
+model SaleItem {
+  id            String @id @default(uuid())
+  saleId        String
+  
+  productId     String
+  product       Product @relation(fields: [productId], references: [id])
+  
+  // Cantidad
+  quantity      Decimal @db.Decimal(15, 4)
+  
+  // Precios
+  unitPrice     Decimal @db.Decimal(12, 4)
+  discount      Decimal @default(0) @db.Decimal(12, 4)
+  taxRate       Decimal @default(0.18) @db.Decimal(5, 4)
+  
+  // Totales por línea
+  subtotal      Decimal @db.Decimal(12, 2)
+  taxAmount     Decimal @db.Decimal(12, 2)
+  total         Decimal @db.Decimal(12, 2)
+  
+  // Trazabilidad (lote usado para esta venta - FIFO)
+  batchId       String?
+  batch         Batch? @relation(fields: [batchId], references: [id])
+  
+  notes         String?
+  
+  sale          Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  
+  @@index([saleId])
+  @@index([productId])
+  @@map("sale_items")
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  TARJETA_CREDITO
+  TARJETA_DEBITO
+  TRANSFERENCIA
+  YAPE_PLIN
+  CHEQUE
+  CREDITO_EMPRESA
+}
+
+enum PaymentStatus {
+  PENDIENTE
+  PAGADO
+  PARCIAL
+  RECHAZADO
+  REEMBOLSADO
+}
+
+model Payment {
+  id             String @id @default(uuid())
+  organizationId String
+  
+  // Referencia al documento (venta o compra)
+  referenceType String // "SALE" o "PURCHASE_ORDER"
+  referenceId   String
+  
+  amount         Decimal @db.Decimal(12, 2)
+  
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDIENTE)
+  
+  // Fecha de pago
+  paymentDate    DateTime @default(now())
+  
+  // Detalles según método
+  cardLastFour   String? // Para tarjetas
+  transactionId  String? // ID de transacción bancaria o pasarela
+  bankName       String?
+  checkNumber    String? // Para cheques
+  
+  notes          String?
+  
+  // Usuario que registró el pago
+  processedBy    String
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([referenceType, referenceId])
+  @@index([paymentDate])
+  @@map("payments")
 }
