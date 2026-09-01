@@ -1,7 +1,7 @@
 import { UnauthorizedException, Injectable, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { User, Membership, OrgRole } from '@prisma/client';
+import { User, Membership, OrgRole, PlatformRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
@@ -14,6 +14,7 @@ type AuthResponse = {
   user: Omit<User, 'password'>;
   organizationId?: string;
   orgRole?: OrgRole;
+  platformRole?: PlatformRole;
 };
 
 type LoginResponse = AuthResponse & {
@@ -91,6 +92,7 @@ export class AuthService {
       email: user.email,
       ...(organizationId && { organizationId }),
       ...(orgRole && { orgRole }),
+      ...(user.platformRole && { platformRole: user.platformRole }),
     };
     const { password, ...safeUser } = user;
 
@@ -101,6 +103,7 @@ export class AuthService {
       user: safeUser,
       ...(organizationId && { organizationId }),
       ...(orgRole && { orgRole }),
+      ...(user.platformRole && { platformRole: user.platformRole }),
     };
   }
 }
