@@ -191,6 +191,11 @@ export class InventoryService {
     });
   }
 
+  /**
+   * @deprecated Use StockMovementService.adjustStock() instead.
+   * This method is kept only for backward compatibility and direct inventory corrections.
+   * For all stock operations (sales, purchases, adjustments), use StockMovementService.
+   */
   async adjustStock(
     organizationId: string,
     productId: string,
@@ -200,6 +205,13 @@ export class InventoryService {
     notes?: string,
     batchId?: string | null,
   ): Promise<InventoryItem> {
+    // DEPRECATED: This bypasses batch tracking and can cause inconsistencies.
+    // Use StockMovementService.adjustStock() instead for proper stock management.
+    console.warn(
+      `DEPRECATED: InventoryService.adjustStock() called for product ${productId}. ` +
+      'Use StockMovementService.adjustStock() instead.',
+    );
+    
     await this.ensureInventoryItem(productId, organizationId);
 
     return this.prisma.inventoryItem.update({

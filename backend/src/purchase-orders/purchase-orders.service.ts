@@ -185,7 +185,7 @@ export class PurchaseOrdersService {
     }
 
     // Usar transacción para asegurar consistencia en todas las operaciones de stock
-    await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       // Procesar cada ítem recibido
       for (const receiveItem of dto.items) {
         const orderItem = order.items.find(
@@ -215,7 +215,9 @@ export class PurchaseOrdersService {
         });
 
         // Delegar al StockMovementService que maneja consistentemente lotes e inventario
-        await this.stockMovementService.adjustStock(
+        // Usamos la versión que acepta transaction client para evitar transacciones anidadas
+        await this.stockMovementService.adjustStockInTransaction(
+          tx,
           orderItem.productId,
           organizationId,
           quantityReceived, // Positivo para ingreso
@@ -233,46 +235,46 @@ export class PurchaseOrdersService {
           },
         );
       }
-    });
 
-    // Actualizar estado de la orden
-    const updatedOrder = await this.prisma.purchaseOrder.findUnique({
-      where: { id: orderId },
-      include: { items: true },
-    });
+      // Actualizar estado de la orden dentro de la misma transacción
+      const updatedOrder = await tx.purchaseOrder.findUnique({
+        where: { id: orderId },
+        include: { items: true },
+      });
 
-    if (!updatedOrder) {
-      throw new NotFoundException(`Purchase order with ID ${orderId} not found`);
-    }
+      if (!updatedOrder) {
+        throw new NotFoundException(`Purchase order with ID ${orderId} not found`);
+      }
 
-    const allItemsReceived = updatedOrder.items.every(
-      (item) => item.quantityReceived >= item.quantityOrdered,
-    );
-    const someItemsReceived = updatedOrder.items.some(
-      (item) => item.quantityReceived > 0,
-    );
+      const allItemsReceived = updatedOrder.items.every(
+        (item) => item.quantityReceived >= item.quantityOrdered,
+      );
+      const someItemsReceived = updatedOrder.items.some(
+        (item) => item.quantityReceived > 0,
+      );
 
-    let newStatus = order.status;
-    if (allItemsReceived) {
-      newStatus = PurchaseOrderStatus.COMPLETADA;
-    } else if (someItemsReceived) {
-      newStatus = PurchaseOrderStatus.PARCIALMENTE_RECIBIDA;
-    }
+      let newStatus = order.status;
+      if (allItemsReceived) {
+        newStatus = PurchaseOrderStatus.COMPLETADA;
+      } else if (someItemsReceived) {
+        newStatus = PurchaseOrderStatus.PARCIALMENTE_RECIBIDA;
+      }
 
-    return this.prisma.purchaseOrder.update({
-      where: { id: orderId },
-      data: {
-        status: newStatus,
-        receivedDate: allItemsReceived ? new Date() : undefined,
-      },
-      include: {
-        supplier: true,
-        items: {
-          include: {
-            product: true,
+      return tx.purchaseOrder.update({
+        where: { id: orderId },
+        data: {
+          status: newStatus,
+          receivedDate: allItemsReceived ? new Date() : undefined,
+        },
+        include: {
+          supplier: true,
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
+      });
     });
   }
 
