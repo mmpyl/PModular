@@ -7,6 +7,9 @@ dist/
 build/
 target/
 
+# Logs
+*.log
+
 # Environment variables
 .env
 .env.local
@@ -17,37 +20,60 @@ target/
 .idea/
 *.swp
 *.swo
-
-# Logs
-*.log
-
-# Temporary files
 *.tmp
 
-# Python cache (if any Python files exist in the project)
+# Python specific
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Coverage reports
-coverage/
-htmlcov/
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
 .coverage
-
-# MyPy cache
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
 .mypy_cache/
-
-# PyTest cache
 .pytest_cache/
+.hypothesis/
 
-# Distribution / packaging
-*.tar.gz
-*.whl
-*.egg
-*.egg-info/
+# Node.js specific
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+dist/
+build/
+.nyc_output
+coverage/
+.nyc_output/
+coverage/
+
+# TypeScript/JavaScript build output
+*.tsbuildinfo
+.next/
+out/
+.nuxt/
+
+# Database
+*.db
+*.db-journal
 
 # OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 ```

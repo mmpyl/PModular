@@ -62,6 +62,7 @@ model Organization {
   sales             Sale[]
   payments          Payment[]
   cashRegisters     CashRegister[]
+  reportCaches      ReportCache[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -724,4 +725,35 @@ model CashRegisterMovement {
   @@index([organizationId])
   @@index([performedBy])
   @@map("cash_register_movements")
+}
+
+// ==========================================
+// FASE 6: Reportes y Dashboards
+// ==========================================
+
+// Modelo para almacenar reportes pre-calculados (opcional, para mejorar performance)
+model ReportCache {
+  id             String @id @default(uuid())
+  organizationId String
+  
+  reportType     String // "VENTAS_DIARIAS", "TOP_PRODUCTOS", "ROTACION_INVENTARIO", etc.
+  period         String // "DAILY", "WEEKLY", "MONTHLY", "YEARLY"
+  
+  // Fecha de referencia del reporte
+  referenceDate  DateTime
+  
+  // Datos del reporte en formato JSON
+  data           Json
+  
+  // Metadatos
+  generatedAt    DateTime @default(now())
+  expiresAt      DateTime? // Null = no expira
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  @@unique([organizationId, reportType, period, referenceDate])
+  @@index([organizationId])
+  @@index([reportType])
+  @@index([referenceDate])
+  @@map("report_caches")
 }
