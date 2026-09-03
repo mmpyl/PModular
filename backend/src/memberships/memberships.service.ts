@@ -112,6 +112,21 @@ export class MembershipsService {
       throw new NotFoundException('Membresía no encontrada');
     }
 
+    // PREVENIR: No permitir eliminar al último OWNER de una organización
+    if (existing.role === 'OWNER') {
+      // Contar cuántos OWNERS hay en esta organización
+      const ownerCount = await this.prisma.membership.count({
+        where: {
+          organizationId,
+          role: 'OWNER',
+        },
+      });
+
+      if (ownerCount <= 1) {
+        throw new Error('No se puede eliminar al último OWNER de la organización. Debe haber al menos un OWNER.');
+      }
+    }
+
     return this.prisma.membership.delete({
       where: {
         userId_organizationId: {

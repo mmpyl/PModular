@@ -13,7 +13,7 @@ import { BusinessEntitiesService } from './business-entities.service';
 import { CreateBusinessEntityDto, UpdateBusinessEntityDto, EntityType } from './dto/create-business-entity.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
-import { CurrentOrg } from '../auth/decorators/org-roles.decorator';
+import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 
 @Controller('business-entities')
 @UseGuards(JwtAuthGuard, TenantGuard)

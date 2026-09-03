@@ -20,7 +20,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
-import { CurrentOrg } from '../auth/decorators/org-roles.decorator';
+import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('sales')
