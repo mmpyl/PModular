@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query } from '@n
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 
 export interface CreateProductDto {
@@ -17,11 +19,12 @@ export interface CreateProductDto {
 }
 
 @Controller('products')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   create(
     @Body() createProductDto: CreateProductDto,
     @CurrentOrg() organizationId: string,
@@ -30,6 +33,7 @@ export class ProductsController {
   }
 
   @Get()
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO', 'VENDEDOR')
   findAll(
     @CurrentOrg() organizationId: string,
     @Query('categoryId') categoryId?: string,
@@ -39,11 +43,13 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO', 'VENDEDOR')
   findOne(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     return this.productsService.findOne(organizationId, id);
   }
 
   @Delete(':id')
+  @OrgRoles('OWNER', 'ADMIN')
   remove(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     return this.productsService.remove(organizationId, id);
   }

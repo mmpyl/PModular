@@ -10,17 +10,21 @@ import { ReportsService } from './reports.service';
 import { DateRangeDto } from './dto/reports.dto';
 import { Request } from 'express';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 
 @Controller('reports')
-@UseGuards(TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   /**
-   * Resumen de ventas
+   * Resumen de ventas - Solo OWNER/ADMIN
    */
   @Get('sales/summary')
+  @OrgRoles('OWNER', 'ADMIN')
   async getSalesSummary(
     @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
@@ -29,9 +33,10 @@ export class ReportsController {
   }
 
   /**
-   * Ventas por categoría
+   * Ventas por categoría - Solo OWNER/ADMIN
    */
   @Get('sales/by-category')
+  @OrgRoles('OWNER', 'ADMIN')
   async getSalesByCategory(
     @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
@@ -40,9 +45,10 @@ export class ReportsController {
   }
 
   /**
-   * Top productos más vendidos
+   * Top productos más vendidos - Solo OWNER/ADMIN
    */
   @Get('sales/top-products')
+  @OrgRoles('OWNER', 'ADMIN')
   async getTopProducts(
     @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
@@ -56,25 +62,28 @@ export class ReportsController {
   }
 
   /**
-   * Resumen de inventario
+   * Resumen de inventario - OWNER/ADMIN/INVENTARIO
    */
   @Get('inventory/summary')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getInventorySummary(@CurrentOrg() organizationId: string) {
     return this.reportsService.getInventorySummary(organizationId);
   }
 
   /**
-   * Inventario por categoría
+   * Inventario por categoría - OWNER/ADMIN/INVENTARIO
    */
   @Get('inventory/by-category')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getInventoryByCategory(@CurrentOrg() organizationId: string) {
     return this.reportsService.getInventoryByCategory(organizationId);
   }
 
   /**
-   * Resumen de movimientos de stock
+   * Resumen de movimientos de stock - OWNER/ADMIN/INVENTARIO
    */
   @Get('stock-movements/summary')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getStockMovementSummary(
     @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
@@ -83,9 +92,10 @@ export class ReportsController {
   }
 
   /**
-   * Resumen de compras
+   * Resumen de compras - OWNER/ADMIN/INVENTARIO
    */
   @Get('purchases/summary')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getPurchaseSummary(
     @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
@@ -94,9 +104,10 @@ export class ReportsController {
   }
 
   /**
-   * Compras por proveedor
+   * Compras por proveedor - OWNER/ADMIN/INVENTARIO
    */
   @Get('purchases/by-supplier')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getPurchasesBySupplier(
     @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
@@ -105,9 +116,10 @@ export class ReportsController {
   }
 
   /**
-   * Resumen de caja
+   * Resumen de caja - OWNER/ADMIN
    */
   @Get('cash-register/summary')
+  @OrgRoles('OWNER', 'ADMIN')
   async getCashRegisterSummary(
     @CurrentOrg() organizationId: string,
     @Query() query: DateRangeDto,
@@ -116,17 +128,19 @@ export class ReportsController {
   }
 
   /**
-   * Métricas principales para dashboard
+   * Métricas principales para dashboard - OWNER/ADMIN/VENDEDOR
    */
   @Get('dashboard/metrics')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
   async getDashboardMetrics(@CurrentOrg() organizationId: string) {
     return this.reportsService.getDashboardMetrics(organizationId);
   }
 
   /**
-   * Lotes próximos a vencer
+   * Lotes próximos a vencer - OWNER/ADMIN/INVENTARIO
    */
   @Get('inventory/expiring-batches')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getExpiringBatches(
     @CurrentOrg() organizationId: string,
     @Query('daysThreshold') daysThreshold?: number,
@@ -138,9 +152,10 @@ export class ReportsController {
   }
 
   /**
-   * Productos con stock bajo
+   * Productos con stock bajo - OWNER/ADMIN/INVENTARIO
    */
   @Get('inventory/low-stock')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getLowStockProducts(
     @CurrentOrg() organizationId: string,
     @Query('threshold') threshold?: number,
