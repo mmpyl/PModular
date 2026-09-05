@@ -19,6 +19,7 @@ describe('AuthService', () => {
     name: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    platformRole: null,
   };
 
   beforeEach(async () => {
