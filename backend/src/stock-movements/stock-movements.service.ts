@@ -211,7 +211,7 @@ export class StockMovementService {
           where: { id: finalBatchId },
           data: {
             currentQuantity: newQuantity,
-            status: newStatus,
+            status: newStatus as BatchStatus,
           },
         });
       }
@@ -449,7 +449,7 @@ export class StockMovementService {
 
     return {
       movement: result.movement,
-      batch: result.batch,
+      batch: result.batch ?? undefined,
     };
   }
 }

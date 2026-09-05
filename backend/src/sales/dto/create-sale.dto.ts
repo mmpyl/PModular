@@ -174,10 +174,10 @@ export class UpdateSaleDto {
 export class ProcessPaymentDto {
   @IsNumber()
   @Min(0)
-  amount: number;
+  amount!: number;
 
   @IsString()
-  method: string;
+  method!: string;
 
   @IsString()
   @IsOptional()

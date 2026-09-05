@@ -162,7 +162,7 @@ export class PurchaseOrdersService {
       [
         PurchaseOrderStatus.COMPLETADA,
         PurchaseOrderStatus.CANCELADA,
-      ].includes(existing.status)
+      ].includes(existing.status as PurchaseOrderStatus)
     ) {
       throw new BadRequestException(
         'Cannot update a completed or cancelled purchase order',
@@ -171,7 +171,7 @@ export class PurchaseOrdersService {
 
     return this.prisma.purchaseOrder.update({
       where: { id },
-      data: dto,
+      data: dto as any,
     });
   }
 
@@ -266,7 +266,7 @@ export class PurchaseOrdersService {
       return tx.purchaseOrder.update({
         where: { id: orderId },
         data: {
-          status: newStatus,
+          status: newStatus as PurchaseOrderStatus,
           receivedDate: allItemsReceived ? new Date() : undefined,
         },
         include: {
@@ -288,7 +288,7 @@ export class PurchaseOrdersService {
       [
         PurchaseOrderStatus.COMPLETADA,
         PurchaseOrderStatus.CANCELADA,
-      ].includes(order.status)
+      ].includes(order.status as PurchaseOrderStatus)
     ) {
       throw new BadRequestException(
         'Cannot cancel a completed or already cancelled order',
@@ -305,7 +305,7 @@ export class PurchaseOrdersService {
     const order = await this.findOne(organizationId, id);
 
     if (
-      ![PurchaseOrderStatus.BORRADOR].includes(order.status)
+      ![PurchaseOrderStatus.BORRADOR].includes(order.status as PurchaseOrderStatus)
     ) {
       throw new BadRequestException(
         'Can only delete draft purchase orders',

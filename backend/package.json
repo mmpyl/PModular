@@ -12,7 +12,8 @@
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "grant:platform-admin": "ts-node scripts/grant-platform-admin.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
