@@ -75,8 +75,8 @@ export class SalesRepository {
       data: {
         ...saleData,
         organizationId,
-        userId,
-        status: 'CONFIRMADA',
+        soldBy: userId,
+        status: 'CONFIRMADA' as SaleStatus,
         subtotal,
         taxAmount,
         discount,

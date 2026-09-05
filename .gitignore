@@ -8,7 +8,7 @@ prisma/migrations/
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
 # Logs
 *.log
