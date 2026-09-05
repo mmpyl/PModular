@@ -6,6 +6,7 @@ const jwt_1 = require("@nestjs/jwt");
 const testing_1 = require("@nestjs/testing");
 const bcrypt = require("bcrypt");
 const users_service_1 = require("../users/users.service");
+const memberships_service_1 = require("../memberships/memberships.service");
 const auth_service_1 = require("./auth.service");
 describe('AuthService', () => {
     let service;
@@ -17,6 +18,7 @@ describe('AuthService', () => {
         email: 'demo@pymen.dev',
         password,
         name: null,
+        platformRole: null,
         createdAt: new Date(),
         updatedAt: new Date(),
     };
@@ -27,6 +29,10 @@ describe('AuthService', () => {
                 {
                     provide: users_service_1.UsersService,
                     useValue: { create: jest.fn(), findByEmail: jest.fn() },
+                },
+                {
+                    provide: memberships_service_1.MembershipsService,
+                    useValue: { findByUser: jest.fn().mockResolvedValue([]) },
                 },
                 {
                     provide: jwt_1.JwtService,

@@ -16,7 +16,7 @@ let OrganizationsService = class OrganizationsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(data) {
+    async create(data, creatorOrganizationId) {
         const businessType = await this.prisma.businessType.findUnique({
             where: { id: data.businessTypeId },
         });
@@ -24,7 +24,7 @@ let OrganizationsService = class OrganizationsService {
             throw new common_1.NotFoundException(`BusinessType con ID ${data.businessTypeId} no encontrado`);
         }
         const enabledModules = data.enabledModules || businessType.defaultModules || [];
-        return this.prisma.organization.create({
+        const organization = await this.prisma.organization.create({
             data: {
                 name: data.name,
                 businessTypeId: data.businessTypeId,
@@ -35,9 +35,13 @@ let OrganizationsService = class OrganizationsService {
                 businessType: true,
             },
         });
+        if (creatorOrganizationId) {
+        }
+        return organization;
     }
-    findAll() {
+    findAll(organizationId) {
         return this.prisma.organization.findMany({
+            where: { id: organizationId },
             include: {
                 businessType: true,
             },

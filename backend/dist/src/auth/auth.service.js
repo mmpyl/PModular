@@ -15,9 +15,11 @@ const config_1 = require("@nestjs/config");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcrypt");
 const users_service_1 = require("../users/users.service");
+const memberships_service_1 = require("../memberships/memberships.service");
 let AuthService = class AuthService {
-    constructor(usersService, jwtService, config) {
+    constructor(usersService, membershipsService, jwtService, config) {
         this.usersService = usersService;
+        this.membershipsService = membershipsService;
         this.jwtService = jwtService;
         this.config = config;
     }
@@ -31,16 +33,52 @@ let AuthService = class AuthService {
         if (!user || !isPasswordValid) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
-        return this.buildAuthResponse(user);
+        const memberships = await this.membershipsService.findByUser(user.id);
+        if (dto.organizationId) {
+            const membership = memberships.find(m => m.organizationId === dto.organizationId);
+            if (!membership) {
+                throw new common_1.ForbiddenException('You do not have access to this organization');
+            }
+            return this.buildAuthResponse(user, membership.organizationId, membership.role);
+        }
+        if (memberships.length === 1) {
+            const membership = memberships[0];
+            return this.buildAuthResponse(user, membership.organizationId, membership.role);
+        }
+        const response = await this.buildAuthResponse(user);
+        return {
+            ...response,
+            memberships,
+        };
     }
-    async buildAuthResponse(user) {
-        const payload = { sub: user.id, email: user.email };
+    async selectOrganization(userId, organizationId) {
+        const membership = await this.membershipsService.findOne(userId, organizationId);
+        if (!membership) {
+            throw new common_1.ForbiddenException('You do not have access to this organization');
+        }
+        const user = await this.usersService.findById(userId);
+        if (!user) {
+            throw new common_1.UnauthorizedException('User not found');
+        }
+        return this.buildAuthResponse(user, membership.organizationId, membership.role);
+    }
+    async buildAuthResponse(user, organizationId, orgRole) {
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            ...(organizationId && { organizationId }),
+            ...(orgRole && { orgRole }),
+            ...(user.platformRole && { platformRole: user.platformRole }),
+        };
         const { password, ...safeUser } = user;
         return {
             accessToken: await this.jwtService.signAsync(payload, {
                 expiresIn: this.config.get('JWT_EXPIRES_IN', '1h'),
             }),
             user: safeUser,
+            ...(organizationId && { organizationId }),
+            ...(orgRole && { orgRole }),
+            ...(user.platformRole && { platformRole: user.platformRole }),
         };
     }
 };
@@ -48,6 +86,7 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [users_service_1.UsersService,
+        memberships_service_1.MembershipsService,
         jwt_1.JwtService,
         config_1.ConfigService])
 ], AuthService);

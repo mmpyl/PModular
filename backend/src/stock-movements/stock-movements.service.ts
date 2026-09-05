@@ -141,7 +141,7 @@ export class StockMovementService {
           },
         });
         batch = upsertedBatch;
-        finalBatchId = batch.id;
+        finalBatchId = upsertedBatch.id;
       } else if (finalBatchId) {
         // Para egresos o ingresos con batchId existente
         const foundBatch = await tx.batch.findUnique({
@@ -154,21 +154,21 @@ export class StockMovementService {
 
         batch = foundBatch;
 
-        if (!isPositive && Number(batch.currentQuantity) < quantity) {
+        if (!isPositive && Number(foundBatch.currentQuantity) < quantity) {
           throw new BadRequestException(
-            `Insufficient stock in batch ${finalBatchId}. Available: ${batch.currentQuantity}, Required: ${quantity}`,
+            `Insufficient stock in batch ${finalBatchId}. Available: ${foundBatch.currentQuantity}, Required: ${quantity}`,
           );
         }
 
         const newQuantity = isPositive
-          ? Number(batch.currentQuantity) + quantity
-          : Number(batch.currentQuantity) - quantity;
+          ? Number(foundBatch.currentQuantity) + quantity
+          : Number(foundBatch.currentQuantity) - quantity;
 
         // Actualizar estado del lote si se agota
-        let newStatus = batch.status;
+        let newStatus = foundBatch.status;
         if (newQuantity <= 0) {
           newStatus = BatchStatus.AGOTADO;
-        } else if (batch.expirationDate && batch.expirationDate < new Date()) {
+        } else if (foundBatch.expirationDate && foundBatch.expirationDate < new Date()) {
           newStatus = BatchStatus.VENCIDO;
         }
 
@@ -201,8 +201,8 @@ export class StockMovementService {
         finalBatchId = oldestBatch.id;
         batch = oldestBatch;
 
-        const newQuantity = Number(batch.currentQuantity) - quantity;
-        let newStatus = batch.status;
+        const newQuantity = Number(oldestBatch.currentQuantity) - quantity;
+        let newStatus = oldestBatch.status;
         if (newQuantity <= 0) {
           newStatus = BatchStatus.AGOTADO;
         }

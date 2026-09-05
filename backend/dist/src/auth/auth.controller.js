@@ -12,23 +12,37 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthController = void 0;
+exports.AuthController = exports.SelectOrganizationDto = void 0;
 const common_1 = require("@nestjs/common");
-const roles_decorator_1 = require("./decorators/roles.decorator");
+const org_roles_decorator_1 = require("./decorators/org-roles.decorator");
 const login_dto_1 = require("./dto/login.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const org_roles_guard_1 = require("./guards/org-roles.guard");
 const auth_service_1 = require("./auth.service");
+const memberships_service_1 = require("../memberships/memberships.service");
 const create_user_dto_1 = require("../users/dto/create-user.dto");
+class SelectOrganizationDto {
+}
+exports.SelectOrganizationDto = SelectOrganizationDto;
 let AuthController = class AuthController {
-    constructor(authService) {
+    constructor(authService, membershipsService) {
         this.authService = authService;
+        this.membershipsService = membershipsService;
     }
     register(dto) {
         return this.authService.register(dto);
     }
     login(dto) {
         return this.authService.login(dto);
+    }
+    selectOrganization(dto, req) {
+        const user = req.user;
+        return this.authService.selectOrganization(user.sub, dto.organizationId);
+    }
+    async getMemberships(req) {
+        const user = req.user;
+        const memberships = await this.membershipsService.findByUser(user.sub);
+        return memberships;
     }
     adminCheck() {
         return { ok: true };
@@ -50,15 +64,33 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
 __decorate([
+    (0, common_1.Post)('select-organization'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [SelectOrganizationDto, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "selectOrganization", null);
+__decorate([
+    (0, common_1.Get)('memberships'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getMemberships", null);
+__decorate([
     (0, common_1.Get)('admin-check'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, org_roles_guard_1.OrgRolesGuard),
-    (0, roles_decorator_1.OrgRoles)('ADMIN', 'OWNER'),
+    (0, org_roles_decorator_1.OrgRoles)('ADMIN', 'OWNER'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "adminCheck", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        memberships_service_1.MembershipsService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

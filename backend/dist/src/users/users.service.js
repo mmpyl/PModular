@@ -32,6 +32,9 @@ let UsersService = class UsersService {
     findByEmail(email) {
         return this.usersRepository.findByEmail(email.toLowerCase());
     }
+    findById(id) {
+        return this.usersRepository.findById(id);
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

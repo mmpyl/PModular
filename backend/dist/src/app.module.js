@@ -18,6 +18,15 @@ const memberships_module_1 = require("./memberships/memberships.module");
 const products_module_1 = require("./products/products.module");
 const categories_module_1 = require("./categories/categories.module");
 const units_of_measure_module_1 = require("./units-of-measure/units-of-measure.module");
+const inventory_module_1 = require("./inventory/inventory.module");
+const stock_movements_module_1 = require("./stock-movements/stock-movements.module");
+const batches_module_1 = require("./batches/batches.module");
+const business_entities_module_1 = require("./business-entities/business-entities.module");
+const purchase_orders_module_1 = require("./purchase-orders/purchase-orders.module");
+const sales_module_1 = require("./sales/sales.module");
+const cash_registers_module_1 = require("./cash-registers/cash-registers.module");
+const reports_module_1 = require("./reports/reports.module");
+const auth_shared_module_1 = require("./auth/auth-shared.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -25,6 +34,7 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
+            auth_shared_module_1.AuthSharedModule,
             prisma_module_1.PrismaModule,
             users_module_1.UsersModule,
             auth_module_1.AuthModule,
@@ -34,6 +44,14 @@ exports.AppModule = AppModule = __decorate([
             products_module_1.ProductsModule,
             categories_module_1.CategoriesModule,
             units_of_measure_module_1.UnitsOfMeasureModule,
+            inventory_module_1.InventoryModule,
+            stock_movements_module_1.StockMovementsModule,
+            batches_module_1.BatchesModule,
+            business_entities_module_1.BusinessEntitiesModule,
+            purchase_orders_module_1.PurchaseOrdersModule,
+            sales_module_1.SalesModule,
+            cash_registers_module_1.CashRegistersModule,
+            reports_module_1.ReportsModule,
         ],
     })
 ], AppModule);

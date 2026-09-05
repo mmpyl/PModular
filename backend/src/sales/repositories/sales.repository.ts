@@ -1,6 +1,6 @@
 import { PrismaService } from '../../prisma.service';
 import { Injectable } from '@nestjs/common';
-import { Sale, SaleItem, Payment } from '@prisma/client';
+import { Sale, SaleItem, Payment, SaleStatus } from '@prisma/client';
 import { CreateSaleDto, UpdateSaleDto } from '../dto/create-sale.dto';
 
 @Injectable()
@@ -74,6 +74,7 @@ export class SalesRepository {
     return this.prisma.sale.create({
       data: {
         ...saleData,
+        saleNumber: `SALE-${Date.now()}`,
         organizationId,
         soldBy: userId,
         status: 'CONFIRMADA' as SaleStatus,

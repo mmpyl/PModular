@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "start": "node dist/main.js",
+    "start": "node dist/src/main.js",
     "start:dev": "nest start --watch",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
@@ -13,6 +13,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "test:user": "ts-node scripts/create-test-user.ts",
     "grant:platform-admin": "ts-node scripts/grant-platform-admin.ts"
   },
   "dependencies": {

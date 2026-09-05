@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { MembershipsService } from '../memberships/memberships.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -20,7 +21,6 @@ describe('AuthService', () => {
     platformRole: null,
     createdAt: new Date(),
     updatedAt: new Date(),
-    platformRole: null,
   };
 
   beforeEach(async () => {
@@ -30,6 +30,10 @@ describe('AuthService', () => {
         {
           provide: UsersService,
           useValue: { create: jest.fn(), findByEmail: jest.fn() },
+        },
+        {
+          provide: MembershipsService,
+          useValue: { findByUser: jest.fn().mockResolvedValue([]) },
         },
         {
           provide: JwtService,

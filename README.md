@@ -1,6 +1,38 @@
-# PymeN Enterprise Full Stack Boilerplate
+# PModular
 
 Base modular para aplicaciones enterprise con NestJS, Next.js App Router, PostgreSQL y Prisma.
+
+## Ejecución local
+
+La ejecución local requiere PostgreSQL activo y una base de datos creada para PModular. Configura estas variables:
+
+- Backend: `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `PORT` y `CORS_ORIGIN`.
+- Frontend: `NEXT_PUBLIC_API_URL`.
+
+Desde PowerShell, en la raíz del proyecto:
+
+```powershell
+Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env.local
+npm ci
+npm run prisma:generate
+npm run prisma:migrate:deploy
+npm run build
+```
+
+Inicia cada aplicación en una terminal independiente:
+
+```powershell
+# Terminal 1
+npm run start:backend
+
+# Terminal 2
+npm run start:frontend
+```
+
+La API queda disponible en `http://localhost:3001` y la aplicación web en `http://localhost:3000`. Para desarrollo con recarga automática usa `npm run dev:backend` y `npm run dev:frontend`. `CORS_ORIGIN` admite varios orígenes separados por coma.
+
+Para actualizar el esquema durante desarrollo, crea una migración con `npm run prisma:migrate -w backend`; para aplicar migraciones existentes usa `npm run prisma:migrate:deploy`.
 
 ## Estructura de carpetas
 

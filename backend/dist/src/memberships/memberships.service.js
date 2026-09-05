@@ -103,6 +103,17 @@ let MembershipsService = class MembershipsService {
         if (!existing) {
             throw new common_1.NotFoundException('Membresía no encontrada');
         }
+        if (existing.role === 'OWNER') {
+            const ownerCount = await this.prisma.membership.count({
+                where: {
+                    organizationId,
+                    role: 'OWNER',
+                },
+            });
+            if (ownerCount <= 1) {
+                throw new Error('No se puede eliminar al último OWNER de la organización. Debe haber al menos un OWNER.');
+            }
+        }
         return this.prisma.membership.delete({
             where: {
                 userId_organizationId: {

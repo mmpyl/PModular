@@ -28,4 +28,4 @@ COPY --from=builder /workspace/backend/dist ./dist
 COPY --from=builder /workspace/node_modules ./node_modules
 
 EXPOSE 3001
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

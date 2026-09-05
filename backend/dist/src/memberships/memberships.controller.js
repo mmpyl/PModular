@@ -16,32 +16,49 @@ exports.MembershipsController = void 0;
 const common_1 = require("@nestjs/common");
 const memberships_service_1 = require("./memberships.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const tenant_guard_1 = require("../auth/guards/tenant.guard");
+const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
+const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
 let MembershipsController = class MembershipsController {
     constructor(membershipsService) {
         this.membershipsService = membershipsService;
     }
-    create(createMembershipDto) {
+    create(createMembershipDto, organizationId) {
+        if (createMembershipDto.organizationId !== organizationId) {
+            throw new Error('No puedes crear membresías para otra organización');
+        }
         return this.membershipsService.create(createMembershipDto);
     }
     findByUser(userId) {
         return this.membershipsService.findByUser(userId);
     }
-    findByOrganization(organizationId) {
+    findByOrganization(organizationId, currentOrgId) {
+        if (organizationId !== currentOrgId) {
+            throw new Error('No tienes acceso a los miembros de esta organización');
+        }
         return this.membershipsService.findByOrganization(organizationId);
     }
-    findOne(userId, organizationId) {
+    findOne(userId, organizationId, currentOrgId) {
+        if (organizationId !== currentOrgId) {
+            throw new Error('No tienes acceso a este miembro');
+        }
         return this.membershipsService.findOne(userId, organizationId);
     }
-    remove(userId, organizationId) {
+    remove(userId, organizationId, currentOrgId) {
+        if (organizationId !== currentOrgId) {
+            throw new Error('No puedes eliminar membresías de otra organización');
+        }
         return this.membershipsService.remove(userId, organizationId);
     }
 };
 exports.MembershipsController = MembershipsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], MembershipsController.prototype, "create", null);
 __decorate([
@@ -54,29 +71,33 @@ __decorate([
 __decorate([
     (0, common_1.Get)('organization/:organizationId'),
     __param(0, (0, common_1.Param)('organizationId')),
+    __param(1, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], MembershipsController.prototype, "findByOrganization", null);
 __decorate([
     (0, common_1.Get)(':userId/:organizationId'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Param)('organizationId')),
+    __param(2, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MembershipsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Delete)(':userId/:organizationId'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Param)('organizationId')),
+    __param(2, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MembershipsController.prototype, "remove", null);
 exports.MembershipsController = MembershipsController = __decorate([
     (0, common_1.Controller)('memberships'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),
     __metadata("design:paramtypes", [memberships_service_1.MembershipsService])
 ], MembershipsController);
 //# sourceMappingURL=memberships.controller.js.map

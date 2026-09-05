@@ -159,10 +159,8 @@ export class PurchaseOrdersService {
 
     if (
       existing &&
-      [
-        PurchaseOrderStatus.COMPLETADA,
-        PurchaseOrderStatus.CANCELADA,
-      ].includes(existing.status as PurchaseOrderStatus)
+      (existing.status === PurchaseOrderStatus.COMPLETADA ||
+        existing.status === PurchaseOrderStatus.CANCELADA)
     ) {
       throw new BadRequestException(
         'Cannot update a completed or cancelled purchase order',
@@ -213,7 +211,7 @@ export class PurchaseOrdersService {
             batchNumber: receiveItem.batchNumber || orderItem.batchNumber,
             expirationDate: receiveItem.expirationDate
               ? new Date(receiveItem.expirationDate)
-              : orderItem.expirationDate,
+              : orderItem.expirationDate ?? undefined,
           },
         });
 
@@ -230,8 +228,8 @@ export class PurchaseOrdersService {
             batchNumber: receiveItem.batchNumber || undefined,
             expirationDate: receiveItem.expirationDate
               ? new Date(receiveItem.expirationDate)
-              : orderItem.expirationDate,
-            unitCost: orderItem.unitCost,
+                : orderItem.expirationDate ?? undefined,
+              unitCost: Number(orderItem.unitCost),
             referenceType: 'PURCHASE_ORDER',
             referenceId: orderId,
             notes: `Recepción de orden ${order.orderNumber}`,
@@ -250,10 +248,10 @@ export class PurchaseOrdersService {
       }
 
       const allItemsReceived = updatedOrder.items.every(
-        (item) => item.quantityReceived >= item.quantityOrdered,
+        (item) => Number(item.quantityReceived) >= Number(item.quantityOrdered),
       );
       const someItemsReceived = updatedOrder.items.some(
-        (item) => item.quantityReceived > 0,
+        (item) => Number(item.quantityReceived) > 0,
       );
 
       let newStatus = order.status;
@@ -285,10 +283,8 @@ export class PurchaseOrdersService {
     const order = await this.findOne(organizationId, id);
 
     if (
-      [
-        PurchaseOrderStatus.COMPLETADA,
-        PurchaseOrderStatus.CANCELADA,
-      ].includes(order.status as PurchaseOrderStatus)
+      order.status === PurchaseOrderStatus.COMPLETADA ||
+      order.status === PurchaseOrderStatus.CANCELADA
     ) {
       throw new BadRequestException(
         'Cannot cancel a completed or already cancelled order',
@@ -304,9 +300,7 @@ export class PurchaseOrdersService {
   async remove(organizationId: string, id: string) {
     const order = await this.findOne(organizationId, id);
 
-    if (
-      ![PurchaseOrderStatus.BORRADOR].includes(order.status as PurchaseOrderStatus)
-    ) {
+    if (order.status !== PurchaseOrderStatus.BORRADOR) {
       throw new BadRequestException(
         'Can only delete draft purchase orders',
       );

@@ -17,10 +17,12 @@ import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { SalesModule } from './sales/sales.module';
 import { CashRegistersModule } from './cash-registers/cash-registers.module';
 import { ReportsModule } from './reports/reports.module';
+import { AuthSharedModule } from './auth/auth-shared.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    AuthSharedModule,
     PrismaModule,
     UsersModule,
     AuthModule,

@@ -18,25 +18,29 @@ let TenantGuard = class TenantGuard {
     }
     async canActivate(context) {
         const request = context.switchToHttp().getRequest();
-        const orgIdFromHeader = request.headers['x-org-id'];
         const authHeader = request.headers.authorization;
         if (!authHeader?.startsWith('Bearer ')) {
-            return true;
+            throw new common_1.UnauthorizedException('Missing or invalid authorization header');
         }
         const token = authHeader.split(' ')[1];
         try {
             const payload = await this.jwtService.verifyAsync(token);
-            if (payload.organizationId) {
-                request.headers['x-org-id'] = payload.organizationId;
-                return true;
+            if (!payload.organizationId) {
+                throw new common_1.ForbiddenException('Organization context required. Please select an organization first.');
             }
-            if (orgIdFromHeader) {
-                request.headers['x-org-id'] = orgIdFromHeader;
-                return true;
+            const orgIdFromHeader = request.headers['x-org-id'];
+            if (orgIdFromHeader && orgIdFromHeader !== payload.organizationId) {
+                throw new common_1.ForbiddenException('X-Org-Id header does not match the organization in your token');
             }
+            request.headers['x-org-id'] = payload.organizationId;
+            request.organizationId = payload.organizationId;
+            request.orgRole = payload.orgRole;
             return true;
         }
         catch (error) {
+            if (error instanceof common_1.UnauthorizedException || error instanceof common_1.ForbiddenException) {
+                throw error;
+            }
             throw new common_1.UnauthorizedException('Invalid token');
         }
     }
