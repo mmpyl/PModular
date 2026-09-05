@@ -17,6 +17,7 @@ describe('AuthService', () => {
     email: 'demo@pymen.dev',
     password,
     name: null,
+    platformRole: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
