@@ -1,16 +1,8 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-<<<<<<< HEAD
-
-export function RequireRole({ roles, children, fallback }: { roles: string[]; children: ReactNode; fallback?: ReactNode }) {
-  const { orgRole } = useAuth();
-  if (!orgRole || !roles.includes(orgRole)) return <>{fallback ?? null}</>;
-  return <>{children}</>;
-}
-=======
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RequireRoleProps {
   children: ReactNode;
@@ -56,4 +48,3 @@ export function RequireRole({
 }
 
 export default RequireRole;
->>>>>>> 8f7b97ccc2e38d7b74af818d2a0a76d13f3dfb52
