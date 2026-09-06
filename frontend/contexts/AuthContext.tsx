@@ -1,11 +1,20 @@
 'use client';
 
+<<<<<<< HEAD
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { apiFetch, ApiError, AuthResponse, AuthUser, Membership } from '@/lib/api';
 
 type Credentials = { email: string; password: string };
 type RegisterPayload = Credentials & { name?: string };
 export type BusinessType = { id: string; code: string; name: string; description?: string | null; defaultModules: unknown; productSchema: Record<string, unknown> };
+=======
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { apiFetch, AuthResponse, Membership, ApiError } from '@/lib/api';
+
+type Credentials = { email: string; password: string };
+type RegisterPayload = Credentials & { name?: string };
+>>>>>>> 8f7b97ccc2e38d7b74af818d2a0a76d13f3dfb52
 
 type AuthContextValue = {
   token: string | null;
@@ -17,24 +26,47 @@ type AuthContextValue = {
   enabledModules: string[];
   isHydrated: boolean;
   isAuthenticated: boolean;
+  organizationId: string | null;
+  orgRole: string | null;
+  platformRole: string | null;
+  memberships: Membership[];
   login: (credentials: Credentials) => Promise<void>;
   selectOrganization: (organizationId: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   createOrganization: (payload: { name: string; businessTypeId: string }) => Promise<void>;
   logout: () => void;
+  selectOrganization: (organizationId: string) => Promise<void>;
+  hasOrgRole: (roles: string[]) => boolean;
+};
+
+type AuthUser = {
+  id: string;
+  email: string;
+  name?: string | null;
+  platformRole?: string;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const STORAGE_KEY = 'pymen.auth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
+<<<<<<< HEAD
   const [session, setSession] = useState<AuthResponse | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+=======
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [orgRole, setOrgRole] = useState<string | null>(null);
+  const [platformRole, setPlatformRole] = useState<string | null>(null);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+>>>>>>> 8f7b97ccc2e38d7b74af818d2a0a76d13f3dfb52
 
+  // Cargar sesión almacenada al iniciar
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
+<<<<<<< HEAD
     try {
       if (stored) {
         const parsed = JSON.parse(stored) as AuthResponse;
@@ -66,8 +98,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(session.accessToken);
     setUser(session.user);
     setSession(session);
+=======
+    if (stored) {
+      try {
+        const session = JSON.parse(stored) as AuthResponse;
+        setToken(session.accessToken);
+        setUser(session.user);
+        setOrganizationId(session.organizationId ?? null);
+        setOrgRole(session.orgRole ?? null);
+        setPlatformRole(session.platformRole ?? null);
+        setMemberships(session.memberships ?? []);
+      } catch {
+        // Sesión inválida, limpiar
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, []);
+
+  const persistSession = useCallback((session: AuthResponse) => {
+    setToken(session.accessToken);
+    setUser(session.user);
+    setOrganizationId(session.organizationId ?? null);
+    setOrgRole(session.orgRole ?? null);
+    setPlatformRole(session.platformRole ?? null);
+    setMemberships(session.memberships ?? []);
+>>>>>>> 8f7b97ccc2e38d7b74af818d2a0a76d13f3dfb52
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-  };
+  }, []);
+
+  const clearSession = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    setOrganizationId(null);
+    setOrgRole(null);
+    setPlatformRole(null);
+    setMemberships([]);
+    window.localStorage.removeItem(STORAGE_KEY);
+  }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
     token,
@@ -85,12 +152,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })(),
     isHydrated,
     isAuthenticated: Boolean(token),
+    organizationId,
+    orgRole,
+    platformRole,
+    memberships,
     login: async (credentials) => {
       const session = await apiFetch<AuthResponse>('/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
       persistSession(session);
+      
+      // Si el login devuelve múltiples membresías, redirigir a selector
+      if (session.memberships && session.memberships.length > 1 && !session.organizationId) {
+        router.push('/select-organization');
+      }
     },
     selectOrganization: async (organizationId) => {
       if (!token) throw new ApiError('La sesion ha expirado', 401);
@@ -108,6 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       persistSession(session);
     },
+<<<<<<< HEAD
     createOrganization: async (payload) => {
       if (!token) throw new ApiError('La sesion ha expirado', 401);
       const organization = await apiFetch<{ id: string }>('/organizations', {
@@ -125,6 +202,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.localStorage.removeItem(STORAGE_KEY);
     },
   }), [isHydrated, session, token, user]);
+=======
+    logout: clearSession,
+    selectOrganization: async (orgId: string) => {
+      const session = await apiFetch<AuthResponse>('/auth/select-organization', {
+        method: 'POST',
+        token: token!,
+        body: JSON.stringify({ organizationId: orgId }),
+      });
+      persistSession(session);
+    },
+    hasOrgRole: (roles: string[]) => {
+      if (!orgRole) return false;
+      return roles.includes(orgRole);
+    },
+  }), [token, user, organizationId, orgRole, platformRole, memberships, persistSession, clearSession, router]);
+>>>>>>> 8f7b97ccc2e38d7b74af818d2a0a76d13f3dfb52
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
