@@ -58,7 +58,10 @@ export class AuthService {
     // Si el usuario tiene exactamente una membresía, usarla automáticamente
     if (memberships.length === 1) {
       const membership = memberships[0];
-      return this.buildAuthResponse(user, membership.organizationId, membership.role);
+      return {
+        ...(await this.buildAuthResponse(user, membership.organizationId, membership.role)),
+        memberships,
+      };
     }
 
     // Si tiene múltiples membresías o ninguna, devolver token sin org + lista de membresías

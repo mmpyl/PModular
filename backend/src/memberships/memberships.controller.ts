@@ -14,7 +14,7 @@ export interface CreateMembershipDto {
 }
 
 @Controller('memberships')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class MembershipsController {
   constructor(private readonly membershipsService: MembershipsService) {}
 
@@ -42,7 +42,7 @@ export class MembershipsController {
     return this.membershipsService.findByOrganization(organizationId);
   }
 
-  @Get(':userId/:organizationId')
+  @Get('member/:userId/:organizationId')
   findOne(@Param('userId') userId: string, @Param('organizationId') organizationId: string, @CurrentOrg() currentOrgId: string) {
     // Validar que solo se pueda ver miembros de tu propia organización
     if (organizationId !== currentOrgId) {

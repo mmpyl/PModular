@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const memberships_service_1 = require("./memberships.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const tenant_guard_1 = require("../auth/guards/tenant.guard");
+const org_roles_guard_1 = require("../auth/guards/org-roles.guard");
 const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
 let MembershipsController = class MembershipsController {
@@ -77,7 +78,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MembershipsController.prototype, "findByOrganization", null);
 __decorate([
-    (0, common_1.Get)(':userId/:organizationId'),
+    (0, common_1.Get)('member/:userId/:organizationId'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Param)('organizationId')),
     __param(2, (0, current_org_decorator_1.CurrentOrg)()),
@@ -97,7 +98,7 @@ __decorate([
 ], MembershipsController.prototype, "remove", null);
 exports.MembershipsController = MembershipsController = __decorate([
     (0, common_1.Controller)('memberships'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     __metadata("design:paramtypes", [memberships_service_1.MembershipsService])
 ], MembershipsController);
 //# sourceMappingURL=memberships.controller.js.map

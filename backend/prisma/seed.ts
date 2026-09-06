@@ -13,7 +13,7 @@ async function main() {
       code: 'BODEGA',
       name: 'Bodega / Tienda de Barrio',
       description: 'Tienda de productos básicos y abarrotes',
-      defaultModules: ['inventario', 'ventas', 'caja'],
+      defaultModules: ['inventario', 'ventas', 'compras', 'caja'],
       productSchema: {
         requiereReceta: { type: 'boolean', default: false },
         numeroLote: { type: 'string', default: null },

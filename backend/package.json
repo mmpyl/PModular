@@ -14,6 +14,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "test:user": "ts-node scripts/create-test-user.ts",
+    "test:admin": "ts-node scripts/create-test-admin.ts",
     "grant:platform-admin": "ts-node scripts/grant-platform-admin.ts"
   },
   "dependencies": {

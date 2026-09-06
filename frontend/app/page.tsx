@@ -2,10 +2,11 @@ import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <main>
-      <h1>PymeN Boilerplate</h1>
-      <p>Base enterprise modular con NestJS, Next.js, PostgreSQL JSONB y Prisma.</p>
-      <Link href="/dashboard">Ir al dashboard protegido</Link>
+    <main className="auth-page">
+      <span className="eyebrow">PModular · operación empresarial</span>
+      <h1>Tu negocio, en orden.</h1>
+      <p>Administra catálogo, inventario y ventas desde un único espacio de trabajo.</p>
+      <Link className="primary-link" href="/login">Entrar al sistema</Link>
     </main>
   );
 }

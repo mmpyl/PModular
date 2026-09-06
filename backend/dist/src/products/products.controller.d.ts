@@ -30,15 +30,15 @@ export declare class ProductsController {
     } & {
         id: string;
         name: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        organizationId: string;
         sku: string | null;
+        description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         categoryId: string | null;
         unitId: string | null;
     }>;
@@ -59,15 +59,15 @@ export declare class ProductsController {
     } & {
         id: string;
         name: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        organizationId: string;
         sku: string | null;
+        description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         categoryId: string | null;
         unitId: string | null;
     })[]>;
@@ -88,30 +88,45 @@ export declare class ProductsController {
     } & {
         id: string;
         name: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        organizationId: string;
         sku: string | null;
+        description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         categoryId: string | null;
         unitId: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
-    remove(id: string, organizationId: string): Promise<{
+    update(id: string, updateProductDto: Partial<CreateProductDto>, organizationId: string): Promise<{
         id: string;
         name: string;
-        description: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        organizationId: string;
         sku: string | null;
+        description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
+        categoryId: string | null;
+        unitId: string | null;
+    }>;
+    remove(id: string, organizationId: string): Promise<{
+        id: string;
+        name: string;
+        sku: string | null;
+        description: string | null;
+        price: import("@prisma/client/runtime/library").Decimal;
+        cost: import("@prisma/client/runtime/library").Decimal | null;
+        attributes: import("@prisma/client/runtime/library").JsonValue;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         categoryId: string | null;
         unitId: string | null;
     }>;

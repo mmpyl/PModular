@@ -8,7 +8,7 @@ export interface CreateOrganizationDto {
 export declare class OrganizationsService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    create(data: CreateOrganizationDto, creatorOrganizationId?: string): Promise<{
+    create(data: CreateOrganizationDto, creatorUserId: string): Promise<{
         businessType: {
             id: string;
             code: string;

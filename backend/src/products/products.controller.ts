@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -46,6 +46,16 @@ export class ProductsController {
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO', 'VENDEDOR')
   findOne(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     return this.productsService.findOne(organizationId, id);
+  }
+
+  @Patch(':id')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
+  update(
+    @Param('id') id: string,
+    @Body() updateProductDto: Partial<CreateProductDto>,
+    @CurrentOrg() organizationId: string,
+  ) {
+    return this.productsService.update(organizationId, id, updateProductDto);
   }
 
   @Delete(':id')

@@ -33,6 +33,9 @@ let ProductsController = class ProductsController {
     findOne(id, organizationId) {
         return this.productsService.findOne(organizationId, id);
     }
+    update(id, updateProductDto, organizationId) {
+        return this.productsService.update(organizationId, id, updateProductDto);
+    }
     remove(id, organizationId) {
         return this.productsService.remove(organizationId, id);
     }
@@ -66,6 +69,16 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'INVENTARIO'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_org_decorator_1.CurrentOrg)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, String]),
+    __metadata("design:returntype", void 0)
+], ProductsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),

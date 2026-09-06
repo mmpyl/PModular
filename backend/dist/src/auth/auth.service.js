@@ -43,7 +43,10 @@ let AuthService = class AuthService {
         }
         if (memberships.length === 1) {
             const membership = memberships[0];
-            return this.buildAuthResponse(user, membership.organizationId, membership.role);
+            return {
+                ...(await this.buildAuthResponse(user, membership.organizationId, membership.role)),
+                memberships,
+            };
         }
         const response = await this.buildAuthResponse(user);
         return {

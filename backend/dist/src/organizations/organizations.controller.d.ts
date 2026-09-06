@@ -8,7 +8,9 @@ export interface CreateOrganizationDto {
 export declare class OrganizationsController {
     private readonly organizationsService;
     constructor(organizationsService: OrganizationsService);
-    create(createOrgDto: CreateOrganizationDto, organizationId: string): Promise<{
+    create(createOrgDto: CreateOrganizationDto, user: {
+        sub: string;
+    }): Promise<{
         businessType: {
             id: string;
             code: string;
@@ -68,6 +70,15 @@ export declare class OrganizationsController {
         settings: import("@prisma/client/runtime/library").JsonValue;
         businessTypeId: string;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
+    update(id: string, updateOrgDto: Partial<CreateOrganizationDto>, organizationId: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        enabledModules: import("@prisma/client/runtime/library").JsonValue;
+        settings: import("@prisma/client/runtime/library").JsonValue;
+        businessTypeId: string;
+    }>;
     remove(id: string, organizationId: string): Promise<{
         id: string;
         name: string;

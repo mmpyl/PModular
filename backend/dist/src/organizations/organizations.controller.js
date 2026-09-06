@@ -17,14 +17,16 @@ const common_1 = require("@nestjs/common");
 const organizations_service_1 = require("./organizations.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const tenant_guard_1 = require("../auth/guards/tenant.guard");
+const org_roles_guard_1 = require("../auth/guards/org-roles.guard");
 const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 let OrganizationsController = class OrganizationsController {
     constructor(organizationsService) {
         this.organizationsService = organizationsService;
     }
-    create(createOrgDto, organizationId) {
-        return this.organizationsService.create(createOrgDto, organizationId);
+    create(createOrgDto, user) {
+        return this.organizationsService.create(createOrgDto, user.sub);
     }
     findAll(organizationId) {
         return this.organizationsService.findAll(organizationId);
@@ -34,6 +36,12 @@ let OrganizationsController = class OrganizationsController {
             throw new Error('No tienes acceso a esta organización');
         }
         return this.organizationsService.findOne(id);
+    }
+    update(id, updateOrgDto, organizationId) {
+        if (id !== organizationId) {
+            throw new Error('No puedes editar otra organización');
+        }
+        return this.organizationsService.update(id, updateOrgDto);
     }
     remove(id, organizationId) {
         if (id !== organizationId) {
@@ -45,14 +53,16 @@ let OrganizationsController = class OrganizationsController {
 exports.OrganizationsController = OrganizationsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], OrganizationsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard),
     __param(0, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -60,6 +70,7 @@ __decorate([
 ], OrganizationsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
@@ -67,7 +78,19 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrganizationsController.prototype, "findOne", null);
 __decorate([
+    (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_org_decorator_1.CurrentOrg)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, String]),
+    __metadata("design:returntype", void 0)
+], OrganizationsController.prototype, "update", null);
+__decorate([
     (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     (0, org_roles_decorator_1.OrgRoles)('OWNER'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, current_org_decorator_1.CurrentOrg)()),
@@ -77,7 +100,7 @@ __decorate([
 ], OrganizationsController.prototype, "remove", null);
 exports.OrganizationsController = OrganizationsController = __decorate([
     (0, common_1.Controller)('organizations'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [organizations_service_1.OrganizationsService])
 ], OrganizationsController);
 //# sourceMappingURL=organizations.controller.js.map

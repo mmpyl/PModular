@@ -180,53 +180,48 @@ export class ReportsService {
   ): Promise<TopProductDto[]> {
     const { startDate, endDate } = this.getDateRange(dto);
 
-    const result = await this.prisma.saleItem.groupBy({
-      by: ['productId'],
+    const items = await this.prisma.saleItem.findMany({
       where: {
         sale: {
           organizationId,
-          saleDate: {
-            gte: startDate,
-            lte: endDate,
-          },
-          status: {
-            in: ['CONFIRMADA', 'COMPLETADA', 'EN_PROCESO'],
-          },
+          saleDate: { gte: startDate, lte: endDate },
+          status: { in: ['CONFIRMADA', 'COMPLETADA', 'EN_PROCESO'] },
         },
       },
-      _sum: {
+      select: {
+        productId: true,
         quantity: true,
         total: true,
-      },
-      orderBy: {
-        _sum: {
-          quantity: 'desc',
-        },
-      },
-      take: limit,
-    });
-
-    const productIds = result.map((r) => r.productId);
-    const products = await this.prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: {
-        id: true,
-        name: true,
-        sku: true,
+        product: { select: { name: true, sku: true } },
       },
     });
 
-    return result.map((item, index) => {
-      const product = products.find((p) => p.id === item.productId)!;
+    const totals = new Map<string, { name: string; sku: string | null; quantity: number; revenue: number }>();
+    for (const item of items) {
+      const current = totals.get(item.productId) ?? {
+        name: item.product.name,
+        sku: item.product.sku,
+        quantity: 0,
+        revenue: 0,
+      };
+      current.quantity += Number(item.quantity);
+      current.revenue += Number(item.total);
+      totals.set(item.productId, current);
+    }
+
+    return [...totals.entries()]
+      .sort(([, first], [, second]) => second.quantity - first.quantity)
+      .slice(0, limit)
+      .map(([productId, item], index) => {
       return {
-        productId: item.productId,
-        productName: product.name,
-        sku: product.sku,
-        totalQuantity: Number(item._sum.quantity || 0),
-        totalRevenue: Number(item._sum.total || 0),
+        productId,
+        productName: item.name,
+        sku: item.sku,
+        totalQuantity: item.quantity,
+        totalRevenue: item.revenue,
         rank: index + 1,
       };
-    });
+      });
   }
 
   /**
