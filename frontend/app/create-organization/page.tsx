@@ -75,67 +75,53 @@ export default function CreateOrganizationPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Crear Organización
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Registra tu empresa para comenzar a usar PymeN
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
-          
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+    <main className="auth-page">
+      {!isAuthenticated ? (
+        <p className="loading-message">Cargando...</p>
+      ) : (
+        <>
+          <span className="eyebrow">Crear organización</span>
+          <h1>Registra tu empresa</h1>
+          <p>Completa los datos para comenzar a usar PymeN.</p>
+          <form onSubmit={handleSubmit}>
+            {error && <p className="error-message">{error}</p>}
+            
+            <label>
               Nombre de la organización
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Mi Empresa S.A."
+              />
             </label>
-            <input
-              id="name"
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="Mi Empresa S.A."
-            />
-          </div>
 
-          <div>
-            <label htmlFor="businessType" className="block text-sm font-medium text-gray-700">
+            <label>
               Tipo de negocio
+              <select
+                required
+                value={businessTypeId}
+                onChange={(e) => setBusinessTypeId(e.target.value)}
+              >
+                <option value="">Selecciona un tipo de negocio</option>
+                {businessTypes.map((bt) => (
+                  <option key={bt.id} value={bt.id}>
+                    {bt.name}
+                  </option>
+                ))}
+              </select>
             </label>
-            <select
-              id="businessType"
-              required
-              value={businessTypeId}
-              onChange={(e) => setBusinessTypeId(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            >
-              <option value="">Selecciona un tipo de negocio</option>
-              {businessTypes.map((bt) => (
-                <option key={bt.id} value={bt.id}>
-                  {bt.name}
-                </option>
-              ))}
-            </select>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading || !name || !businessTypeId}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Creando...' : 'Crear organización'}
-          </button>
-        </form>
-      </div>
+            <button
+              type="submit"
+              disabled={loading || !name || !businessTypeId}
+            >
+              {loading ? 'Creando...' : 'Crear organización'}
+            </button>
+          </form>
+        </>
+      )}
     </main>
   );
 }

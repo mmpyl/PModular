@@ -6,7 +6,10 @@ export default function HomePage() {
       <span className="eyebrow">PModular · operación empresarial</span>
       <h1>Tu negocio, en orden.</h1>
       <p>Administra catálogo, inventario y ventas desde un único espacio de trabajo.</p>
-      <Link className="primary-link" href="/login">Entrar al sistema</Link>
+      <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+        <Link className="primary-link" href="/login" style={{ textAlign: 'center' }}>Entrar al sistema</Link>
+        <Link href="/register" style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--muted)' }}>Crear cuenta nueva</Link>
+      </div>
     </main>
   );
 }
