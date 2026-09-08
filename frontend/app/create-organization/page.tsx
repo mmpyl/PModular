@@ -75,7 +75,7 @@ export default function CreateOrganizationPage() {
   }
 
   return (
-    <main className="auth-page">
+        <main className="auth-page">
       {!isAuthenticated ? (
         <p className="loading-message">Cargando...</p>
       ) : (
@@ -99,7 +99,7 @@ export default function CreateOrganizationPage() {
 
             <label>
               Tipo de negocio
-              <select
+               <select
                 required
                 value={businessTypeId}
                 onChange={(e) => setBusinessTypeId(e.target.value)}
