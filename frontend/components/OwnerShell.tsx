@@ -5,8 +5,6 @@ import { ReactNode } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 
-const labels: Record<string, string> = { inventario: 'Inventario', ventas: 'Ventas', compras: 'Compras', caja: 'Caja' };
-
 export function OwnerShell({ children, active }: { children: ReactNode; active: string }) {
   const { logout, orgRole, memberships, organizationId } = useAuth();
   
@@ -20,17 +18,17 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
   })();
   
   const canManage = orgRole === 'OWNER' || orgRole === 'ADMIN';
-  const ownerRestricted = orgRole === 'OWNER' && ['products', 'categories', 'inventory', 'sales'].includes(active);
   const links = [
     { key: 'dashboard', label: 'Resumen', href: '/dashboard', visible: true },
-    { key: 'products', label: 'Productos', href: '/products', visible: orgRole !== 'OWNER' && enabledModules.includes('inventario') },
-    { key: 'categories', label: 'Categorías', href: '/categories', visible: orgRole !== 'OWNER' && enabledModules.includes('inventario') },
-    { key: 'inventory', label: 'Inventario', href: '/inventory', visible: orgRole !== 'OWNER' && enabledModules.includes('inventario') },
-    { key: 'sales', label: 'Ventas', href: '/sales', visible: orgRole !== 'OWNER' && enabledModules.includes('ventas') },
+    { key: 'products', label: 'Productos', href: '/products', visible: enabledModules.includes('inventario') },
+    { key: 'categories', label: 'Categorías', href: '/categories', visible: enabledModules.includes('inventario') },
+    { key: 'units', label: 'Unidades', href: '/units', visible: enabledModules.includes('inventario') },
+    { key: 'inventory', label: 'Inventario', href: '/inventory', visible: enabledModules.includes('inventario') },
+    { key: 'sales', label: 'Ventas', href: '/sales', visible: enabledModules.includes('ventas') },
     { key: 'purchases', label: 'Compras', href: '/purchase-orders', visible: enabledModules.includes('compras') },
     { key: 'cash', label: 'Caja', href: '/cash-registers', visible: enabledModules.includes('caja') },
     { key: 'team', label: 'Equipo', href: '/team', visible: canManage },
-    { key: 'reports', label: 'Reportes', href: '/reports', visible: orgRole === 'OWNER' || orgRole === 'ADMIN' },
+    { key: 'reports', label: 'Reportes', href: '/reports', visible: canManage },
     { key: 'settings', label: 'Configuración', href: '/business-settings', visible: orgRole === 'OWNER' },
   ];
 
@@ -41,6 +39,7 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
           <div>
             <strong>PModular</strong>
             <span>{activeMembership?.organization?.name || 'Organización'}</span>
+            <span className="role-badge">{orgRole === 'OWNER' ? 'Propietario' : orgRole}</span>
           </div>
           <nav>
             {links.filter((link) => link.visible).map((link) => (
@@ -52,16 +51,7 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
           <button type="button" className="quiet-button" onClick={logout}>Cerrar sesión</button>
         </aside>
         <main className="workspace">
-          {ownerRestricted ? (
-            <section className="panel restricted-panel">
-              <span className="eyebrow">Acceso restringido</span>
-              <h1>Este módulo lo administra el equipo operativo</h1>
-              <p>Como propietario, puedes revisar reportes, permisos y configuración del negocio.</p>
-              <Link className="primary-link" href="/reports">Ir a reportes</Link>
-            </section>
-          ) : (
-            children
-          )}
+          {children}
         </main>
       </div>
     </ProtectedRoute>

@@ -11,8 +11,18 @@ type BusinessType = {
   code: string;
   name: string;
   description?: string | null;
-  defaultModules: unknown;
+  defaultModules: string[];
   productSchema: Record<string, unknown>;
+};
+
+const MODULE_LABELS: Record<string, string> = {
+  inventario: 'Inventario',
+  ventas: 'Ventas',
+  compras: 'Compras',
+  caja: 'Caja',
+  lotes: 'Lotes',
+  recetas: 'Recetas',
+  fraccionamiento: 'Fraccionamiento',
 };
 
 export default function OnboardingPage() {
@@ -58,27 +68,56 @@ export default function OnboardingPage() {
           <button onClick={() => router.replace('/dashboard')}>Ir al dashboard</button>
         </main>
       ) : (
-        <main className="auth-page">
+        <main className="auth-page wide-auth">
           <span className="eyebrow">Primer paso</span>
           <h1>Configura tu negocio</h1>
-          <p>Elige un rubro para activar módulos y atributos iniciales.</p>
-          <form onSubmit={submit}>
+          <p>Elige un rubro para activar los módulos y atributos iniciales.</p>
+          {error && <p className="error-message">{error}</p>}
+
+          <form onSubmit={submit} className="onboarding-form">
             <label>
               Nombre comercial
               <input required value={name} onChange={(e) => setName(e.target.value)} />
             </label>
-            <label>
-              Tipo de negocio
-              <select value={typeId} onChange={(e) => setTypeId(e.target.value)}>
-                {types.map((type) => (
-                  <option key={type.id} value={type.id}>{type.name}</option>
-                ))}
-              </select>
-            </label>
-            {types.find((type) => type.id === typeId) && (
-              <p className="muted">{types.find((type) => type.id === typeId)?.description}</p>
-            )}
-            {error && <p className="error-message">{error}</p>}
+
+            <fieldset className="business-type-options">
+              <legend>Tipo de negocio</legend>
+              {types.map((type) => {
+                const modules = Array.isArray(type.defaultModules) ? type.defaultModules.filter((m): m is string => typeof m === 'string') : [];
+                const schemaKeys = Object.keys(type.productSchema ?? {});
+                return (
+                  <label
+                    key={type.id}
+                    className={`business-type-card${type.id === typeId ? ' selected' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="businessType"
+                      value={type.id}
+                      checked={typeId === type.id}
+                      onChange={() => setTypeId(type.id)}
+                    />
+                    <div className="business-type-copy">
+                      <h3>{type.name}</h3>
+                      {type.description && <p className="muted">{type.description}</p>}
+                      <div className="module-list">
+                        {modules.map((module) => (
+                          <span className="module-chip" key={module}>
+                            {MODULE_LABELS[module] ?? module}
+                          </span>
+                        ))}
+                      </div>
+                      {schemaKeys.length > 0 && (
+                        <small className="schema-fields">
+                          Atributos: {schemaKeys.map((k) => k.replace(/([A-Z])/g, ' $1').toLowerCase()).join(', ')}
+                        </small>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
+            </fieldset>
+
             <button disabled={busy}>{busy ? 'Configurando...' : 'Crear negocio'}</button>
           </form>
         </main>
