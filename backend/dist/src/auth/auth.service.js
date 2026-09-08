@@ -63,7 +63,11 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.UnauthorizedException('User not found');
         }
-        return this.buildAuthResponse(user, membership.organizationId, membership.role);
+        const memberships = await this.membershipsService.findByUser(userId);
+        return {
+            ...(await this.buildAuthResponse(user, membership.organizationId, membership.role)),
+            memberships,
+        };
     }
     async buildAuthResponse(user, organizationId, orgRole) {
         const payload = {

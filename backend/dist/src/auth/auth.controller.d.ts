@@ -32,32 +32,34 @@ export declare class AuthController {
         organizationId?: string;
         orgRole?: import(".prisma/client").OrgRole;
         platformRole?: import(".prisma/client").PlatformRole;
+    } & {
+        memberships?: import(".prisma/client").Membership[];
     }>;
     getMemberships(req: Request): Promise<({
         organization: {
             businessType: {
-                id: string;
-                code: string;
                 name: string;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                code: string;
                 description: string | null;
                 defaultModules: import("@prisma/client/runtime/library").JsonValue;
                 productSchema: import("@prisma/client/runtime/library").JsonValue;
-                createdAt: Date;
-                updatedAt: Date;
             };
         } & {
-            id: string;
             name: string;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
+            businessTypeId: string;
             enabledModules: import("@prisma/client/runtime/library").JsonValue;
             settings: import("@prisma/client/runtime/library").JsonValue;
-            businessTypeId: string;
         };
     } & {
         id: string;
-        organizationId: string;
         userId: string;
+        organizationId: string;
         role: import(".prisma/client").$Enums.OrgRole;
     })[]>;
     adminCheck(): {

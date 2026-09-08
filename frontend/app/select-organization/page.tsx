@@ -16,8 +16,8 @@ export default function SelectOrganizationPage() {
 
     // Si ya tiene organización seleccionada, redirigir al dashboard
     if (memberships.length === 0) {
-      // No tiene membresías, redirigir a crear organización
-      router.replace('/create-organization');
+      // No tiene membresías, redirigir a crear organización (onboarding)
+      router.replace('/onboarding');
     } else if (memberships.length === 1 && memberships[0].organizationId) {
       // Solo tiene una membresía, seleccionar automáticamente
       selectOrganization(memberships[0].organizationId);

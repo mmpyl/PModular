@@ -23,7 +23,7 @@ export declare class AuthService {
     constructor(usersService: UsersService, membershipsService: MembershipsService, jwtService: JwtService, config: ConfigService);
     register(dto: CreateUserDto): Promise<AuthResponse>;
     login(dto: LoginDto): Promise<LoginResponse>;
-    selectOrganization(userId: string, organizationId: string): Promise<AuthResponse>;
+    selectOrganization(userId: string, organizationId: string): Promise<LoginResponse>;
     private buildAuthResponse;
 }
 export {};

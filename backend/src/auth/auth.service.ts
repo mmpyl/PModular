@@ -72,7 +72,7 @@ export class AuthService {
     };
   }
 
-  async selectOrganization(userId: string, organizationId: string): Promise<AuthResponse> {
+  async selectOrganization(userId: string, organizationId: string): Promise<LoginResponse> {
     const membership = await this.membershipsService.findOne(userId, organizationId);
     
     if (!membership) {
@@ -86,7 +86,14 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return this.buildAuthResponse(user, membership.organizationId, membership.role);
+    // Incluir las membresías para que el frontend conserve el contexto multi-tenant
+    // (productSchema de cada BusinessType, módulos habilitados, etc.)
+    const memberships = await this.membershipsService.findByUser(userId);
+
+    return {
+      ...(await this.buildAuthResponse(user, membership.organizationId, membership.role)),
+      memberships,
+    };
   }
 
   private async buildAuthResponse(user: User, organizationId?: string, orgRole?: OrgRole): Promise<AuthResponse> {
