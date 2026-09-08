@@ -21,7 +21,7 @@ export default function LoginPage() {
       await login({ email, password });
       router.push('/dashboard');
     } catch (caughtError) {
-      setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudo iniciar sesion');
+      setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudo iniciar sesión');
     } finally {
       setIsSubmitting(false);
     }
@@ -29,12 +29,35 @@ export default function LoginPage() {
 
   return (
     <main className="auth-page">
+      <span className="eyebrow">PModular</span>
       <h1>Iniciar sesión</h1>
+      <p>Bienvenido de nuevo. Ingresa tus credenciales para continuar.</p>
       <form onSubmit={handleSubmit}>
-        <label>Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email@empresa.com" /></label>
-        <label>Contraseña<input required minLength={8} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Contraseña" /></label>
+        <label>
+          Email
+          <input
+            required
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="email@empresa.com"
+          />
+        </label>
+        <label>
+          Contraseña
+          <input
+            required
+            minLength={8}
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Contraseña"
+          />
+        </label>
         {error && <p className="error-message" role="alert">{error}</p>}
-        <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Validando...' : 'Entrar'}</button>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Validando...' : 'Entrar'}
+        </button>
       </form>
     </main>
   );
