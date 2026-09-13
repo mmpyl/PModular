@@ -81,6 +81,17 @@ let MembershipsService = class MembershipsService {
         if (!existing) {
             throw new common_1.NotFoundException('Membresía no encontrada');
         }
+        if (existing.role === 'OWNER' && role !== 'OWNER') {
+            const ownerCount = await this.prisma.membership.count({
+                where: {
+                    organizationId,
+                    role: 'OWNER',
+                },
+            });
+            if (ownerCount <= 1) {
+                throw new Error('No se puede degradar al último OWNER de la organización. Debe haber al menos un OWNER.');
+            }
+        }
         return this.prisma.membership.update({
             where: {
                 userId_organizationId: {

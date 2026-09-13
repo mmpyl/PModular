@@ -87,6 +87,23 @@ export class MembershipsService {
       throw new NotFoundException('Membresía no encontrada');
     }
 
+    // PREVENIR: No permitir degradar al último OWNER de una organización
+    // Si el miembro actual es OWNER y se quiere cambiar su rol a algo inferior,
+    // verificar que haya más owners en la organización
+    if (existing.role === 'OWNER' && role !== 'OWNER') {
+      // Contar cuántos OWNERS hay en esta organización
+      const ownerCount = await this.prisma.membership.count({
+        where: {
+          organizationId,
+          role: 'OWNER',
+        },
+      });
+
+      if (ownerCount <= 1) {
+        throw new Error('No se puede degradar al último OWNER de la organización. Debe haber al menos un OWNER.');
+      }
+    }
+
     return this.prisma.membership.update({
       where: {
         userId_organizationId: {

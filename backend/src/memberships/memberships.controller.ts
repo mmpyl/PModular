@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, ForbiddenException, Patch } from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -72,5 +72,21 @@ export class MembershipsController {
       throw new ForbiddenException('No puedes eliminar membresías de otra organización');
     }
     return this.membershipsService.remove(userId, organizationId);
+  }
+
+  @Patch(':userId/:organizationId')
+  @UseGuards(TenantGuard, OrgRolesGuard)
+  @OrgRoles('OWNER')
+  updateRole(
+    @Param('userId') userId: string,
+    @Param('organizationId') organizationId: string,
+    @CurrentOrg() currentOrgId: string,
+    @Body('role') role: OrgRole
+  ) {
+    // Validar que la organización coincida con la del JWT
+    if (organizationId !== currentOrgId) {
+      throw new ForbiddenException('No puedes actualizar roles de otra organización');
+    }
+    return this.membershipsService.updateRole(userId, organizationId, role);
   }
 }
