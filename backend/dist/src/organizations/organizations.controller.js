@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OrganizationsController = void 0;
+exports.PlatformOrganizationsController = exports.OrganizationsController = void 0;
 const common_1 = require("@nestjs/common");
 const organizations_service_1 = require("./organizations.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -21,6 +21,7 @@ const org_roles_guard_1 = require("../auth/guards/org-roles.guard");
 const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
 const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
+const platform_roles_guard_1 = require("../auth/guards/platform-roles.guard");
 let OrganizationsController = class OrganizationsController {
     constructor(organizationsService) {
         this.organizationsService = organizationsService;
@@ -103,4 +104,37 @@ exports.OrganizationsController = OrganizationsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [organizations_service_1.OrganizationsService])
 ], OrganizationsController);
+let PlatformOrganizationsController = class PlatformOrganizationsController {
+    constructor(organizationsService) {
+        this.organizationsService = organizationsService;
+    }
+    async suspend(id) {
+        return this.organizationsService.suspendOrganization(id);
+    }
+    async reactivate(id) {
+        return this.organizationsService.reactivateOrganization(id);
+    }
+};
+exports.PlatformOrganizationsController = PlatformOrganizationsController;
+__decorate([
+    (0, common_1.Patch)(':id/suspend'),
+    (0, org_roles_decorator_1.PlatformRoles)('PLATFORM_ADMIN'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PlatformOrganizationsController.prototype, "suspend", null);
+__decorate([
+    (0, common_1.Patch)(':id/reactivate'),
+    (0, org_roles_decorator_1.PlatformRoles)('PLATFORM_ADMIN'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PlatformOrganizationsController.prototype, "reactivate", null);
+exports.PlatformOrganizationsController = PlatformOrganizationsController = __decorate([
+    (0, common_1.Controller)('platform/organizations'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, platform_roles_guard_1.PlatformRolesGuard),
+    __metadata("design:paramtypes", [organizations_service_1.OrganizationsService])
+], PlatformOrganizationsController);
 //# sourceMappingURL=organizations.controller.js.map

@@ -1,10 +1,14 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { PrismaService } from '../../prisma.service';
 
 @Injectable()
 export class TenantGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -23,6 +27,22 @@ export class TenantGuard implements CanActivate {
       // El JWT DEBE tener organizationId para acceder a recursos tenant-specific
       if (!payload.organizationId) {
         throw new ForbiddenException('Organization context required. Please select an organization first.');
+      }
+
+      // FASE 4: Verificación inmediata de suspensión de organización
+      // A diferencia de orgRole (que vive en el JWT y puede tardar hasta 1h en refrescarse),
+      // una suspensión debe surtir efecto de inmediato — no podemos esperar a que expire el token
+      const organization = await this.prisma.organization.findUnique({
+        where: { id: payload.organizationId },
+        select: { status: true },
+      });
+
+      if (!organization) {
+        throw new ForbiddenException('Organización no encontrada');
+      }
+
+      if (organization.status === 'SUSPENDED') {
+        throw new ForbiddenException('Esta organización ha sido suspendida. Contacta al administrador de la plataforma.');
       }
 
       // Si viene header X-Org-Id, debe coincidir con el del JWT

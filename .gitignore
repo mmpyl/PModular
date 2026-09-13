@@ -1,61 +1,36 @@
 ```
-# Build artifacts
-backend/dist/
-backend/**/*.js
-backend/**/*.js.map
-backend/tsconfig.tsbuildinfo
+# Compiled and build artifacts
+*.d.ts
+*.js.map
+dist/
+build/
+target/
 
 # Dependencies
 node_modules/
-backend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
 
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
-# Editor/IDE
+# Editors
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
 
-# Logs
-*.log
+# Prisma
+prisma/migrations/
 
-# Python (if any Python files exist in backend)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Coverage reports
-coverage/
-htmlcov/
-*.coverage
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
+# TypeScript
+*.tsbuildinfo
 ```
