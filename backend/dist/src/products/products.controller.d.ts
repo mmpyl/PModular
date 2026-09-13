@@ -16,24 +16,24 @@ export declare class ProductsController {
     create(createProductDto: CreateProductDto, organizationId: string): Promise<{
         category: {
             id: string;
-            name: string;
             organizationId: string;
+            name: string;
             parentId: string | null;
         } | null;
         unit: {
             symbol: string | null;
             id: string;
-            name: string;
             organizationId: string;
+            name: string;
             isFractionable: boolean;
         } | null;
     } & {
         id: string;
+        organizationId: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        description: string | null;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -45,24 +45,24 @@ export declare class ProductsController {
     findAll(organizationId: string, categoryId?: string, search?: string): import(".prisma/client").Prisma.PrismaPromise<({
         category: {
             id: string;
-            name: string;
             organizationId: string;
+            name: string;
             parentId: string | null;
         } | null;
         unit: {
             symbol: string | null;
             id: string;
-            name: string;
             organizationId: string;
+            name: string;
             isFractionable: boolean;
         } | null;
     } & {
         id: string;
+        organizationId: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        description: string | null;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -74,24 +74,24 @@ export declare class ProductsController {
     findOne(id: string, organizationId: string): import(".prisma/client").Prisma.Prisma__ProductClient<({
         category: {
             id: string;
-            name: string;
             organizationId: string;
+            name: string;
             parentId: string | null;
         } | null;
         unit: {
             symbol: string | null;
             id: string;
-            name: string;
             organizationId: string;
+            name: string;
             isFractionable: boolean;
         } | null;
     } & {
         id: string;
+        organizationId: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        description: string | null;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -102,11 +102,11 @@ export declare class ProductsController {
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateProductDto: Partial<CreateProductDto>, organizationId: string): Promise<{
         id: string;
+        organizationId: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        description: string | null;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -117,11 +117,11 @@ export declare class ProductsController {
     }>;
     remove(id: string, organizationId: string): Promise<{
         id: string;
+        organizationId: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        description: string | null;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
