@@ -2,12 +2,8 @@
 # Compiled and build artifacts
 *.d.ts
 *.js.map
-*.pyc
-*.o
-*.obj
 dist/
-build/
-*.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Dependencies
 node_modules/
@@ -15,7 +11,6 @@ node_modules/
 # Logs and temp files
 *.log
 *.tmp
-*.swp
 
 # Environment
 .env

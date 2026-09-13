@@ -21,6 +21,7 @@ const org_roles_guard_1 = require("../auth/guards/org-roles.guard");
 const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
 const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
+const client_1 = require("@prisma/client");
 let MembershipsController = class MembershipsController {
     constructor(membershipsService) {
         this.membershipsService = membershipsService;
@@ -54,6 +55,12 @@ let MembershipsController = class MembershipsController {
             throw new common_1.ForbiddenException('No puedes eliminar membresías de otra organización');
         }
         return this.membershipsService.remove(userId, organizationId);
+    }
+    updateRole(userId, organizationId, role, currentOrgId) {
+        if (organizationId !== currentOrgId) {
+            throw new common_1.ForbiddenException('No puedes actualizar membresías de otra organización');
+        }
+        return this.membershipsService.updateRole(userId, organizationId, role);
     }
 };
 exports.MembershipsController = MembershipsController;
@@ -105,6 +112,18 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MembershipsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Patch)(':userId/:organizationId'),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER'),
+    __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Param)('organizationId')),
+    __param(2, (0, common_1.Body)('role')),
+    __param(3, (0, current_org_decorator_1.CurrentOrg)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:returntype", void 0)
+], MembershipsController.prototype, "updateRole", null);
 exports.MembershipsController = MembershipsController = __decorate([
     (0, common_1.Controller)('memberships'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

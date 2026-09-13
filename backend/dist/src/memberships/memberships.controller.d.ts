@@ -9,20 +9,20 @@ export declare class MembershipsController {
     private readonly membershipsService;
     constructor(membershipsService: MembershipsService);
     create(createMembershipDto: CreateMembershipDto, organizationId: string): Promise<{
+        user: {
+            id: string;
+            email: string;
+            name: string | null;
+        };
         organization: {
             id: string;
             name: string;
         };
-        user: {
-            id: string;
-            name: string | null;
-            email: string;
-        };
     } & {
         id: string;
-        organizationId: string;
-        userId: string;
         role: import(".prisma/client").$Enums.OrgRole;
+        userId: string;
+        organizationId: string;
     }>;
     findByUser(userId: string, user: {
         sub: string;
@@ -31,61 +31,67 @@ export declare class MembershipsController {
         organization: {
             businessType: {
                 id: string;
-                code: string;
                 name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                code: string;
                 description: string | null;
                 defaultModules: import("@prisma/client/runtime/library").JsonValue;
                 productSchema: import("@prisma/client/runtime/library").JsonValue;
-                createdAt: Date;
-                updatedAt: Date;
             };
         } & {
             id: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            businessTypeId: string;
             enabledModules: import("@prisma/client/runtime/library").JsonValue;
             settings: import("@prisma/client/runtime/library").JsonValue;
-            businessTypeId: string;
         };
     } & {
         id: string;
-        organizationId: string;
-        userId: string;
         role: import(".prisma/client").$Enums.OrgRole;
+        userId: string;
+        organizationId: string;
     })[]>;
     findByOrganization(organizationId: string, currentOrgId: string): import(".prisma/client").Prisma.PrismaPromise<({
         user: {
             id: string;
-            name: string | null;
             email: string;
+            name: string | null;
         };
     } & {
         id: string;
-        organizationId: string;
-        userId: string;
         role: import(".prisma/client").$Enums.OrgRole;
+        userId: string;
+        organizationId: string;
     })[]>;
     findOne(userId: string, organizationId: string, currentOrgId: string): import(".prisma/client").Prisma.Prisma__MembershipClient<({
+        user: {
+            id: string;
+            email: string;
+            name: string | null;
+        };
         organization: {
             id: string;
             name: string;
         };
-        user: {
-            id: string;
-            name: string | null;
-            email: string;
-        };
     } & {
         id: string;
-        organizationId: string;
-        userId: string;
         role: import(".prisma/client").$Enums.OrgRole;
+        userId: string;
+        organizationId: string;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(userId: string, organizationId: string, currentOrgId: string): Promise<{
         id: string;
-        organizationId: string;
-        userId: string;
         role: import(".prisma/client").$Enums.OrgRole;
+        userId: string;
+        organizationId: string;
+    }>;
+    updateRole(userId: string, organizationId: string, role: OrgRole, currentOrgId: string): Promise<{
+        id: string;
+        role: import(".prisma/client").$Enums.OrgRole;
+        userId: string;
+        organizationId: string;
     }>;
 }
