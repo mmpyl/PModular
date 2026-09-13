@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, ForbiddenException } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -36,7 +36,7 @@ export class OrganizationsController {
   findOne(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     // Validar que el ID de la organización coincida con la organización del JWT
     if (id !== organizationId) {
-      throw new Error('No tienes acceso a esta organización');
+      throw new ForbiddenException('No tienes acceso a esta organización');
     }
     return this.organizationsService.findOne(id);
   }
@@ -50,7 +50,7 @@ export class OrganizationsController {
     @CurrentOrg() organizationId: string,
   ) {
     if (id !== organizationId) {
-      throw new Error('No puedes editar otra organización');
+      throw new ForbiddenException('No puedes editar otra organización');
     }
     return this.organizationsService.update(id, updateOrgDto);
   }
@@ -61,7 +61,7 @@ export class OrganizationsController {
   remove(@Param('id') id: string, @CurrentOrg() organizationId: string) {
     // Validar que el ID de la organización coincida con la organización del JWT
     if (id !== organizationId) {
-      throw new Error('No puedes eliminar una organización que no te pertenece');
+      throw new ForbiddenException('No puedes eliminar una organización que no te pertenece');
     }
     return this.organizationsService.remove(id);
   }
