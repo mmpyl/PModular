@@ -20,34 +20,38 @@ const tenant_guard_1 = require("../auth/guards/tenant.guard");
 const org_roles_guard_1 = require("../auth/guards/org-roles.guard");
 const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 let MembershipsController = class MembershipsController {
     constructor(membershipsService) {
         this.membershipsService = membershipsService;
     }
     create(createMembershipDto, organizationId) {
         if (createMembershipDto.organizationId !== organizationId) {
-            throw new Error('No puedes crear membresías para otra organización');
+            throw new common_1.ForbiddenException('No puedes crear membresías para otra organización');
         }
         return this.membershipsService.create(createMembershipDto);
     }
-    findByUser(userId) {
+    findByUser(userId, user) {
+        if (userId !== user.sub && !user.platformRole) {
+            throw new common_1.ForbiddenException('No tienes acceso a las membresías de otro usuario');
+        }
         return this.membershipsService.findByUser(userId);
     }
     findByOrganization(organizationId, currentOrgId) {
         if (organizationId !== currentOrgId) {
-            throw new Error('No tienes acceso a los miembros de esta organización');
+            throw new common_1.ForbiddenException('No tienes acceso a los miembros de esta organización');
         }
         return this.membershipsService.findByOrganization(organizationId);
     }
     findOne(userId, organizationId, currentOrgId) {
         if (organizationId !== currentOrgId) {
-            throw new Error('No tienes acceso a este miembro');
+            throw new common_1.ForbiddenException('No tienes acceso a este miembro');
         }
         return this.membershipsService.findOne(userId, organizationId);
     }
     remove(userId, organizationId, currentOrgId) {
         if (organizationId !== currentOrgId) {
-            throw new Error('No puedes eliminar membresías de otra organización');
+            throw new common_1.ForbiddenException('No puedes eliminar membresías de otra organización');
         }
         return this.membershipsService.remove(userId, organizationId);
     }
@@ -55,6 +59,7 @@ let MembershipsController = class MembershipsController {
 exports.MembershipsController = MembershipsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     (0, org_roles_decorator_1.OrgRoles)('OWNER'),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_org_decorator_1.CurrentOrg)()),
@@ -65,12 +70,14 @@ __decorate([
 __decorate([
     (0, common_1.Get)('user/:userId'),
     __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], MembershipsController.prototype, "findByUser", null);
 __decorate([
     (0, common_1.Get)('organization/:organizationId'),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     __param(0, (0, common_1.Param)('organizationId')),
     __param(1, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
@@ -79,6 +86,7 @@ __decorate([
 ], MembershipsController.prototype, "findByOrganization", null);
 __decorate([
     (0, common_1.Get)('member/:userId/:organizationId'),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Param)('organizationId')),
     __param(2, (0, current_org_decorator_1.CurrentOrg)()),
@@ -88,6 +96,7 @@ __decorate([
 ], MembershipsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Delete)(':userId/:organizationId'),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     (0, org_roles_decorator_1.OrgRoles)('OWNER'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Param)('organizationId')),
@@ -98,7 +107,7 @@ __decorate([
 ], MembershipsController.prototype, "remove", null);
 exports.MembershipsController = MembershipsController = __decorate([
     (0, common_1.Controller)('memberships'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [memberships_service_1.MembershipsService])
 ], MembershipsController);
 //# sourceMappingURL=memberships.controller.js.map

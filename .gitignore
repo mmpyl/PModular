@@ -1,14 +1,23 @@
 ```
+# Compiled and build artifacts
+*.d.ts
+*.js.map
+*.pyc
+*.o
+*.obj
+dist/
+build/
+*.tsbuildinfo
+
 # Dependencies
 node_modules/
 
-# Build outputs
-dist/
-build/
-.next/
-out/
+# Logs and temp files
+*.log
+*.tmp
+*.swp
 
-# Environment variables
+# Environment
 .env
 .env.local
 *.env.*
@@ -16,14 +25,4 @@ out/
 # Editors
 .vscode/
 .idea/
-
-# Logs
-*.log
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
 ```

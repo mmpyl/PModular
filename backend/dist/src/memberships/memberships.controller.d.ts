@@ -24,7 +24,10 @@ export declare class MembershipsController {
         userId: string;
         role: import(".prisma/client").$Enums.OrgRole;
     }>;
-    findByUser(userId: string): import(".prisma/client").Prisma.PrismaPromise<({
+    findByUser(userId: string, user: {
+        sub: string;
+        platformRole?: string;
+    }): import(".prisma/client").Prisma.PrismaPromise<({
         organization: {
             businessType: {
                 id: string;

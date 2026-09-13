@@ -38,28 +38,28 @@ export declare class AuthController {
     getMemberships(req: Request): Promise<({
         organization: {
             businessType: {
-                name: string;
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 code: string;
+                name: string;
                 description: string | null;
                 defaultModules: import("@prisma/client/runtime/library").JsonValue;
                 productSchema: import("@prisma/client/runtime/library").JsonValue;
+                createdAt: Date;
+                updatedAt: Date;
             };
         } & {
-            name: string;
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
-            businessTypeId: string;
             enabledModules: import("@prisma/client/runtime/library").JsonValue;
             settings: import("@prisma/client/runtime/library").JsonValue;
+            businessTypeId: string;
         };
     } & {
         id: string;
-        userId: string;
         organizationId: string;
+        userId: string;
         role: import(".prisma/client").$Enums.OrgRole;
     })[]>;
     adminCheck(): {

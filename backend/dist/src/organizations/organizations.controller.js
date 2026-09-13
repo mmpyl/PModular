@@ -33,19 +33,19 @@ let OrganizationsController = class OrganizationsController {
     }
     findOne(id, organizationId) {
         if (id !== organizationId) {
-            throw new Error('No tienes acceso a esta organización');
+            throw new common_1.ForbiddenException('No tienes acceso a esta organización');
         }
         return this.organizationsService.findOne(id);
     }
     update(id, updateOrgDto, organizationId) {
         if (id !== organizationId) {
-            throw new Error('No puedes editar otra organización');
+            throw new common_1.ForbiddenException('No puedes editar otra organización');
         }
         return this.organizationsService.update(id, updateOrgDto);
     }
     remove(id, organizationId) {
         if (id !== organizationId) {
-            throw new Error('No puedes eliminar una organización que no te pertenece');
+            throw new common_1.ForbiddenException('No puedes eliminar una organización que no te pertenece');
         }
         return this.organizationsService.remove(id);
     }
