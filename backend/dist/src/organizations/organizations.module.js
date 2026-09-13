@@ -17,7 +17,7 @@ exports.OrganizationsModule = OrganizationsModule;
 exports.OrganizationsModule = OrganizationsModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
-        controllers: [organizations_controller_1.OrganizationsController],
+        controllers: [organizations_controller_1.OrganizationsController, organizations_controller_1.PlatformOrganizationsController],
         providers: [organizations_service_1.OrganizationsService],
         exports: [organizations_service_1.OrganizationsService],
     })

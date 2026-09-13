@@ -3,9 +3,10 @@ import { OrganizationsService } from './organizations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
-import { OrgRoles } from '../auth/decorators/org-roles.decorator';
+import { OrgRoles, PlatformRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
 
 export interface CreateOrganizationDto {
   name: string;
@@ -64,5 +65,34 @@ export class OrganizationsController {
       throw new ForbiddenException('No puedes eliminar una organización que no te pertenece');
     }
     return this.organizationsService.remove(id);
+  }
+}
+
+// ==========================================
+// FASE 4: Suspensión de organizaciones (moderación de plataforma)
+// Endpoints solo accesibles para PLATFORM_ADMIN
+// ==========================================
+@Controller('platform/organizations')
+@UseGuards(JwtAuthGuard, PlatformRolesGuard)
+export class PlatformOrganizationsController {
+  constructor(private readonly organizationsService: OrganizationsService) {}
+
+  /**
+   * Suspender una organización - Solo PLATFORM_ADMIN
+   * La suspensión surte efecto inmediato gracias a la verificación en TenantGuard
+   */
+  @Patch(':id/suspend')
+  @PlatformRoles('PLATFORM_ADMIN')
+  async suspend(@Param('id') id: string) {
+    return this.organizationsService.suspendOrganization(id);
+  }
+
+  /**
+   * Reactivar una organización suspendida - Solo PLATFORM_ADMIN
+   */
+  @Patch(':id/reactivate')
+  @PlatformRoles('PLATFORM_ADMIN')
+  async reactivate(@Param('id') id: string) {
+    return this.organizationsService.reactivateOrganization(id);
   }
 }

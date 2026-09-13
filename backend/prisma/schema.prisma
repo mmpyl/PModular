@@ -48,11 +48,19 @@ enum PlatformRole {
   SUPPORT
 }
 
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model Organization {
   id             String       @id @default(uuid())
   name           String
   businessTypeId String
   businessType   BusinessType @relation(fields: [businessTypeId], references: [id])
+
+  // Módulo de suspensión de organizaciones (Fase 4)
+  status OrganizationStatus @default(ACTIVE)
 
   // Módulos activados para esta organización específica
   // Si está vacío, se usan los defaultModules del BusinessType

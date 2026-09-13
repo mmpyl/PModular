@@ -76,6 +76,28 @@ let OrganizationsService = class OrganizationsService {
             where: { id },
         });
     }
+    async suspendOrganization(id) {
+        const existing = await this.prisma.organization.findUnique({ where: { id } });
+        if (!existing) {
+            throw new common_1.NotFoundException(`Organización con ID ${id} no encontrada`);
+        }
+        return this.prisma.organization.update({
+            where: { id },
+            data: { status: 'SUSPENDED' },
+            include: { businessType: true },
+        });
+    }
+    async reactivateOrganization(id) {
+        const existing = await this.prisma.organization.findUnique({ where: { id } });
+        if (!existing) {
+            throw new common_1.NotFoundException(`Organización con ID ${id} no encontrada`);
+        }
+        return this.prisma.organization.update({
+            where: { id },
+            data: { status: 'ACTIVE' },
+            include: { businessType: true },
+        });
+    }
 };
 exports.OrganizationsService = OrganizationsService;
 exports.OrganizationsService = OrganizationsService = __decorate([

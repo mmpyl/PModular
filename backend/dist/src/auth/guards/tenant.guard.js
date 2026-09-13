@@ -12,9 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TenantGuard = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
+const prisma_service_1 = require("../../prisma.service");
 let TenantGuard = class TenantGuard {
-    constructor(jwtService) {
+    constructor(jwtService, prisma) {
         this.jwtService = jwtService;
+        this.prisma = prisma;
     }
     async canActivate(context) {
         const request = context.switchToHttp().getRequest();
@@ -27,6 +29,16 @@ let TenantGuard = class TenantGuard {
             const payload = await this.jwtService.verifyAsync(token);
             if (!payload.organizationId) {
                 throw new common_1.ForbiddenException('Organization context required. Please select an organization first.');
+            }
+            const organization = await this.prisma.organization.findUnique({
+                where: { id: payload.organizationId },
+                select: { status: true },
+            });
+            if (!organization) {
+                throw new common_1.ForbiddenException('Organización no encontrada');
+            }
+            if (organization.status === 'SUSPENDED') {
+                throw new common_1.ForbiddenException('Esta organización ha sido suspendida. Contacta al administrador de la plataforma.');
             }
             const orgIdFromHeader = request.headers['x-org-id'];
             if (orgIdFromHeader && orgIdFromHeader !== payload.organizationId) {
@@ -48,6 +60,7 @@ let TenantGuard = class TenantGuard {
 exports.TenantGuard = TenantGuard;
 exports.TenantGuard = TenantGuard = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [jwt_1.JwtService])
+    __metadata("design:paramtypes", [jwt_1.JwtService,
+        prisma_service_1.PrismaService])
 ], TenantGuard);
 //# sourceMappingURL=tenant.guard.js.map

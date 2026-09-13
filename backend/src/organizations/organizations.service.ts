@@ -85,4 +85,41 @@ export class OrganizationsService {
       where: { id },
     });
   }
+
+  // ==========================================
+  // FASE 4: Suspensión de organizaciones (moderación de plataforma)
+  // ==========================================
+
+  /**
+   * Suspender una organización - Solo PLATFORM_ADMIN
+   * La suspensión surte efecto inmediato porque TenantGuard verifica el status en cada request
+   */
+  async suspendOrganization(id: string) {
+    const existing = await this.prisma.organization.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Organización con ID ${id} no encontrada`);
+    }
+
+    return this.prisma.organization.update({
+      where: { id },
+      data: { status: 'SUSPENDED' },
+      include: { businessType: true },
+    });
+  }
+
+  /**
+   * Reactivar una organización suspendida - Solo PLATFORM_ADMIN
+   */
+  async reactivateOrganization(id: string) {
+    const existing = await this.prisma.organization.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Organización con ID ${id} no encontrada`);
+    }
+
+    return this.prisma.organization.update({
+      where: { id },
+      data: { status: 'ACTIVE' },
+      include: { businessType: true },
+    });
+  }
 }

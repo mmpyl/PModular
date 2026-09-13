@@ -4,28 +4,33 @@
 *.js.map
 dist/
 build/
-*.o
-*.obj
-*.pyc
-__pycache__/
+target/
 
 # Dependencies
 node_modules/
-.venv/
-venv/
-.env
-.env.local
-*.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
 
+# Environment
+.env
+.env.local
+.env.*
+
 # Editors
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# TypeScript/JavaScript specific
-tsconfig.tsbuildinfo
+# Prisma
+prisma/migrations/
+
+# TypeScript
+*.tsbuildinfo
 ```
