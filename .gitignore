@@ -2,27 +2,30 @@
 # Compiled and build artifacts
 *.d.ts
 *.js.map
-*.pyc
-*.o
-*.obj
 dist/
 build/
-*.tsbuildinfo
+*.o
+*.obj
+*.pyc
+__pycache__/
 
 # Dependencies
 node_modules/
+.venv/
+venv/
+.env
+.env.local
+*.env.*
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
 
-# Environment
-.env
-.env.local
-*.env.*
-
 # Editors
 .vscode/
 .idea/
+
+# TypeScript/JavaScript specific
+tsconfig.tsbuildinfo
 ```
