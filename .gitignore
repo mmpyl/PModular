@@ -1,25 +1,27 @@
-
+```
 # Build artifacts
-dist/
 backend/dist/
-*.tsbuildinfo
+backend/src/**/*.js
+backend/src/**/*.js.map
+**/tsconfig.tsbuildinfo
 
 # Dependencies
 node_modules/
 backend/node_modules/
-
-# Logs and temp files
-*.log
-*.tmp
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Editors
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Logs
+*.log
 
 # Python
 __pycache__/
@@ -27,7 +29,34 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+env/
 venv/
 .venv/
-.env
+.ENV
 
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pytest
+.pytest_cache/
+
+# Gradle
+.gradle/
+build/
+
+# Target
+target/
+```
