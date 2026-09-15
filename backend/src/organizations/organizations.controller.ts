@@ -8,6 +8,12 @@ import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
 
+/**
+ * Roles de plataforma permitidos para operaciones de suspensión/reactivación de organizaciones.
+ * Centralizado para evitar hardcoding y facilitar cambios futuros.
+ */
+const ALLOWED_PLATFORM_ADMIN_ROLE = ['PLATFORM_ADMIN'] as const;
+
 export interface CreateOrganizationDto {
   name: string;
   businessTypeId: string;
@@ -82,7 +88,7 @@ export class PlatformOrganizationsController {
    * La suspensión surte efecto inmediato gracias a la verificación en TenantGuard
    */
   @Patch(':id/suspend')
-  @PlatformRoles('PLATFORM_ADMIN')
+  @PlatformRoles(...ALLOWED_PLATFORM_ADMIN_ROLE)
   async suspend(@Param('id') id: string) {
     return this.organizationsService.suspendOrganization(id);
   }
@@ -91,7 +97,7 @@ export class PlatformOrganizationsController {
    * Reactivar una organización suspendida - Solo PLATFORM_ADMIN
    */
   @Patch(':id/reactivate')
-  @PlatformRoles('PLATFORM_ADMIN')
+  @PlatformRoles(...ALLOWED_PLATFORM_ADMIN_ROLE)
   async reactivate(@Param('id') id: string) {
     return this.organizationsService.reactivateOrganization(id);
   }

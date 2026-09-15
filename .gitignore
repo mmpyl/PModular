@@ -1,12 +1,12 @@
 ```
-# Build artifacts
-dist/
-backend/dist/
+# Compiled and build artifacts
+*.js.map
 *.tsbuildinfo
+dist/
+build/
 
 # Dependencies
 node_modules/
-backend/node_modules/
 
 # Logs and temp files
 *.log
@@ -20,14 +20,4 @@ backend/node_modules/
 # Editors
 .vscode/
 .idea/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-venv/
-.venv/
-.env
 ```

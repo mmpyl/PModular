@@ -17,8 +17,8 @@ const common_1 = require("@nestjs/common");
 const business_types_service_1 = require("./business-types.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
-const client_1 = require("@prisma/client");
 const platform_roles_guard_1 = require("../auth/guards/platform-roles.guard");
+const ALLOWED_PLATFORM_ADMIN_ROLE = ['PLATFORM_ADMIN'];
 let BusinessTypesController = class BusinessTypesController {
     constructor(businessTypesService) {
         this.businessTypesService = businessTypesService;
@@ -37,7 +37,7 @@ exports.BusinessTypesController = BusinessTypesController;
 __decorate([
     (0, common_1.Post)('seed'),
     (0, common_1.UseGuards)(platform_roles_guard_1.PlatformRolesGuard),
-    (0, org_roles_decorator_1.PlatformRoles)(client_1.PlatformRole.PLATFORM_ADMIN),
+    (0, org_roles_decorator_1.PlatformRoles)(...ALLOWED_PLATFORM_ADMIN_ROLE),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

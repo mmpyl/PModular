@@ -7,6 +7,12 @@ import { PlatformPaginationQueryDto } from './dto/platform-pagination-query.dto'
 import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse } from './dto/platform-response.dto';
 
 /**
+ * Roles de plataforma permitidos para operaciones de administración global.
+ * Centralizado para evitar hardcoding y facilitar cambios futuros.
+ */
+const ALLOWED_PLATFORM_ROLES = ['PLATFORM_ADMIN', 'SUPPORT'] as const;
+
+/**
  * Módulo de plataforma para administración global.
  * Todos los endpoints están protegidos con JwtAuthGuard + PlatformRolesGuard.
  * No usa TenantGuard porque Owen (plataforma) nunca tendrá organizationId.
@@ -22,7 +28,7 @@ export class PlatformController {
    * Requiere rol PLATFORM_ADMIN o SUPPORT.
    */
   @Get('organizations')
-  @PlatformRoles('PLATFORM_ADMIN', 'SUPPORT')
+  @PlatformRoles(...ALLOWED_PLATFORM_ROLES)
   async findOrganizations(
     @Query() query: PlatformPaginationQueryDto,
   ): Promise<PaginatedPlatformResult<PlatformOrganizationResponse>> {
@@ -35,7 +41,7 @@ export class PlatformController {
    * Requiere rol PLATFORM_ADMIN o SUPPORT.
    */
   @Get('organizations/:id')
-  @PlatformRoles('PLATFORM_ADMIN', 'SUPPORT')
+  @PlatformRoles(...ALLOWED_PLATFORM_ROLES)
   async findOrganizationById(
     @Param('id') id: string,
   ): Promise<PlatformOrganizationResponse> {
@@ -48,7 +54,7 @@ export class PlatformController {
    * Requiere rol PLATFORM_ADMIN o SUPPORT.
    */
   @Get('users')
-  @PlatformRoles('PLATFORM_ADMIN', 'SUPPORT')
+  @PlatformRoles(...ALLOWED_PLATFORM_ROLES)
   async findUsers(
     @Query() query: PlatformPaginationQueryDto,
   ): Promise<PaginatedPlatformResult<PlatformUserResponse>> {

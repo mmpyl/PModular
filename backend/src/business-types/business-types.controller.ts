@@ -2,8 +2,13 @@ import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { BusinessTypesService } from './business-types.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PlatformRoles } from '../auth/decorators/org-roles.decorator';
-import { PlatformRole } from '@prisma/client';
 import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
+
+/**
+ * Roles de plataforma permitidos para operaciones de seed de tipos de negocio.
+ * Centralizado para evitar hardcoding y facilitar cambios futuros.
+ */
+const ALLOWED_PLATFORM_ADMIN_ROLE = ['PLATFORM_ADMIN'] as const;
 
 @Controller('business-types')
 @UseGuards(JwtAuthGuard)
@@ -12,7 +17,7 @@ export class BusinessTypesController {
 
   @Post('seed')
   @UseGuards(PlatformRolesGuard)
-  @PlatformRoles(PlatformRole.PLATFORM_ADMIN)
+  @PlatformRoles(...ALLOWED_PLATFORM_ADMIN_ROLE)
   async seed() {
     return this.businessTypesService.seed();
   }

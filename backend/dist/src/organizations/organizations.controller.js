@@ -22,6 +22,7 @@ const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
 const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const platform_roles_guard_1 = require("../auth/guards/platform-roles.guard");
+const ALLOWED_PLATFORM_ADMIN_ROLE = ['PLATFORM_ADMIN'];
 let OrganizationsController = class OrganizationsController {
     constructor(organizationsService) {
         this.organizationsService = organizationsService;
@@ -118,7 +119,7 @@ let PlatformOrganizationsController = class PlatformOrganizationsController {
 exports.PlatformOrganizationsController = PlatformOrganizationsController;
 __decorate([
     (0, common_1.Patch)(':id/suspend'),
-    (0, org_roles_decorator_1.PlatformRoles)('PLATFORM_ADMIN'),
+    (0, org_roles_decorator_1.PlatformRoles)(...ALLOWED_PLATFORM_ADMIN_ROLE),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -126,7 +127,7 @@ __decorate([
 ], PlatformOrganizationsController.prototype, "suspend", null);
 __decorate([
     (0, common_1.Patch)(':id/reactivate'),
-    (0, org_roles_decorator_1.PlatformRoles)('PLATFORM_ADMIN'),
+    (0, org_roles_decorator_1.PlatformRoles)(...ALLOWED_PLATFORM_ADMIN_ROLE),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
