@@ -1,4 +1,3 @@
-```
 # Compiled and build artifacts
 *.d.ts
 *.js.map
@@ -33,4 +32,3 @@ prisma/migrations/
 
 # TypeScript
 *.tsbuildinfo
-```
