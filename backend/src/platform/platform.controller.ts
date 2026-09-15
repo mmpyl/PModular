@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { PlatformService } from './platform.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
-import { PlatformRoles } from '../auth/decorators/org-roles.decorator';
+import { PlatformRoles, ALLOWED_PLATFORM_ROLES } from '../auth/decorators/org-roles.decorator';
 import { PlatformPaginationQueryDto } from './dto/platform-pagination-query.dto';
 import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse } from './dto/platform-response.dto';
 
@@ -22,7 +22,7 @@ export class PlatformController {
    * Requiere rol PLATFORM_ADMIN o SUPPORT.
    */
   @Get('organizations')
-  @PlatformRoles('PLATFORM_ADMIN', 'SUPPORT')
+  @PlatformRoles(...ALLOWED_PLATFORM_ROLES)
   async findOrganizations(
     @Query() query: PlatformPaginationQueryDto,
   ): Promise<PaginatedPlatformResult<PlatformOrganizationResponse>> {
@@ -35,7 +35,7 @@ export class PlatformController {
    * Requiere rol PLATFORM_ADMIN o SUPPORT.
    */
   @Get('organizations/:id')
-  @PlatformRoles('PLATFORM_ADMIN', 'SUPPORT')
+  @PlatformRoles(...ALLOWED_PLATFORM_ROLES)
   async findOrganizationById(
     @Param('id') id: string,
   ): Promise<PlatformOrganizationResponse> {
@@ -48,7 +48,7 @@ export class PlatformController {
    * Requiere rol PLATFORM_ADMIN o SUPPORT.
    */
   @Get('users')
-  @PlatformRoles('PLATFORM_ADMIN', 'SUPPORT')
+  @PlatformRoles(...ALLOWED_PLATFORM_ROLES)
   async findUsers(
     @Query() query: PlatformPaginationQueryDto,
   ): Promise<PaginatedPlatformResult<PlatformUserResponse>> {
