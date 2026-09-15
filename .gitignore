@@ -1,36 +1,33 @@
 ```
-# Compiled and build artifacts
-*.d.ts
-*.js.map
+# Build artifacts
 dist/
-build/
-target/
+backend/dist/
+*.tsbuildinfo
 
 # Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+backend/node_modules/
 
 # Logs and temp files
 *.log
 *.tmp
-*.swp
 
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Prisma
-prisma/migrations/
-
-# TypeScript
-*.tsbuildinfo
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+.env
 ```
