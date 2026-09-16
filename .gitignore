@@ -7,50 +7,21 @@ out/
 node_modules/
 
 # Environment variables
-.env.local
 .env
-.env.*
+.env.local
+*.env.*
 
 # Logs
 *.log
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# Temporary files
+*.tmp
+*.swp
 
-# Editor files
+# Editor directories
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
 # Coverage directory used by tools like istanbul
 coverage/
-*.lcov
-
-# Production build artifacts
-dist/
-build/
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-
-# Compiled binary files
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Compressed archives
-*.zip
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.7z
-*.rar
 ```
