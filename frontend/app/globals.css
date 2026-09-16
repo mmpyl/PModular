@@ -2,7 +2,6 @@
 @import "tailwindcss";
 
 :root {
-<<<<<<< HEAD
   /* Colores principales */
   --primary: #16a34a;
   --primary-hover: #15803d;
@@ -28,9 +27,8 @@
   --info: #2563eb;
 }
 
-* {
+ {
   box-sizing: border-box;
-=======
   --ink: #17211f;
   --muted: #64706b;
   --line: #dce5df;
@@ -40,7 +38,6 @@
   --accent-dark: #a94427;
   --green: #2f6f5e;
   --danger: #c0392b;
->>>>>>> 708954a36adc6d20f147ef1aa387e312680ee033
 }
 
 body {
@@ -124,7 +121,6 @@ button.quiet-button:hover, .btn-quiet:hover {
   color: var(--ink);
 }
 
-<<<<<<< HEAD
 /* Inputs y formularios */
 input, select, textarea {
   font: inherit;
@@ -163,7 +159,6 @@ form {
 }
 
 /* Utilidades de diseño */
-=======
 button,
 input,
 select,
@@ -503,8 +498,6 @@ form.compact-form label {
 }
 
 /* ---------- Mensajes ---------- */
-
->>>>>>> 708954a36adc6d20f147ef1aa387e312680ee033
 .auth-page {
   background: var(--surface);
   border-top: 4px solid var(--primary);
