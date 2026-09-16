@@ -10,7 +10,7 @@ export type CategoryFormData = z.infer<typeof categorySchema>;
 export const unitSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   symbol: z.string().optional(),
-  isFractionable: z.boolean().default(false),
+  isFractionable: z.boolean().optional().default(false),
 });
 
 export type UnitFormData = z.infer<typeof unitSchema>;

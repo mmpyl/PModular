@@ -23,12 +23,12 @@ export default function UnitsPage() {
   const updateMutation = useUpdateUnit(organizationId ?? undefined);
   const deleteMutation = useDeleteUnit(organizationId ?? undefined);
 
-  const form = useForm<UnitFormData & { id?: string }>({
+  const form = useForm({
     resolver: zodResolver(unitSchema),
-    defaultValues: { name: '', symbol: '', isFractionable: false },
+    defaultValues: { name: '', symbol: '', isFractionable: false } as UnitFormData & { id?: string },
   });
 
-  const editingId = form.watch('id') as string | undefined;
+  const editingId = form.getValues('id' as any) as string | undefined;
 
   const canWrite = orgRole !== null && WRITE_ROLES.includes(orgRole);
   const canDelete = orgRole !== null && DELETE_ROLES.includes(orgRole);
@@ -38,7 +38,7 @@ export default function UnitsPage() {
   }
 
   function startEdit(unit: Unit) {
-    form.reset({ id: unit.id, name: unit.name, symbol: unit.symbol ?? '', isFractionable: unit.isFractionable });
+    form.reset({ id: unit.id, name: unit.name, symbol: unit.symbol ?? '', isFractionable: unit.isFractionable } as any);
   }
 
   async function onSubmit(data: UnitFormData & { id?: string }) {

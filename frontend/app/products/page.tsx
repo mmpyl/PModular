@@ -31,10 +31,10 @@ export default function ProductsPage() {
 
   // productSchema del BusinessType de la membresía activa
   const activeMembership = memberships.find((m) => m.organizationId === organizationId) ?? null;
-  const productSchemaDef = activeMembership?.organization?.businessType?.productSchema ?? {} as Record<string, SchemaField>;
+  const productSchemaDef = (activeMembership?.organization?.businessType?.productSchema ?? {}) as Record<string, SchemaField>;
   const schemaFields = Object.entries(productSchemaDef);
 
-  const form = useForm<ProductFormData & { id?: string; attributes: Record<string, unknown> }>({
+  const form = useForm<ProductFormData & { id?: string }>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
@@ -48,8 +48,8 @@ export default function ProductsPage() {
   });
 
   const editingId = form.watch('id') as string | undefined;
-  const search = form.watch('search') as string | undefined;
-  const filterCategory = form.watch('filterCategory') as string | undefined;
+  const search = form.getValues('search' as any) as string | undefined;
+  const filterCategory = form.getValues('filterCategory' as any) as string | undefined;
 
   const canWrite = orgRole !== null && WRITE_ROLES.includes(orgRole);
   const canDelete = orgRole !== null && DELETE_ROLES.includes(orgRole);
@@ -310,9 +310,9 @@ export default function ProductsPage() {
             aria-label="Buscar productos"
             placeholder="Buscar por nombre o SKU..."
             value={search ?? ''}
-            onChange={(e) => form.setValue('search', e.target.value)}
+            onChange={(e) => form.setValue('search' as any, e.target.value)}
           />
-          <Select value={filterCategory ?? ''} onValueChange={(v) => form.setValue('filterCategory', v)}>
+          <Select value={filterCategory ?? ''} onValueChange={(v) => form.setValue('filterCategory' as any, v)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Todas las categorías" />
             </SelectTrigger>

@@ -24,12 +24,12 @@ export default function CategoriesPage() {
   const updateMutation = useUpdateCategory(orgId);
   const deleteMutation = useDeleteCategory(orgId);
 
-  const form = useForm<CategoryFormData & { id?: string }>({
+  const form = useForm({
     resolver: zodResolver(categorySchema),
-    defaultValues: { name: '', parentId: null },
+    defaultValues: { name: '', parentId: null } as CategoryFormData & { id?: string },
   });
 
-  const editingId = form.getValues('id');
+  const editingId = form.getValues('id' as any);
 
   const canWrite = orgRole !== null && WRITE_ROLES.includes(orgRole);
   const canDelete = orgRole !== null && DELETE_ROLES.includes(orgRole);
