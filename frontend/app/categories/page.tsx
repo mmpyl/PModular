@@ -24,12 +24,12 @@ export default function CategoriesPage() {
   const updateMutation = useUpdateCategory(orgId);
   const deleteMutation = useDeleteCategory(orgId);
 
-  const form = useForm({
+  const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
-    defaultValues: { name: '', parentId: null } as CategoryFormData & { id?: string },
+    defaultValues: { name: '', parentId: null },
   });
 
-  const editingId = form.getValues('id' as any);
+  const editingId = form.watch('id' as any);
 
   const canWrite = orgRole !== null && WRITE_ROLES.includes(orgRole);
   const canDelete = orgRole !== null && DELETE_ROLES.includes(orgRole);
@@ -39,7 +39,8 @@ export default function CategoriesPage() {
   }
 
   function startEdit(category: Category) {
-    form.reset({ id: category.id, name: category.name, parentId: category.parentId ?? null });
+    form.reset({ name: category.name, parentId: category.parentId ?? null });
+    form.setValue('id' as any, category.id);
   }
 
   async function onSubmit(data: CategoryFormData & { id?: string }) {

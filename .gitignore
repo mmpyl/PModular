@@ -1,7 +1,7 @@
 ```
-# Next.js build output
-.next/
-out/
+# Next.js build outputs
+.frontend/.next/
+frontend/out/
 
 # Dependencies
 node_modules/
@@ -14,7 +14,57 @@ node_modules/
 # Logs
 *.log
 
-# Coverage
+# Coverage reports
 coverage/
+htmlcov/
+.coverage
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Build outputs
+dist/
+build/
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Testing
+.mypy_cache/
+.pytest_cache/
 .nyc_output/
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Compressed files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.gz
+*.bz2
+*.xz
+*.7z
+*.rar
 ```

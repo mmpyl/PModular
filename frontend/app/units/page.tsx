@@ -23,12 +23,12 @@ export default function UnitsPage() {
   const updateMutation = useUpdateUnit(organizationId ?? undefined);
   const deleteMutation = useDeleteUnit(organizationId ?? undefined);
 
-  const form = useForm({
+  const form = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
-    defaultValues: { name: '', symbol: '', isFractionable: false } as UnitFormData & { id?: string },
+    defaultValues: { name: '', symbol: '', isFractionable: false } as UnitFormData,
   });
 
-  const editingId = form.getValues('id' as any) as string | undefined;
+  const editingId = form.watch('id' as any) as string | undefined;
 
   const canWrite = orgRole !== null && WRITE_ROLES.includes(orgRole);
   const canDelete = orgRole !== null && DELETE_ROLES.includes(orgRole);
@@ -38,17 +38,19 @@ export default function UnitsPage() {
   }
 
   function startEdit(unit: Unit) {
-    form.reset({ id: unit.id, name: unit.name, symbol: unit.symbol ?? '', isFractionable: unit.isFractionable } as any);
+    form.reset({ name: unit.name, symbol: unit.symbol ?? '', isFractionable: unit.isFractionable });
+    form.setValue('id' as any, unit.id);
   }
 
   async function onSubmit(data: UnitFormData & { id?: string }) {
     if (!token || !organizationId) return;
     const { id, ...submitData } = data;
+    const payload = { ...submitData, isFractionable: submitData.isFractionable ?? false };
     try {
       if (id) {
-        await updateMutation.mutateAsync({ id, data: submitData });
+        await updateMutation.mutateAsync({ id, data: payload });
       } else {
-        await createMutation.mutateAsync(submitData);
+        await createMutation.mutateAsync(payload);
       }
       resetForm();
     } catch {
