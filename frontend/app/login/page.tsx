@@ -1,64 +1,111 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ApiError } from '@/lib/api';
+import { useLoginMutation } from '@/features/hooks/use-login-mutation';
+import { loginSchema, type LoginFormData } from '@/features/schemas/login-schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { persistSession } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const loginMutation = useLoginMutation();
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError('');
-    setIsSubmitting(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      await login({ email, password });
+      const session = await loginMutation.mutateAsync(data);
+      persistSession(session);
       router.push('/dashboard');
     } catch (caughtError) {
-      setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudo iniciar sesión');
-    } finally {
-      setIsSubmitting(false);
+      // El error ya está manejado por react-query, pero podemos mostrarlo si es necesario
+      if (caughtError instanceof ApiError) {
+        // Podríamos agregar un toast o mensaje de error aquí
+        console.error(caughtError.message);
+      }
     }
   };
 
   return (
-    <main className="auth-page">
-      <span className="eyebrow">PModular</span>
-      <h1>Iniciar sesión</h1>
-      <p>Bienvenido de nuevo. Ingresa tus credenciales para continuar.</p>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="email@empresa.com"
-          />
-        </label>
-        <label>
-          Contraseña
-          <input
-            required
-            minLength={8}
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Contraseña"
-          />
-        </label>
-        {error && <p className="error-message" role="alert">{error}</p>}
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Validando...' : 'Entrar'}
-        </button>
-      </form>
+    <main className="auth-page flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <span className="eyebrow text-sm font-medium text-muted-foreground">PModular</span>
+          <CardTitle className="text-2xl font-bold">Iniciar sesión</CardTitle>
+          <CardDescription>
+            Bienvenido de nuevo. Ingresa tus credenciales para continuar.
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="email@empresa.com"
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive" role="alert">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Contraseña
+              </label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Contraseña"
+                {...register('password')}
+              />
+              {errors.password && (
+                <p className="text-sm text-destructive" role="alert">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+            {loginMutation.isError && (
+              <p className="text-sm text-destructive" role="alert">
+                No se pudo iniciar sesión. Verifica tus credenciales.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full" disabled={isSubmitting || loginMutation.isPending}>
+              {isSubmitting || loginMutation.isPending ? 'Validando...' : 'Entrar'}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
     </main>
   );
 }
