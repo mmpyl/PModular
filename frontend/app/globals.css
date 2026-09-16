@@ -27,19 +27,6 @@
   --info: #2563eb;
 }
 
- {
-  box-sizing: border-box;
-  --ink: #17211f;
-  --muted: #64706b;
-  --line: #dce5df;
-  --paper: #f5f7f3;
-  --white: #fff;
-  --accent: #d85f37;
-  --accent-dark: #a94427;
-  --green: #2f6f5e;
-  --danger: #c0392b;
-}
-
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
