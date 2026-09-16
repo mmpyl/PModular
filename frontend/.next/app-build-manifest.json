@@ -51,6 +51,14 @@
       "static/chunks/main-app-eb431c085de800ac.js",
       "static/chunks/app/create-organization/page-f2899f2ffd1512a1.js"
     ],
+    "/dashboard/page": [
+      "static/chunks/webpack-1e82457347a9eda9.js",
+      "static/chunks/618f8807-8b0e26369b8d5a64.js",
+      "static/chunks/364-5d59f35f8e501020.js",
+      "static/chunks/main-app-eb431c085de800ac.js",
+      "static/chunks/485-8440597c69150150.js",
+      "static/chunks/app/dashboard/page-43d6e929759bca1c.js"
+    ],
     "/inventory/page": [
       "static/chunks/webpack-1e82457347a9eda9.js",
       "static/chunks/618f8807-8b0e26369b8d5a64.js",
@@ -127,14 +135,6 @@
       "static/chunks/485-8440597c69150150.js",
       "static/chunks/906-c11d79b8d1957f92.js",
       "static/chunks/app/sales/page-12c8ec130052fa7b.js"
-    ],
-    "/dashboard/page": [
-      "static/chunks/webpack-1e82457347a9eda9.js",
-      "static/chunks/618f8807-8b0e26369b8d5a64.js",
-      "static/chunks/364-5d59f35f8e501020.js",
-      "static/chunks/main-app-eb431c085de800ac.js",
-      "static/chunks/485-8440597c69150150.js",
-      "static/chunks/app/dashboard/page-43d6e929759bca1c.js"
     ],
     "/select-organization/page": [
       "static/chunks/webpack-1e82457347a9eda9.js",
