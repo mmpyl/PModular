@@ -1,19 +1,29 @@
 ```
-# Build artifacts
-*.tsbuildinfo
-dist/
-build/
+# Next.js build outputs
+.next/
+
 # Dependencies
 node_modules/
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-# Environment
+
+# Environment variables
 .env
 .env.local
-*.env.*
-# Editors
+.env.*
+
+# IDE and editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# Build artifacts
+dist/
+build/
+coverage/
+htmlcov/
+.nyc_output/
 ```
