@@ -22,6 +22,7 @@ type AuthContextValue = {
   createOrganization: (payload: { name: string; businessTypeId: string }) => Promise<void>;
   logout: () => void;
   hasOrgRole: (roles: string[]) => boolean;
+  persistSession: (session: AuthResponse) => void;
 };
 
 type AuthUser = {
@@ -150,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!orgRole) return false;
       return roles.includes(orgRole);
     },
+    persistSession,
   }), [token, user, organizationId, orgRole, platformRole, memberships, isHydrated, persistSession, clearSession, router]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

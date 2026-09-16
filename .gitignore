@@ -10,46 +10,33 @@ node_modules/
 .env.local
 .env.*
 
-# Logs
-*.log
-
-# Coverage reports
-coverage/
-htmlcov/
-.coverage
-
 # IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS files
-.DS_Store
-Thumbs.db
+# Logs and temporary files
+*.log
+*.tmp
 
-# Build artifacts
+# Python cache (if present in project)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build outputs
 dist/
 build/
 target/
-*.o
-*.obj
-*.exe
-*.dll
-*.so
-*.a
-*.out
-*.class
-*.pyc
-__pycache__/
 
-# Cache directories
-.mypy_cache/
-.pytest_cache/
-.nyc_output/
+# Coverage reports
 coverage/
+htmlcov/
+.coverage
 
-# Compressed files
+# Compression files
 *.zip
 *.gz
 *.tar
