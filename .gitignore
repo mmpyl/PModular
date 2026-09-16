@@ -1,37 +1,31 @@
 ```
-# Next.js build output
+# Next.js build outputs
 .next/
-out/
 
 # Dependencies
 node_modules/
 
 # Environment variables
-.env.local
 .env
-.env.*
+.env.local
+*.env.*
 
-# Logs
-*.log
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Editor files
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# Logs
+*.log
+
+# Temporary files
 *.tmp
 
-# Coverage directory used by tools like istanbul
+# Coverage reports
 coverage/
-*.lcov
-
-# Production build artifacts
-dist/
-build/
+htmlcov/
+.coverage
 
 # Python cache
 __pycache__/
@@ -39,18 +33,19 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-
-# Compiled binary files
-*.exe
-*.dll
 *.so
-*.dylib
 
-# Compressed archives
-*.zip
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.7z
-*.rar
+# Build outputs
+dist/
+build/
+target/
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
