@@ -417,3 +417,51 @@ export function useCashRegisterMovements(organizationId: string | undefined, reg
     enabled: !!organizationId && !!registerId,
   });
 }
+
+// ==================== PRODUCTS ====================
+
+export type Product = {
+  id: string;
+  name: string;
+  sku?: string | null;
+  price: number;
+  description?: string | null;
+};
+
+export function useProducts(organizationId: string | undefined) {
+  return useQuery<Product[]>({
+    queryKey: ['products', organizationId],
+    queryFn: async () => {
+      if (!organizationId) throw new Error('Organization ID required');
+      return apiFetch<Product[]>('/products', { organizationId });
+    },
+    enabled: !!organizationId,
+  });
+}
+
+// ==================== BUSINESS ENTITIES ====================
+
+export type BusinessEntityType = 'PROVEEDOR' | 'CLIENTE' | 'TRANSPORTISTA';
+
+export type BusinessEntity = {
+  id: string;
+  name: string;
+  type: BusinessEntityType;
+  taxId?: string | null;
+  email?: string | null;
+  phone?: string | null;
+};
+
+export function useBusinessEntities(organizationId: string | undefined, type?: BusinessEntityType) {
+  return useQuery<BusinessEntity[]>({
+    queryKey: ['business-entities', organizationId, type],
+    queryFn: async () => {
+      if (!organizationId) throw new Error('Organization ID required');
+      const params = new URLSearchParams();
+      if (type) params.set('type', type);
+      const qs = params.toString();
+      return apiFetch<BusinessEntity[]>(`/business-entities${qs ? `?${qs}` : ''}`, { organizationId });
+    },
+    enabled: !!organizationId,
+  });
+}

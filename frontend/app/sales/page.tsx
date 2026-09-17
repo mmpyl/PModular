@@ -1,22 +1,350 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { OwnerHeader, OwnerShell } from '@/components/OwnerShell';
 import { useAuth } from '@/contexts/AuthContext';
-import { apiFetch, ApiError } from '@/lib/api';
+import {
+  useSales,
+  useCreateSale,
+  useCompleteSale,
+  useCancelSale,
+  useProducts,
+  type SaleStatus,
+} from '@/features/hooks';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
-type Product = { id: string; name: string; price: number | string };
-type Sale = { id: string; saleNumber: string; status: string; total: number | string; saleDate: string };
+type SaleItemFormData = {
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+type CreateSaleFormData = {
+  items: SaleItemFormData[];
+  customerId?: string;
+};
 
 export default function SalesPage() {
-  const { token, organizationId } = useAuth();
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [productId, setProductId] = useState('');
-  const [quantity, setQuantity] = useState('1');
-  const [error, setError] = useState('');
-  const load = async () => { if (!token || !organizationId) return; try { const [saleRows, productRows] = await Promise.all([apiFetch<Sale[]>('/sales', { token, organizationId }), apiFetch<Product[]>('/products', { token, organizationId })]); setSales(saleRows); setProducts(productRows); if (!productId && productRows[0]) setProductId(productRows[0].id); } catch (e: unknown) { setError(e instanceof ApiError ? e.message : 'No se pudieron cargar las ventas'); } };
-  useEffect(() => { void load(); }, [organizationId, token]);
-  async function createSale(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!token || !organizationId || !productId) return; const product = products.find((item) => item.id === productId); try { await apiFetch('/sales', { method: 'POST', token, organizationId, body: JSON.stringify({ items: [{ productId, quantity: Number(quantity), unitPrice: Number(product?.price || 0) }] }) }); await load(); } catch (e: unknown) { setError(e instanceof ApiError ? e.message : 'No se pudo registrar la venta'); } }
-  return <OwnerShell active="sales"><OwnerHeader eyebrow="Operación" title="Ventas" />{error && <p className="error-message">{error}</p>}<section className="content-grid"><article className="panel"><span className="eyebrow">Nueva operación</span><h2>Registrar venta</h2><form className="compact-form" onSubmit={createSale}><label>Producto<select value={productId} onChange={(e) => setProductId(e.target.value)}>{products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select></label><label>Cantidad<input min="1" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} /></label><button type="submit" disabled={!products.length}>Registrar venta</button></form></article><article className="panel"><span className="eyebrow">Historial</span><h2>Ventas recientes</h2>{sales.map((sale) => <div className="list-row" key={sale.id}><span><strong>{sale.saleNumber}</strong><small>{new Date(sale.saleDate).toLocaleDateString('es-MX')} · {sale.status}</small></span><strong>{Number(sale.total).toFixed(2)}</strong></div>)}{!sales.length && <p className="muted">No hay ventas registradas.</p>}</article></section></OwnerShell>;
+  const { organizationId } = useAuth();
+  const [statusFilter, setStatusFilter] = useState<SaleStatus | undefined>(undefined);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
+
+  const { data: sales = [], isLoading, refetch } = useSales(organizationId, statusFilter);
+  const { data: products = [] } = useProducts(organizationId);
+  const createSale = useCreateSale(organizationId);
+  const completeSale = useCompleteSale(organizationId);
+  const cancelSale = useCancelSale(organizationId);
+
+  const selectedSale = sales.find((s) => s.id === selectedSaleId);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<CreateSaleFormData>({
+    defaultValues: { items: [{ productId: '', quantity: 1, unitPrice: 0 }] },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'items',
+  });
+
+  const onCreateSubmit = async (data: CreateSaleFormData) => {
+    await createSale.mutateAsync(data);
+    setCreateDialogOpen(false);
+    reset();
+    refetch();
+  };
+
+  const handleComplete = async (saleId: string) => {
+    if (confirm('¿Completar esta venta?')) {
+      await completeSale.mutateAsync(saleId);
+      refetch();
+    }
+  };
+
+  const handleCancel = async (saleId: string) => {
+    if (confirm('¿Cancelar esta venta? Esta acción no se puede deshacer.')) {
+      await cancelSale.mutateAsync(saleId);
+      refetch();
+    }
+  };
+
+  const getStatusBadgeVariant = (status: SaleStatus) => {
+    switch (status) {
+      case 'COMPLETED':
+        return 'default' as const;
+      case 'DRAFT':
+        return 'secondary' as const;
+      case 'CANCELLED':
+        return 'destructive' as const;
+      default:
+        return 'outline' as const;
+    }
+  };
+
+  const getStatusLabel = (status: SaleStatus) => {
+    switch (status) {
+      case 'COMPLETED':
+        return 'Completada';
+      case 'DRAFT':
+        return 'Borrador';
+      case 'CANCELLED':
+        return 'Cancelada';
+      default:
+        return status;
+    }
+  };
+
+  return (
+    <OwnerShell active="sales">
+      <OwnerHeader eyebrow="Operación" title="Ventas" />
+
+      <section className="panel">
+        <div className="panel-heading">
+          <div>
+            <span className="eyebrow">Historial</span>
+            <h2>Ventas registradas</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select
+              value={statusFilter || 'all'}
+              onValueChange={(value) =>
+                setStatusFilter(value === 'all' ? undefined : (value as SaleStatus))
+              }
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Filtrar por estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="DRAFT">Borrador</SelectItem>
+                <SelectItem value="COMPLETED">Completada</SelectItem>
+                <SelectItem value="CANCELLED">Cancelada</SelectItem>
+              </SelectContent>
+            </Select>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">Nueva venta</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Registrar nueva venta</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit(onCreateSubmit)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Productos</Label>
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <Label htmlFor={`items.${index}.productId`}>Producto</Label>
+                          <select
+                            id={`items.${index}.productId`}
+                            className="w-full px-3 py-2 border rounded-md"
+                            {...register(`items.${index}.productId`, { required: 'Requerido' })}
+                          >
+                            <option value="">Seleccionar...</option>
+                            {products.map((product) => (
+                              <option key={product.id} value={product.id}>
+                                {product.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="w-24">
+                          <Label htmlFor={`items.${index}.quantity`}>Cant.</Label>
+                          <Input
+                            id={`items.${index}.quantity`}
+                            type="number"
+                            min="1"
+                            className="w-full"
+                            {...register(`items.${index}.quantity`, {
+                              required: 'Requerido',
+                              min: { value: 1, message: 'Mínimo 1' },
+                            })}
+                          />
+                        </div>
+                        <div className="w-28">
+                          <Label htmlFor={`items.${index}.unitPrice`}>Precio</Label>
+                          <Input
+                            id={`items.${index}.unitPrice`}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            className="w-full"
+                            {...register(`items.${index}.unitPrice`, {
+                              required: 'Requerido',
+                              min: { value: 0, message: 'Mínimo 0' },
+                            })}
+                          />
+                        </div>
+                        {fields.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => remove(index)}
+                          >
+                            ×
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => append({ productId: '', quantity: 1, unitPrice: 0 })}
+                    >
+                      + Agregar producto
+                    </Button>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCreateDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createSale.isPending || !products.length}
+                    >
+                      {createSale.isPending ? 'Guardando...' : 'Crear venta'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <p className="muted">Cargando ventas...</p>
+        ) : (
+          <div className="space-y-2">
+            {sales.map((sale) => (
+              <div className="list-row items-center" key={sale.id}>
+                <span className="flex-1">
+                  <strong>{sale.saleNumber}</strong>
+                  <small className="block">
+                    {new Date(sale.saleDate).toLocaleDateString('es-MX')} ·{' '}
+                    {sale.customer?.name || 'Cliente general'}
+                  </small>
+                </span>
+                <div className="flex items-center gap-4">
+                  <Badge variant={getStatusBadgeVariant(sale.status)}>
+                    {getStatusLabel(sale.status)}
+                  </Badge>
+                  <span className="font-semibold">${Number(sale.total).toFixed(2)}</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedSaleId(sale.id);
+                      setDetailDialogOpen(true);
+                    }}
+                  >
+                    Ver detalle
+                  </Button>
+                  {sale.status === 'DRAFT' && (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => handleComplete(sale.id)}
+                        disabled={completeSale.isPending}
+                      >
+                        Completar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleCancel(sale.id)}
+                        disabled={cancelSale.isPending}
+                      >
+                        Cancelar
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!sales.length && !isLoading && (
+          <p className="muted">No hay ventas registradas.</p>
+        )}
+      </section>
+
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalle de venta - {selectedSale?.saleNumber}</DialogTitle>
+          </DialogHeader>
+          {selectedSale && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-muted-foreground">Estado</Label>
+                  <Badge variant={getStatusBadgeVariant(selectedSale.status)}>
+                    {getStatusLabel(selectedSale.status)}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Fecha</Label>
+                  <p>{new Date(selectedSale.saleDate).toLocaleDateString('es-MX')}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Cliente</Label>
+                  <p>{selectedSale.customer?.name || 'Cliente general'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Total</Label>
+                  <p className="font-semibold">${Number(selectedSale.total).toFixed(2)}</p>
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Productos</Label>
+                <div className="border rounded-md divide-y">
+                  {selectedSale.items.map((item, idx) => (
+                    <div key={idx} className="p-2 flex justify-between text-sm">
+                      <span>
+                        {item.product?.name || 'Producto'} × {item.quantity}
+                      </span>
+                      <span>${Number(item.subtotal || item.unitPrice * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </OwnerShell>
+  );
 }
