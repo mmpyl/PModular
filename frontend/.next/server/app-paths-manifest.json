@@ -1,8 +1,8 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/business-settings/page": "app/business-settings/page.js",
   "/cash-registers/page": "app/cash-registers/page.js",
   "/categories/page": "app/categories/page.js",
-  "/business-settings/page": "app/business-settings/page.js",
   "/create-organization/page": "app/create-organization/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/inventory/page": "app/inventory/page.js",
@@ -16,5 +16,7 @@
   "/sales/page": "app/sales/page.js",
   "/select-organization/page": "app/select-organization/page.js",
   "/team/page": "app/team/page.js",
-  "/units/page": "app/units/page.js"
+  "/units/page": "app/units/page.js",
+  "/platform/organizations/page": "app/platform/organizations/page.js",
+  "/platform/users/page": "app/platform/users/page.js"
 }

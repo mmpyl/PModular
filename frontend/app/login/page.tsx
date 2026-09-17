@@ -39,7 +39,21 @@ export default function LoginPage() {
     try {
       const session = await loginMutation.mutateAsync(data);
       persistSession(session);
-      router.push('/dashboard');
+      
+      // Routing condicional basado en el tipo de usuario
+      if (session.platformRole && ['PLATFORM_ADMIN', 'SUPPORT'].includes(session.platformRole) && !session.organizationId) {
+        // Usuario de plataforma sin organización → Panel de plataforma
+        router.push('/platform/organizations');
+      } else if (session.memberships && session.memberships.length > 1 && !session.organizationId) {
+        // Múltiples membresías sin organización seleccionada → Selector
+        router.push('/select-organization');
+      } else if (session.organizationId) {
+        // Usuario con organización → Dashboard normal
+        router.push('/dashboard');
+      } else {
+        // Caso por defecto → Dashboard
+        router.push('/dashboard');
+      }
     } catch (caughtError) {
       // El error ya está manejado por react-query, pero podemos mostrarlo si es necesario
       if (caughtError instanceof ApiError) {

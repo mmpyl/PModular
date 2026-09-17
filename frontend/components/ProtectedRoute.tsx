@@ -4,11 +4,23 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-export function ProtectedRoute({ children, requireOrganization = true }: { children: ReactNode; requireOrganization?: boolean }) {
-  const { isAuthenticated, isHydrated, organizationId } = useAuth();
+/**
+ * Componente para proteger rutas que requieren organización.
+ * Por defecto requiere organizationId, pero puede usarse en modo plataforma.
+ */
+export function ProtectedRoute({ 
+  children, 
+  requireOrganization = true,
+  requirePlatform = false 
+}: { 
+  children: ReactNode; 
+  requireOrganization?: boolean;
+  requirePlatform?: boolean;
+}) {
+  const { isAuthenticated, isHydrated, organizationId, platformRole } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-
+  
   useEffect(() => {
     if (!isHydrated) return;
     
@@ -17,12 +29,30 @@ export function ProtectedRoute({ children, requireOrganization = true }: { child
       return;
     }
     
-    if (requireOrganization && !organizationId && pathname !== '/select-organization') {
+    // Modo plataforma: solo requiere platformRole
+    if (requirePlatform) {
+      if (!platformRole || !['PLATFORM_ADMIN', 'SUPPORT'].includes(platformRole)) {
+        router.replace('/dashboard');
+        return;
+      }
+    }
+    // Modo organización: requiere organizationId
+    else if (requireOrganization && !organizationId && pathname !== '/select-organization') {
       router.replace('/select-organization');
       return;
     }
-  }, [isAuthenticated, isHydrated, organizationId, pathname, requireOrganization, router]);
+  }, [isAuthenticated, isHydrated, organizationId, platformRole, pathname, requireOrganization, requirePlatform, router]);
 
+  // Loading state para modo plataforma
+  if (requirePlatform && (!isHydrated || !isAuthenticated || !platformRole)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-600">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  // Loading state para modo organización
   if (!isHydrated || !isAuthenticated || (requireOrganization && !organizationId)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
