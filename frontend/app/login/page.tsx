@@ -39,7 +39,17 @@ export default function LoginPage() {
     try {
       const session = await loginMutation.mutateAsync(data);
       persistSession(session);
-      router.push('/dashboard');
+      
+      // Si el usuario tiene rol de plataforma, redirigir al panel de plataforma
+      if (session.platformRole === 'PLATFORM_ADMIN' || session.platformRole === 'SUPPORT') {
+        router.push('/platform');
+      } else if (session.memberships && session.memberships.length > 1 && !session.organizationId) {
+        // Si tiene múltiples membresías sin organización seleccionada, ir al selector
+        router.push('/select-organization');
+      } else {
+        // Caso normal: ir al dashboard de la organización
+        router.push('/dashboard');
+      }
     } catch (caughtError) {
       // El error ya está manejado por react-query, pero podemos mostrarlo si es necesario
       if (caughtError instanceof ApiError) {

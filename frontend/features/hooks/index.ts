@@ -95,6 +95,95 @@ export function useInviteMember(organizationId: string | undefined) {
   });
 }
 
+// ==================== PLATFORM (OWEN) ====================
+
+export type PlatformOrganization = {
+  id: string;
+  name: string;
+  businessTypeId: string;
+  businessType: {
+    id: string;
+    name: string;
+    code: string;
+    defaultModules: unknown;
+  };
+  enabledModules: string[];
+  settings: unknown;
+  createdAt: string;
+  updatedAt: string;
+  members?: Array<{
+    id: string;
+    userId: string;
+    role: string;
+    user: {
+      id: string;
+      email: string;
+      name: string | null;
+    };
+  }>;
+  _count?: {
+    memberships: number;
+    products?: number;
+  };
+};
+
+export type PlatformUser = {
+  id: string;
+  email: string;
+  name: string | null;
+  platformRole: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    memberships: number;
+  };
+};
+
+export type PlatformPaginationParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  email?: string;
+};
+
+export function usePlatformOrganizations(params?: PlatformPaginationParams) {
+  return useQuery<{ data: PlatformOrganization[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }>({
+    queryKey: ['platform', 'organizations', params],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.set('page', String(params.page));
+      if (params?.pageSize) queryParams.set('pageSize', String(params.pageSize));
+      if (params?.search) queryParams.set('search', params.search);
+      return apiFetch(`/platform/organizations?${queryParams.toString()}`);
+    },
+  });
+}
+
+export function usePlatformOrganization(id: string | undefined) {
+  return useQuery<PlatformOrganization>({
+    queryKey: ['platform', 'organization', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Organization ID required');
+      return apiFetch(`/platform/organizations/${id}`);
+    },
+    enabled: !!id,
+  });
+}
+
+export function usePlatformUsers(params?: PlatformPaginationParams) {
+  return useQuery<{ data: PlatformUser[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }>({
+    queryKey: ['platform', 'users', params],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.set('page', String(params.page));
+      if (params?.pageSize) queryParams.set('pageSize', String(params.pageSize));
+      if (params?.search) queryParams.set('search', params.search);
+      if (params?.email) queryParams.set('email', params.email);
+      return apiFetch(`/platform/users?${queryParams.toString()}`);
+    },
+  });
+}
+
 // ==================== INVENTORY ====================
 
 export type InventoryItem = {

@@ -9,6 +9,7 @@
   "/login/page": "app/login/page.js",
   "/onboarding/page": "app/onboarding/page.js",
   "/page": "app/page.js",
+  "/platform/page": "app/platform/page.js",
   "/products/page": "app/products/page.js",
   "/purchase-orders/page": "app/purchase-orders/page.js",
   "/register/page": "app/register/page.js",

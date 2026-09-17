@@ -1,48 +1,25 @@
 ```
-# Next.js build outputs
-.frontend/.next/
-frontend/.next/
+# Next.js build output
+.next/
 
-# TypeScript build info
-frontend/tsconfig.tsbuildinfo
+# TypeScript cache
+*.tsbuildinfo
 
-# Environment files
-.env
+# Environment variables
 .env.local
-.env.*
+.env
 
 # Dependencies
 node_modules/
-frontend/node_modules/
 
 # Logs
 *.log
 
-# Coverage reports
-coverage/
-htmlcov/
-*.coverage
-
-# IDE files
-.vscode/
-.idea/
+# Temporary files
+*.tmp
 *.swp
-*.swo
 
 # OS generated files
 .DS_Store
 Thumbs.db
-
-# Build artifacts
-dist/
-build/
-target/
-*.pyc
-__pycache__/
-
-# Cache directories
-.cache/
-.mypy_cache/
-.pytest_cache/
-.nyc_output/
 ```
