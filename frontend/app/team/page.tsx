@@ -8,6 +8,7 @@ import {
   useMemberships,
   useUpdateMemberRole,
   useRemoveMember,
+  useInviteMember,
   type MemberWithUser,
 } from '@/features/hooks';
 import { Button } from '@/components/ui/button';
@@ -34,9 +35,11 @@ type InviteFormData = {
 
 export default function TeamPage() {
   const { token, organizationId, orgRole } = useAuth();
-  const { data: members = [], isLoading, error } = useMemberships(organizationId);
-  const updateMemberRole = useUpdateMemberRole(organizationId);
-  const removeMember = useRemoveMember(organizationId);
+  const orgId = organizationId ?? undefined;
+  const { data: members = [], isLoading, error } = useMemberships(orgId);
+  const updateMemberRole = useUpdateMemberRole(orgId);
+  const removeMember = useRemoveMember(orgId);
+  const inviteMember = useInviteMember(orgId);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<MemberWithUser | null>(null);
 
@@ -50,10 +53,14 @@ export default function TeamPage() {
   });
 
   const onInviteSubmit = async (data: InviteFormData) => {
-    // TODO: Implementar invitación cuando el backend lo soporte
-    console.log('Invitar miembro:', data);
-    setInviteDialogOpen(false);
-    resetInvite();
+    try {
+      await inviteMember.mutateAsync({ email: data.email, role: data.role });
+      setInviteDialogOpen(false);
+      resetInvite();
+    } catch (err) {
+      console.error('Error al invitar miembro:', err);
+      alert(err instanceof Error ? err.message : 'Error al invitar miembro');
+    }
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
@@ -134,7 +141,9 @@ export default function TeamPage() {
                       <Button type="button" variant="outline" onClick={() => setInviteDialogOpen(false)}>
                         Cancelar
                       </Button>
-                      <Button type="submit">Invitar</Button>
+                      <Button type="submit" disabled={inviteMember.isPending}>
+                        {inviteMember.isPending ? 'Invitando...' : 'Invitar'}
+                      </Button>
                     </div>
                   </form>
                 </DialogContent>

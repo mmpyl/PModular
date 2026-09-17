@@ -1,55 +1,48 @@
 ```
-# Dependencies
-node_modules/
-
-# Build outputs
+# Next.js build outputs
+.frontend/.next/
 frontend/.next/
-build/
-dist/
 
-# Environment variables
+# TypeScript build info
+frontend/tsconfig.tsbuildinfo
+
+# Environment files
 .env
 .env.local
-*.env.*
+.env.*
 
-# Cache
-.cache/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-.pytest_cache/
-.mypy_cache/
+# Dependencies
+node_modules/
+frontend/node_modules/
 
 # Logs
 *.log
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# Coverage reports
+coverage/
+htmlcov/
+*.coverage
 
-# IDE specific
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Compression
-*.zip
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.gz
-*.rar
-*.7z
+# OS generated files
+.DS_Store
+Thumbs.db
 
-# Coverage reports
-coverage/
-htmlcov/
-.coverage
+# Build artifacts
+dist/
+build/
+target/
+*.pyc
+__pycache__/
 
-# Temporary files
-*.tmp
-*.temp
+# Cache directories
+.cache/
+.mypy_cache/
+.pytest_cache/
+.nyc_output/
 ```
