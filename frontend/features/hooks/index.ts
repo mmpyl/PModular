@@ -57,6 +57,44 @@ export function useRemoveMember(organizationId: string | undefined) {
   });
 }
 
+export function useInviteMember(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ email, role }: { email: string; role: 'OWNER' | 'ADMIN' | 'VENDEDOR' | 'INVENTARIO' | 'CAJA' }) => {
+      if (!organizationId) throw new Error('Organization ID required');
+      // El backend POST /memberships requiere userId, no email
+      // Necesitamos encontrar el usuario por email primero
+      // Usamos el endpoint de plataforma que permite buscar usuarios
+      const platformUsers = await apiFetch<{ data: Array<{ id: string; email: string; name?: string }> }>(
+        '/platform/users?email=' + encodeURIComponent(email),
+        {}
+      );
+      const user = platformUsers.data?.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (!user) {
+        throw new Error('El usuario no está registrado en la plataforma. Pídele que se registre primero.');
+      }
+      // Verificamos que no sea ya miembro
+      const members = await apiFetch<Array<{ id: string; user: { id: string; email: string } }>>(
+        `/memberships/organization/${organizationId}`,
+        { organizationId }
+      );
+      const existingMember = members.find(m => m.user.id === user.id);
+      if (existingMember) {
+        throw new Error('El usuario ya es miembro de esta organización');
+      }
+      // Creamos la membresía
+      return apiFetch<Membership>('/memberships', {
+        method: 'POST',
+        organizationId,
+        body: JSON.stringify({ userId: user.id, organizationId, role }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['memberships'] });
+    },
+  });
+}
+
 // ==================== INVENTORY ====================
 
 export type InventoryItem = {
