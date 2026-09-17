@@ -1,19 +1,55 @@
 ```
-# Build artifacts
-*.tsbuildinfo
-dist/
-build/
 # Dependencies
 node_modules/
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-# Environment
+
+# Build outputs
+frontend/.next/
+build/
+dist/
+
+# Environment variables
 .env
 .env.local
 *.env.*
-# Editors
+
+# Cache
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE specific
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Compression
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.gz
+*.rar
+*.7z
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Temporary files
+*.tmp
+*.temp
 ```
