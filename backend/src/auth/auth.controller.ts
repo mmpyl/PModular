@@ -3,6 +3,8 @@ import { OrgRoles } from './decorators/org-roles.decorator';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { OrgRolesGuard } from './guards/org-roles.guard';
+import { PlatformRolesGuard } from './guards/platform-roles.guard';
+import { PlatformRoles } from './decorators/org-roles.decorator';
 import { AuthService } from './auth.service';
 import { MembershipsService } from '../memberships/memberships.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -10,6 +12,11 @@ import { Request } from 'express';
 
 export class SelectOrganizationDto {
   organizationId!: string;
+}
+
+export class PlatformLoginDto {
+  email!: string;
+  password!: string;
 }
 
 @Controller('auth')
@@ -27,6 +34,18 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  /**
+   * Endpoint específico para login de usuarios de plataforma (Owen).
+   * Valida que el usuario tenga rol de plataforma (PLATFORM_ADMIN o SUPPORT).
+   */
+  @Post('platform/login')
+  @PlatformRoles('PLATFORM_ADMIN', 'SUPPORT')
+  @UseGuards(JwtAuthGuard, PlatformRolesGuard)
+  platformLogin(@Req() req: Request) {
+    const user = req.user as { sub: string };
+    return this.authService.platformLogin(user.sub);
   }
 
   @Post('select-organization')

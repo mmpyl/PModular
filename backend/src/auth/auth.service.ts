@@ -96,6 +96,25 @@ export class AuthService {
     };
   }
 
+  /**
+   * Login específico para usuarios de plataforma (Owen).
+   * Devuelve un token con platformRole pero sin organizationId.
+   */
+  async platformLogin(userId: string): Promise<AuthResponse> {
+    const user = await this.usersService.findById(userId);
+    
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Verificar que el usuario tenga rol de plataforma
+    if (!user.platformRole || !['PLATFORM_ADMIN', 'SUPPORT'].includes(user.platformRole)) {
+      throw new ForbiddenException('User does not have platform access');
+    }
+
+    return this.buildAuthResponse(user);
+  }
+
   private async buildAuthResponse(user: User, organizationId?: string, orgRole?: OrgRole): Promise<AuthResponse> {
     const payload: JwtPayload = { 
       sub: user.id, 
