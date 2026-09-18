@@ -30,6 +30,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 type SaleItemFormData = {
   productId: string;
@@ -123,33 +124,34 @@ export default function SalesPage() {
     <OwnerShell active="sales">
       <OwnerHeader eyebrow="Operación" title="Ventas" />
 
-      <section className="panel">
-        <div className="panel-heading">
-          <div>
-            <span className="eyebrow">Historial</span>
-            <h2>Ventas registradas</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select
-              value={statusFilter || 'all'}
-              onValueChange={(value) =>
-                setStatusFilter(value === 'all' ? undefined : (value as SaleStatus))
-              }
-            >
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Filtrar por estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="DRAFT">Borrador</SelectItem>
-                <SelectItem value="COMPLETED">Completada</SelectItem>
-                <SelectItem value="CANCELLED">Cancelada</SelectItem>
-              </SelectContent>
-            </Select>
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">Nueva venta</Button>
-              </DialogTrigger>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm text-gray-500 mb-1 block">Historial</span>
+              <h2>Ventas registradas</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select
+                value={statusFilter || 'all'}
+                onValueChange={(value) =>
+                  setStatusFilter(value === 'all' ? undefined : (value as SaleStatus))
+                }
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Filtrar por estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="DRAFT">Borrador</SelectItem>
+                  <SelectItem value="COMPLETED">Completada</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+              <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">Nueva venta</Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Registrar nueva venta</DialogTitle>
@@ -241,65 +243,67 @@ export default function SalesPage() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
+        </CardHeader>
 
-        {isLoading ? (
-          <p className="muted">Cargando ventas...</p>
-        ) : (
-          <div className="space-y-2">
-            {sales.map((sale) => (
-              <div className="list-row items-center" key={sale.id}>
-                <span className="flex-1">
-                  <strong>{sale.saleNumber}</strong>
-                  <small className="block">
-                    {new Date(sale.saleDate).toLocaleDateString('es-MX')} ·{' '}
-                    {sale.customer?.name || 'Cliente general'}
-                  </small>
-                </span>
-                <div className="flex items-center gap-4">
-                  <Badge variant={getStatusBadgeVariant(sale.status)}>
-                    {getStatusLabel(sale.status)}
-                  </Badge>
-                  <span className="font-semibold">${Number(sale.total).toFixed(2)}</span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedSaleId(sale.id);
-                      setDetailDialogOpen(true);
-                    }}
-                  >
-                    Ver detalle
-                  </Button>
-                  {sale.status === 'DRAFT' && (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={() => handleComplete(sale.id)}
-                        disabled={completeSale.isPending}
-                      >
-                        Completar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleCancel(sale.id)}
-                        disabled={cancelSale.isPending}
-                      >
-                        Cancelar
-                      </Button>
-                    </>
-                  )}
+        <CardContent>
+          {isLoading ? (
+            <p className="text-gray-500 text-sm">Cargando ventas...</p>
+          ) : (
+            <div className="space-y-2">
+              {sales.map((sale) => (
+                <div key={sale.id} className="flex items-center justify-between p-3 border rounded-md">
+                  <span className="flex-1">
+                    <strong className="block">{sale.saleNumber}</strong>
+                    <small className="text-gray-500">
+                      {new Date(sale.saleDate).toLocaleDateString('es-MX')} ·{' '}
+                      {sale.customer?.name || 'Cliente general'}
+                    </small>
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <Badge variant={getStatusBadgeVariant(sale.status)}>
+                      {getStatusLabel(sale.status)}
+                    </Badge>
+                    <span className="font-semibold">${Number(sale.total).toFixed(2)}</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedSaleId(sale.id);
+                        setDetailDialogOpen(true);
+                      }}
+                    >
+                      Ver detalle
+                    </Button>
+                    {sale.status === 'DRAFT' && (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handleComplete(sale.id)}
+                          disabled={completeSale.isPending}
+                        >
+                          Completar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleCancel(sale.id)}
+                          disabled={cancelSale.isPending}
+                        >
+                          Cancelar
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {!sales.length && !isLoading && (
-          <p className="muted">No hay ventas registradas.</p>
-        )}
-      </section>
+          {!sales.length && !isLoading && (
+            <p className="text-gray-500 text-sm">No hay ventas registradas.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="max-w-2xl">

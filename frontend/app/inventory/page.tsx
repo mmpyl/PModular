@@ -19,6 +19,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type AdjustStockFormData = {
   quantity: number;
@@ -69,50 +72,58 @@ export default function InventoryPage() {
     <OwnerShell active="inventory">
       <OwnerHeader eyebrow="Control operativo" title="Inventario" />
 
-      {error && <p className="error-message">{error.message}</p>}
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      )}
 
-      <section className="panel">
-        <div className="panel-heading">
-          <div>
-            <span className="eyebrow">Existencias</span>
-            <h2>Stock por producto</h2>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm text-gray-500 mb-1 block">Existencias</span>
+              <h2>Stock por producto</h2>
+            </div>
+            <Badge variant="secondary">{items.length} registros</Badge>
           </div>
-          <span className="role-badge">{items.length} registros</span>
-        </div>
+        </CardHeader>
 
-        {isLoading ? (
-          <p className="muted">Cargando inventario...</p>
-        ) : (
-          <div className="space-y-2">
-            {items.map((item) => (
-              <div className="list-row items-center" key={item.id}>
-                <span className="flex-1">
-                  <strong>{item.product.name}</strong>
-                  <small className="block">
-                    {item.product.sku || 'Sin SKU'} · Reservado: {item.reserved}
-                  </small>
-                </span>
-                <div className="flex items-center gap-4">
-                  <span className="font-semibold">
-                    {item.quantity} uds. · ${Number(item.averageCost).toFixed(2)}
+        <CardContent>
+          {isLoading ? (
+            <p className="text-gray-500 text-sm">Cargando inventario...</p>
+          ) : (
+            <div className="space-y-2">
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-3 border rounded-md">
+                  <span className="flex-1">
+                    <strong className="block">{item.product.name}</strong>
+                    <small className="text-gray-500">
+                      {item.product.sku || 'Sin SKU'} · Reservado: {item.reserved}
+                    </small>
                   </span>
-                  <Button
-                    size="sm"
-                    onClick={() => handleAdjustStock(item)}
-                    disabled={updateInventory.isPending}
-                  >
-                    Ajustar
-                  </Button>
+                  <div className="flex items-center gap-4">
+                    <span className="font-semibold">
+                      {item.quantity} uds. · ${Number(item.averageCost).toFixed(2)}
+                    </span>
+                    <Button
+                      size="sm"
+                      onClick={() => handleAdjustStock(item)}
+                      disabled={updateInventory.isPending}
+                    >
+                      Ajustar
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {!items.length && !isLoading && !error && (
-          <p className="muted">No hay existencias registradas todavía.</p>
-        )}
-      </section>
+          {!items.length && !isLoading && !error && (
+            <p className="text-gray-500 text-sm">No hay existencias registradas todavía.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
         <DialogContent>

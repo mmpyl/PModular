@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useProducts, useCategories, useUnits, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product as ProductType } from '@/features/catalog/hooks';
 import { productSchema, type ProductFormData } from '@/features/catalog/schemas';
 
@@ -110,23 +113,30 @@ export default function ProductsPage() {
   return (
     <OwnerShell active="products">
       <OwnerHeader eyebrow="Catálogo" title="Productos" />
-      {createMutation.isError || updateMutation.isError || deleteMutation.isError ? (
-        <p className="error-message" role="alert">
-          {createMutation.error?.message || updateMutation.error?.message || deleteMutation.error?.message}
-        </p>
-      ) : null}
+      {(createMutation.isError || updateMutation.isError || deleteMutation.isError) && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>
+            {createMutation.error?.message || updateMutation.error?.message || deleteMutation.error?.message}
+          </AlertDescription>
+        </Alert>
+      )}
       {(createMutation.isSuccess || updateMutation.isSuccess) && (
-        <p className="success-message">
-          {editingId ? 'Producto actualizado correctamente' : 'Producto creado correctamente'}
-        </p>
+        <Alert className="mb-4 bg-green-50 border-green-200 text-green-800">
+          <AlertDescription>
+            {editingId ? 'Producto actualizado correctamente' : 'Producto creado correctamente'}
+          </AlertDescription>
+        </Alert>
       )}
 
       <RequireRole roles={WRITE_ROLES}>
-        <section className="panel">
-          <span className="eyebrow">{editingId ? 'Edición' : 'Alta'}</span>
-          <h2>{editingId ? 'Editar producto' : 'Nuevo producto'}</h2>
-          <Form {...form}>
-            <form className="compact-form" onSubmit={form.handleSubmit(onSubmit)}>
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <span className="text-sm text-gray-500 mb-1">{editingId ? 'Edición' : 'Alta'}</span>
+            <h2 className="text-lg font-semibold">{editingId ? 'Editar producto' : 'Nuevo producto'}</h2>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
               <FormField
                 control={form.control}
                 name="name"
@@ -239,7 +249,7 @@ export default function ProductsPage() {
                     const label = definition.label ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
                     if (type === 'boolean') {
                       return (
-                        <FormItem className="fractionable-field">
+                        <FormItem>
                           <div className="flex items-center gap-2">
                             <FormControl>
                               <Checkbox checked={Boolean(field.value)} onCheckedChange={field.onChange} />
@@ -285,7 +295,7 @@ export default function ProductsPage() {
                 />
               ))}
               {editingId && (
-                <Button type="button" variant="link" className="quiet-link" onClick={resetForm}>
+                <Button type="button" variant="ghost" onClick={resetForm}>
                   Cancelar edición
                 </Button>
               )}
@@ -294,77 +304,83 @@ export default function ProductsPage() {
               </Button>
             </form>
           </Form>
-        </section>
+          </CardContent>
+        </Card>
       </RequireRole>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <div>
-            <span className="eyebrow">Catálogo</span>
-            <h2>Catálogo actual</h2>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm text-gray-500 mb-1 block">Catálogo</span>
+              <h2 className="text-lg font-semibold">Catálogo actual</h2>
+            </div>
+            <Badge variant="secondary">{filteredProducts.length} productos</Badge>
           </div>
-          <span className="role-badge">{filteredProducts.length} productos</span>
-        </div>
-        <div className="field-actions">
-          <Input
-            aria-label="Buscar productos"
-            placeholder="Buscar por nombre o SKU..."
-            value={search ?? ''}
-            onChange={(e) => form.setValue('search', e.target.value)}
-          />
-          <Select value={filterCategory ?? ''} onValueChange={(v) => form.setValue('filterCategory', v)}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Todas las categorías" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todas las categorías</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {loadingProducts ? (
-          <p className="muted">Cargando...</p>
-        ) : (
-          <>
-            {filteredProducts.map((product) => (
-              <div className="list-row" key={product.id}>
-                <span>
-                  <strong>{product.name}</strong>
-                  <small>{product.sku || 'Sin SKU'} · {product.category?.name || 'Sin categoría'} · {product.unit?.name || 'Sin unidad'}</small>
-                </span>
-                <span className="list-right">
-                  <strong>{Number(product.price).toFixed(2)}</strong>
-                  <RequireRole roles={WRITE_ROLES}>
-                    <div className="row-actions">
-                      <Button type="button" variant="link" className="quiet-link" onClick={() => startEdit(product)}>
-                        Editar
-                      </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 mb-4">
+            <Input
+              aria-label="Buscar productos"
+              placeholder="Buscar por nombre o SKU..."
+              value={search ?? ''}
+              onChange={(e) => form.setValue('search', e.target.value)}
+              className="flex-1"
+            />
+            <Select value={filterCategory ?? ''} onValueChange={(v) => form.setValue('filterCategory', v)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Todas las categorías" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas las categorías</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {loadingProducts ? (
+            <p className="text-gray-500 text-sm">Cargando...</p>
+          ) : (
+            <>
+              <div className="space-y-2">
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+                    <div>
+                      <strong className="block">{product.name}</strong>
+                      <small className="text-gray-500">{product.sku || 'Sin SKU'} · {product.category?.name || 'Sin categoría'} · {product.unit?.name || 'Sin unidad'}</small>
                     </div>
-                  </RequireRole>
-                  {canDelete && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      className="danger"
-                      onClick={() => void deleteProduct(product)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      Eliminar
-                    </Button>
-                  )}
-                </span>
+                    <div className="flex items-center gap-4">
+                      <strong>{Number(product.price).toFixed(2)}</strong>
+                      <RequireRole roles={WRITE_ROLES}>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => startEdit(product)}>
+                          Editar
+                        </Button>
+                      </RequireRole>
+                      {canDelete && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => void deleteProduct(product)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          Eliminar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-            {!filteredProducts.length && (
-              <p className="muted">No hay productos para mostrar.</p>
-            )}
-          </>
-        )}
-      </section>
+              {!filteredProducts.length && (
+                <p className="text-gray-500 text-sm">No hay productos para mostrar.</p>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </OwnerShell>
   );
 }
