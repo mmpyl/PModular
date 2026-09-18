@@ -147,16 +147,17 @@ export default function CashRegistersPage() {
     <OwnerShell active="cash">
       <OwnerHeader eyebrow="Tesorería" title="Cajas registradoras" />
 
-      <section className="panel">
-        <div className="panel-heading">
-          <div>
-            <span className="eyebrow">Configuración</span>
-            <h2>Cajas registradoras</h2>
-          </div>
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">Nueva caja</Button>
-            </DialogTrigger>
+      <Card className="mt-4">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Configuración</p>
+              <h2 className="text-2xl font-semibold leading-none tracking-tight">Cajas registradoras</h2>
+            </div>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">Nueva caja</Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Crear nueva caja</DialogTitle>

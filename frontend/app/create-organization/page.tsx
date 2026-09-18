@@ -4,6 +4,10 @@ import { FormEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type BusinessType = {
   id: string;
@@ -75,34 +79,38 @@ export default function CreateOrganizationPage() {
   }
 
   return (
-        <main className="auth-page">
+        <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-gray-50 to-white">
       {!isAuthenticated ? (
-        <p className="loading-message">Cargando...</p>
+        <p className="text-muted-foreground">Cargando...</p>
       ) : (
-        <>
-          <span className="eyebrow">Crear organización</span>
-          <h1>Registra tu empresa</h1>
-          <p>Completa los datos para comenzar a usar PymeN.</p>
-          <form onSubmit={handleSubmit}>
-            {error && <p className="error-message">{error}</p>}
+        <div className="w-full max-w-md space-y-6">
+          <div className="space-y-2 text-center">
+            <p className="text-sm font-medium text-muted-foreground">Crear organización</p>
+            <h1 className="text-3xl font-bold tracking-tight">Registra tu empresa</h1>
+            <p className="text-muted-foreground">Completa los datos para comenzar a usar PymeN.</p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
             
-            <label>
-              Nombre de la organización
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="org-name">Nombre de la organización</Label>
+              <Input
+                id="org-name"
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Mi Empresa S.A."
               />
-            </label>
+            </div>
 
-            <label>
-              Tipo de negocio
+            <div className="space-y-2">
+              <Label htmlFor="business-type">Tipo de negocio</Label>
                <select
                 required
                 value={businessTypeId}
                 onChange={(e) => setBusinessTypeId(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">Selecciona un tipo de negocio</option>
                 {businessTypes.map((bt) => (
@@ -111,16 +119,17 @@ export default function CreateOrganizationPage() {
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading || !name || !businessTypeId}
+              className="w-full"
             >
               {loading ? 'Creando...' : 'Crear organización'}
-            </button>
+            </Button>
           </form>
-        </>
+        </div>
       )}
     </main>
   );

@@ -48,10 +48,10 @@ export default function PlatformLoginPage() {
   };
 
   return (
-    <main className="auth-page flex min-h-screen items-center justify-center p-4">
+    <main className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <span className="eyebrow text-sm font-medium text-muted-foreground">Owen Panel</span>
+          <p className="text-sm font-medium text-muted-foreground">Owen Panel</p>
           <CardTitle className="text-2xl font-bold">Acceso de Plataforma</CardTitle>
           <CardDescription>
             Ingresa tus credenciales de administrador para acceder al panel de plataforma.
