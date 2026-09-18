@@ -9,8 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useUnits, useCreateUnit, useUpdateUnit, useDeleteUnit, type Unit } from '@/features/catalog/hooks';
 import { unitSchema, type UnitFormData } from '@/features/catalog/schemas';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 // Crear/editar: OWNER/ADMIN/INVENTARIO. Eliminar: solo OWNER/ADMIN (backend).
 const WRITE_ROLES = ['OWNER', 'ADMIN', 'INVENTARIO'];
@@ -65,123 +69,143 @@ export default function UnitsPage() {
   return (
     <OwnerShell active="units">
       <OwnerHeader eyebrow="Catálogo" title="Unidades de medida" />
-      {createMutation.isError || updateMutation.isError || deleteMutation.isError ? (
-        <p className="error-message" role="alert">
-          {createMutation.error?.message || updateMutation.error?.message || deleteMutation.error?.message}
-        </p>
-      ) : null}
+      
+      {/* Mensajes de error */}
+      {(createMutation.isError || updateMutation.isError || deleteMutation.isError) && (
+        <Alert variant="destructive" className="mb-4" role="alert">
+          <XCircle className="h-4 w-4" />
+          <AlertDescription>
+            {createMutation.error?.message || updateMutation.error?.message || deleteMutation.error?.message}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Mensajes de éxito */}
       {(createMutation.isSuccess || updateMutation.isSuccess) && (
-        <p className="success-message">
-          {editingId ? 'Unidad actualizada correctamente' : 'Unidad creada correctamente'}
-        </p>
+        <Alert variant="default" className="mb-4 bg-green-50 border-green-200 text-green-800">
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <AlertDescription>
+            {editingId ? 'Unidad actualizada correctamente' : 'Unidad creada correctamente'}
+          </AlertDescription>
+        </Alert>
       )}
 
       <RequireRole roles={WRITE_ROLES}>
-        <section className="panel">
-          <span className="eyebrow">{editingId ? 'Edición' : 'Alta'}</span>
-          <h2>{editingId ? 'Editar unidad' : 'Nueva unidad'}</h2>
-          <Form {...form}>
-            <form className="compact-form" onSubmit={form.handleSubmit(onSubmit)}>
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="symbol"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Símbolo</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="isFractionable"
-                render={({ field }) => (
-                  <FormItem className="fractionable-field">
-                    <div className="flex items-center gap-2">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">{editingId ? 'Editar unidad' : 'Nueva unidad'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre</FormLabel>
                       <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        <Input {...field} />
                       </FormControl>
-                      <FormLabel className="!mt-0 cursor-pointer">¿Vendible fraccionado?</FormLabel>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {editingId && (
-                <Button type="button" variant="link" className="quiet-link" onClick={resetForm}>
-                  Cancelar edición
-                </Button>
-              )}
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {editingId ? 'Guardar cambios' : 'Agregar unidad'}
-              </Button>
-            </form>
-          </Form>
-        </section>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="symbol"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Símbolo</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isFractionable"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="!mt-0 cursor-pointer">¿Vendible fraccionado?</FormLabel>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex items-center gap-2">
+                  {editingId && (
+                    <Button type="button" variant="ghost" onClick={resetForm}>
+                      Cancelar edición
+                    </Button>
+                  )}
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                    {editingId ? 'Guardar cambios' : 'Agregar unidad'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </RequireRole>
 
-      <section className="panel">
-        <div className="panel-heading">
-          <div>
-            <span className="eyebrow">Catálogo</span>
-            <h2>Unidades disponibles</h2>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-500 mb-1">Catálogo</div>
+              <CardTitle>Unidades disponibles</CardTitle>
+            </div>
+            <Badge variant="secondary">{units.length} unidades</Badge>
           </div>
-          <span className="role-badge">{units.length} unidades</span>
-        </div>
-        {isLoading ? (
-          <p className="muted">Cargando...</p>
-        ) : (
-          <>
-            {units.map((unit) => (
-              <div className="list-row" key={unit.id}>
-                <span>
-                  <strong>{unit.name}</strong>
-                  <small>{unit.symbol || 'Sin símbolo'}{unit.isFractionable ? ' · Fraccionable' : ''}</small>
-                </span>
-                <RequireRole roles={WRITE_ROLES}>
-                  <div className="row-actions">
-                    <Button type="button" variant="link" className="quiet-link" onClick={() => startEdit(unit)}>
-                      Editar
-                    </Button>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-gray-500">Cargando...</p>
+          ) : (
+            <>
+              {units.map((unit) => (
+                <div className="flex items-center justify-between py-3 border-b last:border-0" key={unit.id}>
+                  <div>
+                    <div className="font-medium">{unit.name}</div>
+                    <div className="text-sm text-gray-500">
+                      {unit.symbol || 'Sin símbolo'}
+                      {unit.isFractionable ? ' · Fraccionable' : ''}
+                    </div>
                   </div>
-                </RequireRole>
-                <RequireRole roles={DELETE_ROLES}>
-                  <div className="row-actions">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      className="danger"
-                      onClick={() => void remove(unit)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      Eliminar
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <RequireRole roles={WRITE_ROLES}>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => startEdit(unit)}>
+                        Editar
+                      </Button>
+                    </RequireRole>
+                    <RequireRole roles={DELETE_ROLES}>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => void remove(unit)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        Eliminar
+                      </Button>
+                    </RequireRole>
                   </div>
-                </RequireRole>
-              </div>
-            ))}
-            {!units.length && (
-              <p className="muted">No hay unidades registradas.</p>
-            )}
-          </>
-        )}
-      </section>
+                </div>
+              ))}
+              {!units.length && (
+                <p className="text-sm text-gray-500">No hay unidades registradas.</p>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </OwnerShell>
   );
 }
