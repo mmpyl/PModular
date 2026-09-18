@@ -27,6 +27,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type InviteFormData = {
   email: string;
@@ -82,31 +85,39 @@ export default function TeamPage() {
         title={canManageTeam ? 'Equipo y permisos' : 'Equipo'}
       />
 
-      {canManageTeam ? (
-        <p className="success-message">
-          Como propietario puedes administrar los accesos de esta organización.
-        </p>
-      ) : (
-        <p className="muted">
+      {canManageTeam && (
+        <Alert className="mb-4 bg-green-50 border-green-200 text-green-800">
+          <AlertDescription>
+            Como propietario puedes administrar los accesos de esta organización.
+          </AlertDescription>
+        </Alert>
+      )}
+      {!canManageTeam && (
+        <p className="text-gray-500 text-sm mb-4">
           Consulta los miembros y sus roles. Solo el propietario puede modificar permisos.
         </p>
       )}
 
-      {error && <p className="error-message">{error.message}</p>}
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      )}
 
-      <section className="panel">
-        <div className="panel-heading">
-          <div>
-            <span className="eyebrow">Miembros</span>
-            <h2>Usuarios de la organización</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="role-badge">{members.length} miembros</span>
-            {canManageTeam && (
-              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm">Invitar miembro</Button>
-                </DialogTrigger>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm text-gray-500 mb-1 block">Miembros</span>
+              <h2>Usuarios de la organización</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{members.length} miembros</Badge>
+              {canManageTeam && (
+                <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">Invitar miembro</Button>
+                  </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Invitar nuevo miembro</DialogTitle>
@@ -150,58 +161,60 @@ export default function TeamPage() {
               </Dialog>
             )}
           </div>
-        </div>
+        </CardHeader>
 
-        {isLoading ? (
-          <p className="muted">Cargando miembros...</p>
-        ) : (
-          <div className="space-y-2">
-            {members.map((member) => (
-              <div className="list-row items-center" key={member.id}>
-                <span className="flex-1">
-                  <strong>{member.user.name || member.user.email}</strong>
-                  <small className="block">{member.user.email}</small>
-                </span>
-                {canManageTeam ? (
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={member.role}
-                      onValueChange={(value) => handleRoleChange(member.user.id, value)}
-                    >
-                      <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Seleccionar rol" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="OWNER">Propietario</SelectItem>
-                        <SelectItem value="ADMIN">Administrador</SelectItem>
-                        <SelectItem value="VENDEDOR">Vendedor</SelectItem>
-                        <SelectItem value="INVENTARIO">Inventario</SelectItem>
-                        <SelectItem value="CAJA">Caja</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {member.role !== 'OWNER' && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleRemoveMember(member.user.id)}
-                        disabled={removeMember.isPending}
+        <CardContent>
+          {isLoading ? (
+            <p className="text-gray-500 text-sm">Cargando miembros...</p>
+          ) : (
+            <div className="space-y-2">
+              {members.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-3 border rounded-md">
+                  <span className="flex-1">
+                    <strong className="block">{member.user.name || member.user.email}</strong>
+                    <small className="text-gray-500">{member.user.email}</small>
+                  </span>
+                  {canManageTeam ? (
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={member.role}
+                        onValueChange={(value) => handleRoleChange(member.user.id, value)}
                       >
-                        Remover
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <span className="role-badge">{member.role}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue placeholder="Seleccionar rol" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="OWNER">Propietario</SelectItem>
+                          <SelectItem value="ADMIN">Administrador</SelectItem>
+                          <SelectItem value="VENDEDOR">Vendedor</SelectItem>
+                          <SelectItem value="INVENTARIO">Inventario</SelectItem>
+                          <SelectItem value="CAJA">Caja</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {member.role !== 'OWNER' && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleRemoveMember(member.user.id)}
+                          disabled={removeMember.isPending}
+                        >
+                          Remover
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <Badge variant="secondary">{member.role}</Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
-        {!members.length && !isLoading && !error && (
-          <p className="muted">No hay miembros para mostrar.</p>
-        )}
-      </section>
+          {!members.length && !isLoading && !error && (
+            <p className="text-gray-500 text-sm">No hay miembros para mostrar.</p>
+          )}
+        </CardContent>
+      </Card>
     </OwnerShell>
   );
 }
