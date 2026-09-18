@@ -24,6 +24,7 @@ export declare class AuthService {
     register(dto: CreateUserDto): Promise<AuthResponse>;
     login(dto: LoginDto): Promise<LoginResponse>;
     selectOrganization(userId: string, organizationId: string): Promise<LoginResponse>;
+    platformLogin(userId: string): Promise<AuthResponse>;
     private buildAuthResponse;
 }
 export {};
