@@ -2,25 +2,25 @@
 # Dependencies
 node_modules/
 
-# Next.js
-.next/
-
 # Build artifacts
 dist/
 build/
-target/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Logs
 *.log
-
-# Environment variables
-.env
-.env.local
-.env.*
-
-# IDE
-.vscode/
-.idea/
 
 # Python
 __pycache__/
@@ -28,15 +28,16 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-venv/
-.venv/
-
-# Coverage
-coverage/
-htmlcov/
+*.so
 .coverage
+htmlcov/
+.coverage.*
+.pytest_cache/
+.mypy_cache/
 
-# System
+# Temporary files
+*.tmp
+*~
 .DS_Store
 Thumbs.db
 
@@ -59,4 +60,8 @@ Thumbs.db
 *.Z
 *.lz
 *.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 ```
