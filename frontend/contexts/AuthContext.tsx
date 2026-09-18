@@ -45,43 +45,106 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Cargar sesión almacenada al iniciar
+  // Cargar sesión almacenada al iniciar (priorizar cookie httpOnly, fallback a localStorage)
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
+    const loadSession = async () => {
+      // Intentar obtener token y datos desde cookie httpOnly primero
       try {
-        const session = JSON.parse(stored) as AuthResponse;
-        setToken(session.accessToken);
-        setUser(session.user);
-        setOrganizationId(session.organizationId ?? null);
-        setOrgRole(session.orgRole ?? null);
-        setPlatformRole(session.platformRole ?? null);
-        setMemberships(session.memberships ?? []);
+        const response = await fetch('/api/auth/cookie', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.token) {
+            const session: AuthResponse = {
+              accessToken: data.token,
+              user: data.user,
+              organizationId: data.organizationId,
+              orgRole: data.orgRole,
+              platformRole: data.platformRole,
+              memberships: [],
+            };
+            setToken(session.accessToken);
+            setUser(session.user);
+            setOrganizationId(session.organizationId ?? null);
+            setOrgRole(session.orgRole ?? null);
+            setPlatformRole(session.platformRole ?? null);
+            setMemberships(session.memberships ?? []);
+            setIsHydrated(true);
+            return;
+          }
+        }
       } catch {
-        // Sesión inválida, limpiar
-        window.localStorage.removeItem(STORAGE_KEY);
+        // Ignorar errores de cookie, intentar fallback
       }
-    }
-    setIsHydrated(true);
+
+      // Fallback a localStorage para compatibilidad
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const session = JSON.parse(stored) as AuthResponse;
+          setToken(session.accessToken);
+          setUser(session.user);
+          setOrganizationId(session.organizationId ?? null);
+          setOrgRole(session.orgRole ?? null);
+          setPlatformRole(session.platformRole ?? null);
+          setMemberships(session.memberships ?? []);
+        } catch {
+          // Sesión inválida, limpiar
+          window.localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+      setIsHydrated(true);
+    };
+
+    loadSession();
   }, []);
 
-  const persistSession = useCallback((session: AuthResponse) => {
+  const persistSession = useCallback(async (session: AuthResponse) => {
     setToken(session.accessToken);
     setUser(session.user);
     setOrganizationId(session.organizationId ?? null);
     setOrgRole(session.orgRole ?? null);
     setPlatformRole(session.platformRole ?? null);
     setMemberships(session.memberships ?? []);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+
+    // Establecer cookie httpOnly vía Route Handler
+    try {
+      await fetch('/api/auth/cookie', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: session.accessToken }),
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Error al establecer cookie:', error);
+      // Fallback a localStorage si falla la cookie
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    }
   }, []);
 
-  const clearSession = useCallback(() => {
+  const clearSession = useCallback(async () => {
     setToken(null);
     setUser(null);
     setOrganizationId(null);
     setOrgRole(null);
     setPlatformRole(null);
     setMemberships([]);
+
+    // Eliminar cookie httpOnly vía Route Handler
+    try {
+      await fetch('/api/auth/cookie', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Error al eliminar cookie:', error);
+    }
+
+    // Limpiar localStorage también para fallback
     window.localStorage.removeItem(STORAGE_KEY);
   }, []);
 

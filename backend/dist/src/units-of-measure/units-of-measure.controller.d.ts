@@ -7,39 +7,9 @@ export interface CreateUnitOfMeasureDto {
 export declare class UnitsOfMeasureController {
     private readonly unitsOfMeasureService;
     constructor(unitsOfMeasureService: UnitsOfMeasureService);
-    create(createUnitDto: CreateUnitOfMeasureDto, organizationId: string): Promise<{
-        symbol: string | null;
-        id: string;
-        name: string;
-        organizationId: string;
-        isFractionable: boolean;
-    }>;
-    findAll(organizationId: string): import(".prisma/client").Prisma.PrismaPromise<{
-        symbol: string | null;
-        id: string;
-        name: string;
-        organizationId: string;
-        isFractionable: boolean;
-    }[]>;
-    findOne(id: string, organizationId: string): import(".prisma/client").Prisma.Prisma__UnitOfMeasureClient<{
-        symbol: string | null;
-        id: string;
-        name: string;
-        organizationId: string;
-        isFractionable: boolean;
-    } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
-    update(id: string, updateUnitDto: Partial<CreateUnitOfMeasureDto>, organizationId: string): Promise<{
-        symbol: string | null;
-        id: string;
-        name: string;
-        organizationId: string;
-        isFractionable: boolean;
-    }>;
-    remove(id: string, organizationId: string): Promise<{
-        symbol: string | null;
-        id: string;
-        name: string;
-        organizationId: string;
-        isFractionable: boolean;
-    }>;
+    create(createUnitDto: CreateUnitOfMeasureDto, organizationId: string): Promise<any>;
+    findAll(organizationId: string): any;
+    findOne(id: string, organizationId: string): any;
+    update(id: string, updateUnitDto: Partial<CreateUnitOfMeasureDto>, organizationId: string): Promise<any>;
+    remove(id: string, organizationId: string): Promise<any>;
 }

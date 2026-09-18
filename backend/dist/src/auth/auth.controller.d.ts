@@ -6,63 +6,47 @@ import { Request } from 'express';
 export declare class SelectOrganizationDto {
     organizationId: string;
 }
+export declare class PlatformLoginDto {
+    email: string;
+    password: string;
+}
 export declare class AuthController {
     private readonly authService;
     private readonly membershipsService;
     constructor(authService: AuthService, membershipsService: MembershipsService);
     register(dto: CreateUserDto): Promise<{
         accessToken: string;
-        user: Omit<import(".prisma/client").User, "password">;
+        user: Omit<User, "password">;
         organizationId?: string;
-        orgRole?: import(".prisma/client").OrgRole;
-        platformRole?: import(".prisma/client").PlatformRole;
+        orgRole?: OrgRole;
+        platformRole?: PlatformRole;
     }>;
     login(dto: LoginDto): Promise<{
         accessToken: string;
-        user: Omit<import(".prisma/client").User, "password">;
+        user: Omit<User, "password">;
         organizationId?: string;
-        orgRole?: import(".prisma/client").OrgRole;
-        platformRole?: import(".prisma/client").PlatformRole;
+        orgRole?: OrgRole;
+        platformRole?: PlatformRole;
     } & {
-        memberships?: import(".prisma/client").Membership[];
+        memberships?: Membership[];
+    }>;
+    platformLogin(req: Request): Promise<{
+        accessToken: string;
+        user: Omit<User, "password">;
+        organizationId?: string;
+        orgRole?: OrgRole;
+        platformRole?: PlatformRole;
     }>;
     selectOrganization(dto: SelectOrganizationDto, req: Request): Promise<{
         accessToken: string;
-        user: Omit<import(".prisma/client").User, "password">;
+        user: Omit<User, "password">;
         organizationId?: string;
-        orgRole?: import(".prisma/client").OrgRole;
-        platformRole?: import(".prisma/client").PlatformRole;
+        orgRole?: OrgRole;
+        platformRole?: PlatformRole;
     } & {
-        memberships?: import(".prisma/client").Membership[];
+        memberships?: Membership[];
     }>;
-    getMemberships(req: Request): Promise<({
-        organization: {
-            businessType: {
-                id: string;
-                code: string;
-                name: string;
-                description: string | null;
-                defaultModules: import("@prisma/client/runtime/library").JsonValue;
-                productSchema: import("@prisma/client/runtime/library").JsonValue;
-                createdAt: Date;
-                updatedAt: Date;
-            };
-        } & {
-            id: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            status: import(".prisma/client").$Enums.OrganizationStatus;
-            enabledModules: import("@prisma/client/runtime/library").JsonValue;
-            settings: import("@prisma/client/runtime/library").JsonValue;
-            businessTypeId: string;
-        };
-    } & {
-        id: string;
-        organizationId: string;
-        userId: string;
-        role: import(".prisma/client").$Enums.OrgRole;
-    })[]>;
+    getMemberships(req: Request): Promise<any>;
     adminCheck(): {
         ok: boolean;
     };

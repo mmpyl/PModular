@@ -12,18 +12,23 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthController = exports.SelectOrganizationDto = void 0;
+exports.AuthController = exports.PlatformLoginDto = exports.SelectOrganizationDto = void 0;
 const common_1 = require("@nestjs/common");
 const org_roles_decorator_1 = require("./decorators/org-roles.decorator");
 const login_dto_1 = require("./dto/login.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const org_roles_guard_1 = require("./guards/org-roles.guard");
+const platform_roles_guard_1 = require("./guards/platform-roles.guard");
+const org_roles_decorator_2 = require("./decorators/org-roles.decorator");
 const auth_service_1 = require("./auth.service");
 const memberships_service_1 = require("../memberships/memberships.service");
 const create_user_dto_1 = require("../users/dto/create-user.dto");
 class SelectOrganizationDto {
 }
 exports.SelectOrganizationDto = SelectOrganizationDto;
+class PlatformLoginDto {
+}
+exports.PlatformLoginDto = PlatformLoginDto;
 let AuthController = class AuthController {
     constructor(authService, membershipsService) {
         this.authService = authService;
@@ -34,6 +39,10 @@ let AuthController = class AuthController {
     }
     login(dto) {
         return this.authService.login(dto);
+    }
+    platformLogin(req) {
+        const user = req.user;
+        return this.authService.platformLogin(user.sub);
     }
     selectOrganization(dto, req) {
         const user = req.user;
@@ -63,6 +72,15 @@ __decorate([
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('platform/login'),
+    (0, org_roles_decorator_2.PlatformRoles)('PLATFORM_ADMIN', 'SUPPORT'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, platform_roles_guard_1.PlatformRolesGuard),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "platformLogin", null);
 __decorate([
     (0, common_1.Post)('select-organization'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

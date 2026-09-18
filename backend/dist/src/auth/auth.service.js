@@ -69,6 +69,16 @@ let AuthService = class AuthService {
             memberships,
         };
     }
+    async platformLogin(userId) {
+        const user = await this.usersService.findById(userId);
+        if (!user) {
+            throw new common_1.UnauthorizedException('User not found');
+        }
+        if (!user.platformRole || !['PLATFORM_ADMIN', 'SUPPORT'].includes(user.platformRole)) {
+            throw new common_1.ForbiddenException('User does not have platform access');
+        }
+        return this.buildAuthResponse(user);
+    }
     async buildAuthResponse(user, organizationId, orgRole) {
         const payload = {
             sub: user.id,
