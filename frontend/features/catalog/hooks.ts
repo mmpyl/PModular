@@ -31,18 +31,18 @@ export type Product = {
 };
 
 // Categories
-export function useCategories(organizationId: string | undefined) {
+export function useCategories(organizationId: string | undefined, token?: string) {
   return useQuery<Category[]>({
     queryKey: ['categories', organizationId],
     queryFn: async () => {
       if (!organizationId) throw new Error('Organization ID required');
-      return apiFetch<Category[]>('/categories', { organizationId });
+      return apiFetch<Category[]>('/categories', { organizationId, token });
     },
     enabled: !!organizationId,
   });
 }
 
-export function useCreateCategory(organizationId: string | undefined) {
+export function useCreateCategory(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: { name: string; parentId: string | null }) => {
@@ -50,6 +50,7 @@ export function useCreateCategory(organizationId: string | undefined) {
       return apiFetch<Category>('/categories', {
         method: 'POST',
         organizationId,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -59,7 +60,7 @@ export function useCreateCategory(organizationId: string | undefined) {
   });
 }
 
-export function useUpdateCategory(organizationId: string | undefined) {
+export function useUpdateCategory(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { name: string; parentId: string | null } }) => {
@@ -67,6 +68,7 @@ export function useUpdateCategory(organizationId: string | undefined) {
       return apiFetch<Category>(`/categories/${id}`, {
         method: 'PATCH',
         organizationId,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -76,7 +78,7 @@ export function useUpdateCategory(organizationId: string | undefined) {
   });
 }
 
-export function useDeleteCategory(organizationId: string | undefined) {
+export function useDeleteCategory(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
@@ -84,6 +86,7 @@ export function useDeleteCategory(organizationId: string | undefined) {
       return apiFetch<void>(`/categories/${id}`, {
         method: 'DELETE',
         organizationId,
+        token,
       });
     },
     onSuccess: () => {
@@ -93,18 +96,18 @@ export function useDeleteCategory(organizationId: string | undefined) {
 }
 
 // Units
-export function useUnits(organizationId: string | undefined) {
+export function useUnits(organizationId: string | undefined, token?: string) {
   return useQuery<Unit[]>({
     queryKey: ['units', organizationId],
     queryFn: async () => {
       if (!organizationId) throw new Error('Organization ID required');
-      return apiFetch<Unit[]>('/units-of-measure', { organizationId });
+      return apiFetch<Unit[]>('/units-of-measure', { organizationId, token });
     },
     enabled: !!organizationId,
   });
 }
 
-export function useCreateUnit(organizationId: string | undefined) {
+export function useCreateUnit(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: { name: string; symbol?: string; isFractionable: boolean }) => {
@@ -112,6 +115,7 @@ export function useCreateUnit(organizationId: string | undefined) {
       return apiFetch<Unit>('/units-of-measure', {
         method: 'POST',
         organizationId,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -121,7 +125,7 @@ export function useCreateUnit(organizationId: string | undefined) {
   });
 }
 
-export function useUpdateUnit(organizationId: string | undefined) {
+export function useUpdateUnit(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { name: string; symbol?: string; isFractionable: boolean } }) => {
@@ -129,6 +133,7 @@ export function useUpdateUnit(organizationId: string | undefined) {
       return apiFetch<Unit>(`/units-of-measure/${id}`, {
         method: 'PATCH',
         organizationId,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -138,7 +143,7 @@ export function useUpdateUnit(organizationId: string | undefined) {
   });
 }
 
-export function useDeleteUnit(organizationId: string | undefined) {
+export function useDeleteUnit(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
@@ -146,6 +151,7 @@ export function useDeleteUnit(organizationId: string | undefined) {
       return apiFetch<void>(`/units-of-measure/${id}`, {
         method: 'DELETE',
         organizationId,
+        token,
       });
     },
     onSuccess: () => {
@@ -155,7 +161,7 @@ export function useDeleteUnit(organizationId: string | undefined) {
 }
 
 // Products
-export function useProducts(organizationId: string | undefined, search?: string, categoryId?: string) {
+export function useProducts(organizationId: string | undefined, search?: string, categoryId?: string, token?: string) {
   return useQuery<Product[]>({
     queryKey: ['products', organizationId, search, categoryId],
     queryFn: async () => {
@@ -164,13 +170,13 @@ export function useProducts(organizationId: string | undefined, search?: string,
       if (search) params.set('search', search);
       if (categoryId) params.set('categoryId', categoryId);
       const qs = params.toString();
-      return apiFetch<Product[]>(`/products${qs ? `?${qs}` : ''}`, { organizationId });
+      return apiFetch<Product[]>(`/products${qs ? `?${qs}` : ''}`, { organizationId, token });
     },
     enabled: !!organizationId,
   });
 }
 
-export function useCreateProduct(organizationId: string | undefined) {
+export function useCreateProduct(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -186,6 +192,7 @@ export function useCreateProduct(organizationId: string | undefined) {
       return apiFetch<Product>('/products', {
         method: 'POST',
         organizationId,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -195,7 +202,7 @@ export function useCreateProduct(organizationId: string | undefined) {
   });
 }
 
-export function useUpdateProduct(organizationId: string | undefined) {
+export function useUpdateProduct(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: {
@@ -211,6 +218,7 @@ export function useUpdateProduct(organizationId: string | undefined) {
       return apiFetch<Product>(`/products/${id}`, {
         method: 'PATCH',
         organizationId,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -220,7 +228,7 @@ export function useUpdateProduct(organizationId: string | undefined) {
   });
 }
 
-export function useDeleteProduct(organizationId: string | undefined) {
+export function useDeleteProduct(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
@@ -228,6 +236,7 @@ export function useDeleteProduct(organizationId: string | undefined) {
       return apiFetch<void>(`/products/${id}`, {
         method: 'DELETE',
         organizationId,
+        token,
       });
     },
     onSuccess: () => {

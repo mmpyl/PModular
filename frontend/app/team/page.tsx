@@ -39,10 +39,10 @@ type InviteFormData = {
 export default function TeamPage() {
   const { token, organizationId, orgRole } = useAuth();
   const orgId = organizationId ?? undefined;
-  const { data: members = [], isLoading, error } = useMemberships(orgId);
-  const updateMemberRole = useUpdateMemberRole(orgId);
-  const removeMember = useRemoveMember(orgId);
-  const inviteMember = useInviteMember(orgId);
+  const { data: members = [], isLoading, error } = useMemberships(orgId, token);
+  const updateMemberRole = useUpdateMemberRole(orgId, token);
+  const removeMember = useRemoveMember(orgId, token);
+  const inviteMember = useInviteMember(orgId, token);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<MemberWithUser | null>(null);
 

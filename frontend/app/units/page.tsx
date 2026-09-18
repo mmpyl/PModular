@@ -22,10 +22,10 @@ const DELETE_ROLES = ['OWNER', 'ADMIN'];
 
 export default function UnitsPage() {
   const { token, organizationId, orgRole } = useAuth();
-  const { data: units = [], isLoading } = useUnits(organizationId ?? undefined);
-  const createMutation = useCreateUnit(organizationId ?? undefined);
-  const updateMutation = useUpdateUnit(organizationId ?? undefined);
-  const deleteMutation = useDeleteUnit(organizationId ?? undefined);
+  const { data: units = [], isLoading } = useUnits(organizationId ?? undefined, token);
+  const createMutation = useCreateUnit(organizationId ?? undefined, token);
+  const updateMutation = useUpdateUnit(organizationId ?? undefined, token);
+  const deleteMutation = useDeleteUnit(organizationId ?? undefined, token);
 
   const form = useForm<UnitFormData & { id?: string }>({
     resolver: zodResolver(unitSchema),

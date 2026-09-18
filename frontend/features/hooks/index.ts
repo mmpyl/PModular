@@ -13,18 +13,18 @@ export type MemberWithUser = Membership & {
   };
 };
 
-export function useMemberships(organizationId: string | undefined) {
+export function useMemberships(organizationId: string | undefined, token?: string) {
   return useQuery<MemberWithUser[]>({
     queryKey: ['memberships', organizationId],
     queryFn: async () => {
       if (!organizationId) throw new Error('Organization ID required');
-      return apiFetch<MemberWithUser[]>(`/memberships/organization/${organizationId}`, { organizationId });
+      return apiFetch<MemberWithUser[]>(`/memberships/organization/${organizationId}`, { organizationId, token });
     },
     enabled: !!organizationId,
   });
 }
 
-export function useUpdateMemberRole(organizationId: string | undefined) {
+export function useUpdateMemberRole(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: 'OWNER' | 'ADMIN' | 'VENDEDOR' | 'INVENTARIO' | 'CAJA' }) => {
@@ -32,6 +32,12 @@ export function useUpdateMemberRole(organizationId: string | undefined) {
       return apiFetch<Membership>(`/memberships/${userId}/${organizationId}`, {
         method: 'PATCH',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify({ role }),
       });
     },
@@ -41,7 +47,7 @@ export function useUpdateMemberRole(organizationId: string | undefined) {
   });
 }
 
-export function useRemoveMember(organizationId: string | undefined) {
+export function useRemoveMember(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
@@ -49,6 +55,12 @@ export function useRemoveMember(organizationId: string | undefined) {
       return apiFetch<void>(`/memberships/${userId}/${organizationId}`, {
         method: 'DELETE',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
+        token,
       });
     },
     onSuccess: () => {
@@ -57,7 +69,7 @@ export function useRemoveMember(organizationId: string | undefined) {
   });
 }
 
-export function useInviteMember(organizationId: string | undefined) {
+export function useInviteMember(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ email, role }: { email: string; role: 'OWNER' | 'ADMIN' | 'VENDEDOR' | 'INVENTARIO' | 'CAJA' }) => {
@@ -67,7 +79,7 @@ export function useInviteMember(organizationId: string | undefined) {
       // Usamos el endpoint de plataforma que permite buscar usuarios
       const platformUsers = await apiFetch<{ data: Array<{ id: string; email: string; name?: string }> }>(
         '/platform/users?email=' + encodeURIComponent(email),
-        {}
+        { token }
       );
       const user = platformUsers.data?.find(u => u.email.toLowerCase() === email.toLowerCase());
       if (!user) {
@@ -76,7 +88,7 @@ export function useInviteMember(organizationId: string | undefined) {
       // Verificamos que no sea ya miembro
       const members = await apiFetch<Array<{ id: string; user: { id: string; email: string } }>>(
         `/memberships/organization/${organizationId}`,
-        { organizationId }
+        { organizationId, token }
       );
       const existingMember = members.find(m => m.user.id === user.id);
       if (existingMember) {
@@ -86,6 +98,12 @@ export function useInviteMember(organizationId: string | undefined) {
       return apiFetch<Membership>('/memberships', {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify({ userId: user.id, organizationId, role }),
       });
     },
@@ -110,7 +128,7 @@ export type InventoryItem = {
   };
 };
 
-export function useInventory(organizationId: string | undefined, productId?: string) {
+export function useInventory(organizationId: string | undefined, productId?: string, token?: string) {
   return useQuery<InventoryItem[]>({
     queryKey: ['inventory', organizationId, productId],
     queryFn: async () => {
@@ -118,13 +136,13 @@ export function useInventory(organizationId: string | undefined, productId?: str
       const params = new URLSearchParams();
       if (productId) params.set('productId', productId);
       const qs = params.toString();
-      return apiFetch<InventoryItem[]>(`/inventory${qs ? `?${qs}` : ''}`, { organizationId });
+      return apiFetch<InventoryItem[]>(`/inventory${qs ? `?${qs}` : ''}`, { organizationId, token });
     },
     enabled: !!organizationId,
   });
 }
 
-export function useUpdateInventory(organizationId: string | undefined) {
+export function useUpdateInventory(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { quantity?: number; reserved?: number; averageCost?: number } }) => {
@@ -136,6 +154,12 @@ export function useUpdateInventory(organizationId: string | undefined) {
       return apiFetch<InventoryItem>(`/inventory/${id}?${params.toString()}`, {
         method: 'PATCH',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
+        token,
       });
     },
     onSuccess: () => {
@@ -144,7 +168,7 @@ export function useUpdateInventory(organizationId: string | undefined) {
   });
 }
 
-export function useRecalculateInventory(organizationId: string | undefined) {
+export function useRecalculateInventory(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (productId: string) => {
@@ -152,6 +176,12 @@ export function useRecalculateInventory(organizationId: string | undefined) {
       return apiFetch<void>(`/inventory/recalculate/${productId}`, {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
+        token,
       });
     },
     onSuccess: () => {
@@ -182,7 +212,7 @@ export type Sale = {
   }>;
 };
 
-export function useSales(organizationId: string | undefined, status?: SaleStatus, customerId?: string) {
+export function useSales(organizationId: string | undefined, status?: SaleStatus, customerId?: string, token?: string) {
   return useQuery<Sale[]>({
     queryKey: ['sales', organizationId, status, customerId],
     queryFn: async () => {
@@ -191,13 +221,13 @@ export function useSales(organizationId: string | undefined, status?: SaleStatus
       if (status) params.set('status', status);
       if (customerId) params.set('customerId', customerId);
       const qs = params.toString();
-      return apiFetch<Sale[]>(`/sales${qs ? `?${qs}` : ''}`, { organizationId });
+      return apiFetch<Sale[]>(`/sales${qs ? `?${qs}` : ''}`, { organizationId, token });
     },
     enabled: !!organizationId,
   });
 }
 
-export function useCreateSale(organizationId: string | undefined) {
+export function useCreateSale(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -208,6 +238,11 @@ export function useCreateSale(organizationId: string | undefined) {
       return apiFetch<Sale>('/sales', {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -218,7 +253,7 @@ export function useCreateSale(organizationId: string | undefined) {
   });
 }
 
-export function useCompleteSale(organizationId: string | undefined) {
+export function useCompleteSale(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (saleId: string) => {
@@ -226,6 +261,11 @@ export function useCompleteSale(organizationId: string | undefined) {
       return apiFetch<Sale>(`/sales/${saleId}/complete`, {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
       });
     },
     onSuccess: () => {
@@ -234,7 +274,7 @@ export function useCompleteSale(organizationId: string | undefined) {
   });
 }
 
-export function useCancelSale(organizationId: string | undefined) {
+export function useCancelSale(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (saleId: string) => {
@@ -242,6 +282,11 @@ export function useCancelSale(organizationId: string | undefined) {
       return apiFetch<Sale>(`/sales/${saleId}/cancel`, {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
       });
     },
     onSuccess: () => {
@@ -273,7 +318,7 @@ export type PurchaseOrder = {
   }>;
 };
 
-export function usePurchaseOrders(organizationId: string | undefined, status?: PurchaseOrderStatus, supplierId?: string) {
+export function usePurchaseOrders(organizationId: string | undefined, status?: PurchaseOrderStatus, supplierId?: string, token?: string) {
   return useQuery<PurchaseOrder[]>({
     queryKey: ['purchase-orders', organizationId, status, supplierId],
     queryFn: async () => {
@@ -282,13 +327,13 @@ export function usePurchaseOrders(organizationId: string | undefined, status?: P
       if (status) params.set('status', status);
       if (supplierId) params.set('supplierId', supplierId);
       const qs = params.toString();
-      return apiFetch<PurchaseOrder[]>(`/purchase-orders${qs ? `?${qs}` : ''}`, { organizationId });
+      return apiFetch<PurchaseOrder[]>(`/purchase-orders${qs ? `?${qs}` : ''}`, { organizationId, token });
     },
     enabled: !!organizationId,
   });
 }
 
-export function useCreatePurchaseOrder(organizationId: string | undefined) {
+export function useCreatePurchaseOrder(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -299,6 +344,11 @@ export function useCreatePurchaseOrder(organizationId: string | undefined) {
       return apiFetch<PurchaseOrder>('/purchase-orders', {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -308,7 +358,7 @@ export function useCreatePurchaseOrder(organizationId: string | undefined) {
   });
 }
 
-export function useReceivePurchaseOrder(organizationId: string | undefined) {
+export function useReceivePurchaseOrder(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ orderId, data }: { orderId: string; data: { items?: Array<{ productId: string; quantityReceived: number }> } }) => {
@@ -316,6 +366,11 @@ export function useReceivePurchaseOrder(organizationId: string | undefined) {
       return apiFetch<PurchaseOrder>(`/purchase-orders/${orderId}/receive`, {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -326,7 +381,7 @@ export function useReceivePurchaseOrder(organizationId: string | undefined) {
   });
 }
 
-export function useCancelPurchaseOrder(organizationId: string | undefined) {
+export function useCancelPurchaseOrder(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (orderId: string) => {
@@ -334,6 +389,11 @@ export function useCancelPurchaseOrder(organizationId: string | undefined) {
       return apiFetch<PurchaseOrder>(`/purchase-orders/${orderId}/cancel`, {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
       });
     },
     onSuccess: () => {
@@ -366,18 +426,18 @@ export type CashRegisterMovement = {
   createdBy?: { id: string; name: string | null } | null;
 };
 
-export function useCashRegisters(organizationId: string | undefined) {
+export function useCashRegisters(organizationId: string | undefined, token?: string) {
   return useQuery<CashRegister[]>({
     queryKey: ['cash-registers', organizationId],
     queryFn: async () => {
       if (!organizationId) throw new Error('Organization ID required');
-      return apiFetch<CashRegister[]>('/cash-registers', { organizationId });
+      return apiFetch<CashRegister[]>('/cash-registers', { organizationId, token });
     },
     enabled: !!organizationId,
   });
 }
 
-export function useCreateCashRegister(organizationId: string | undefined) {
+export function useCreateCashRegister(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: { name: string; description?: string }) => {
@@ -385,6 +445,11 @@ export function useCreateCashRegister(organizationId: string | undefined) {
       return apiFetch<CashRegister>('/cash-registers', {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -394,7 +459,7 @@ export function useCreateCashRegister(organizationId: string | undefined) {
   });
 }
 
-export function useOpenCashRegister(organizationId: string | undefined) {
+export function useOpenCashRegister(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ registerId, initialBalance }: { registerId: string; initialBalance: number }) => {
@@ -402,6 +467,11 @@ export function useOpenCashRegister(organizationId: string | undefined) {
       return apiFetch<CashRegister>(`/cash-registers/${registerId}/open`, {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify({ initialBalance }),
       });
     },
@@ -411,7 +481,7 @@ export function useOpenCashRegister(organizationId: string | undefined) {
   });
 }
 
-export function useCloseCashRegister(organizationId: string | undefined) {
+export function useCloseCashRegister(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ registerId, finalBalance }: { registerId: string; finalBalance: number }) => {
@@ -419,6 +489,11 @@ export function useCloseCashRegister(organizationId: string | undefined) {
       return apiFetch<CashRegister>(`/cash-registers/${registerId}/close`, {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify({ finalBalance }),
       });
     },
@@ -428,7 +503,7 @@ export function useCloseCashRegister(organizationId: string | undefined) {
   });
 }
 
-export function useAddCashRegisterMovement(organizationId: string | undefined) {
+export function useAddCashRegisterMovement(organizationId: string | undefined, token?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ registerId, data }: { registerId: string; data: { amount: number; type: 'INCOME' | 'EXPENSE'; reason: string } }) => {
@@ -436,6 +511,11 @@ export function useAddCashRegisterMovement(organizationId: string | undefined) {
       return apiFetch<CashRegisterMovement>(`/cash-registers/${registerId}/movements`, {
         method: 'POST',
         organizationId,
+        token,
+        token,
+        token,
+        token,
+        token,
         body: JSON.stringify(data),
       });
     },
@@ -445,12 +525,12 @@ export function useAddCashRegisterMovement(organizationId: string | undefined) {
   });
 }
 
-export function useCashRegisterMovements(organizationId: string | undefined, registerId: string | undefined) {
+export function useCashRegisterMovements(organizationId: string | undefined, registerId: string | undefined, token?: string) {
   return useQuery<CashRegisterMovement[]>({
     queryKey: ['cash-register-movements', registerId],
     queryFn: async () => {
       if (!organizationId || !registerId) throw new Error('Organization ID and Register ID required');
-      return apiFetch<CashRegisterMovement[]>(`/cash-registers/${registerId}/movements`, { organizationId });
+      return apiFetch<CashRegisterMovement[]>(`/cash-registers/${registerId}/movements`, { organizationId, token });
     },
     enabled: !!organizationId && !!registerId,
   });
@@ -466,12 +546,12 @@ export type Product = {
   description?: string | null;
 };
 
-export function useProducts(organizationId: string | undefined) {
+export function useProducts(organizationId: string | undefined, token?: string) {
   return useQuery<Product[]>({
     queryKey: ['products', organizationId],
     queryFn: async () => {
       if (!organizationId) throw new Error('Organization ID required');
-      return apiFetch<Product[]>('/products', { organizationId });
+      return apiFetch<Product[]>('/products', { organizationId, token });
     },
     enabled: !!organizationId,
   });
@@ -490,7 +570,7 @@ export type BusinessEntity = {
   phone?: string | null;
 };
 
-export function useBusinessEntities(organizationId: string | undefined, type?: BusinessEntityType) {
+export function useBusinessEntities(organizationId: string | undefined, type?: BusinessEntityType, token?: string) {
   return useQuery<BusinessEntity[]>({
     queryKey: ['business-entities', organizationId, type],
     queryFn: async () => {
@@ -498,7 +578,7 @@ export function useBusinessEntities(organizationId: string | undefined, type?: B
       const params = new URLSearchParams();
       if (type) params.set('type', type);
       const qs = params.toString();
-      return apiFetch<BusinessEntity[]>(`/business-entities${qs ? `?${qs}` : ''}`, { organizationId });
+      return apiFetch<BusinessEntity[]>(`/business-entities${qs ? `?${qs}` : ''}`, { organizationId, token });
     },
     enabled: !!organizationId,
   });

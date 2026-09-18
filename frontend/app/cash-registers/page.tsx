@@ -53,12 +53,12 @@ export default function CashRegistersPage() {
   const [movementDialogOpen, setMovementDialogOpen] = useState(false);
   const [selectedRegisterId, setSelectedRegisterId] = useState<string | undefined>(undefined);
 
-  const { data: registers = [], isLoading, refetch } = useCashRegisters(organizationId ?? undefined);
-  const createRegister = useCreateCashRegister(organizationId ?? undefined);
-  const openRegister = useOpenCashRegister(organizationId ?? undefined);
-  const closeRegister = useCloseCashRegister(organizationId ?? undefined);
-  const addMovement = useAddCashRegisterMovement(organizationId ?? undefined);
-  const { data: movements = [] } = useCashRegisterMovements(organizationId ?? undefined, selectedRegisterId);
+  const { data: registers = [], isLoading, refetch } = useCashRegisters(organizationId ?? undefined, token);
+  const createRegister = useCreateCashRegister(organizationId ?? undefined, token);
+  const openRegister = useOpenCashRegister(organizationId ?? undefined, token);
+  const closeRegister = useCloseCashRegister(organizationId ?? undefined, token);
+  const addMovement = useAddCashRegisterMovement(organizationId ?? undefined, token);
+  const { data: movements = [] } = useCashRegisterMovements(organizationId ?? undefined, selectedRegisterId, token);
 
   const selectedRegister = registers.find((r) => r.id === selectedRegisterId);
 

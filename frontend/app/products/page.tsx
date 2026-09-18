@@ -25,12 +25,12 @@ const DELETE_ROLES = ['OWNER', 'ADMIN'];
 
 export default function ProductsPage() {
   const { token, organizationId, orgRole, memberships } = useAuth();
-  const { data: products = [], isLoading: loadingProducts } = useProducts(organizationId ?? undefined);
-  const { data: categories = [] } = useCategories(organizationId ?? undefined);
-  const { data: units = [] } = useUnits(organizationId ?? undefined);
-  const createMutation = useCreateProduct(organizationId ?? undefined);
-  const updateMutation = useUpdateProduct(organizationId ?? undefined);
-  const deleteMutation = useDeleteProduct(organizationId ?? undefined);
+  const { data: products = [], isLoading: loadingProducts } = useProducts(organizationId ?? undefined, token);
+  const { data: categories = [] } = useCategories(organizationId ?? undefined, token);
+  const { data: units = [] } = useUnits(organizationId ?? undefined, token);
+  const createMutation = useCreateProduct(organizationId ?? undefined, token);
+  const updateMutation = useUpdateProduct(organizationId ?? undefined, token);
+  const deleteMutation = useDeleteProduct(organizationId ?? undefined, token);
 
   // productSchema del BusinessType de la membresía activa
   const activeMembership = memberships.find((m) => m.organizationId === organizationId) ?? null;

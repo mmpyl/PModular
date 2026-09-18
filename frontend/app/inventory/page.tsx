@@ -30,9 +30,9 @@ type AdjustStockFormData = {
 
 export default function InventoryPage() {
   const { token, organizationId } = useAuth();
-  const { data: items = [], isLoading, error } = useInventory(organizationId ?? undefined);
-  const updateInventory = useUpdateInventory(organizationId ?? undefined);
-  const { data: products = [] } = useProducts(organizationId ?? undefined);
+  const { data: items = [], isLoading, error } = useInventory(organizationId ?? undefined, token);
+  const updateInventory = useUpdateInventory(organizationId ?? undefined, token);
+  const { data: products = [] } = useProducts(organizationId ?? undefined, token);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
