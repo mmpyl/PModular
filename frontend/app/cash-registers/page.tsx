@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 type CreateRegisterFormData = {
   name: string;
@@ -158,43 +159,45 @@ export default function CashRegistersPage() {
               <DialogTrigger asChild>
                 <Button size="sm">Nueva caja</Button>
               </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Crear nueva caja</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmitCreate(onCreateSubmit)} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input
-                    id="name"
-                    {...registerCreate('name', { required: 'Requerido' })}
-                    placeholder="Caja principal"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Descripción (opcional)</Label>
-                  <Input
-                    id="description"
-                    {...registerCreate('description')}
-                    placeholder="Ubicación o notas"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setCreateDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit" disabled={createRegister.isPending}>
-                    {createRegister.isPending ? 'Guardando...' : 'Crear'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Crear nueva caja</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmitCreate(onCreateSubmit)} className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Nombre</Label>
+                    <Input
+                      id="name"
+                      {...registerCreate('name', { required: 'Requerido' })}
+                      placeholder="Caja principal"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Descripción (opcional)</Label>
+                    <Input
+                      id="description"
+                      {...registerCreate('description')}
+                      placeholder="Ubicación o notas"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCreateDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button type="submit" disabled={createRegister.isPending}>
+                      {createRegister.isPending ? 'Guardando...' : 'Crear'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
 
         {isLoading ? (
           <p className="muted">Cargando cajas...</p>
@@ -266,7 +269,8 @@ export default function CashRegistersPage() {
         {!registers.length && !isLoading && (
           <p className="muted">No hay cajas configuradas.</p>
         )}
-      </section>
+      </CardContent>
+    </Card>
 
       {/* Dialog para abrir caja */}
       <Dialog open={openDialogOpen} onOpenChange={setOpenDialogOpen}>

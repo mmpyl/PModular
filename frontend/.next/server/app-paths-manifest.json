@@ -5,8 +5,8 @@
   "/cash-registers/page": "app/cash-registers/page.js",
   "/categories/page": "app/categories/page.js",
   "/create-organization/page": "app/create-organization/page.js",
-  "/inventory/page": "app/inventory/page.js",
   "/dashboard/page": "app/dashboard/page.js",
+  "/inventory/page": "app/inventory/page.js",
   "/login/page": "app/login/page.js",
   "/onboarding/page": "app/onboarding/page.js",
   "/page": "app/page.js",
@@ -20,6 +20,6 @@
   "/reports/page": "app/reports/page.js",
   "/sales/page": "app/sales/page.js",
   "/select-organization/page": "app/select-organization/page.js",
-  "/units/page": "app/units/page.js",
-  "/team/page": "app/team/page.js"
+  "/team/page": "app/team/page.js",
+  "/units/page": "app/units/page.js"
 }
