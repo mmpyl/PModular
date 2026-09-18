@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 type PlatformOrganization = {
   id: string;
@@ -33,15 +34,13 @@ type PaginatedResult<T> = {
 
 export default function PlatformOrganizationsPage() {
   const router = useRouter();
+  const { token } = useAuth();
 
   const { data, isLoading, error } = useQuery<PaginatedResult<PlatformOrganization>>({
     queryKey: ['platform', 'organizations'],
     queryFn: async () => {
-      const token = localStorage.getItem('pymen.auth');
-      const session = token ? JSON.parse(token) : null;
-      
       return apiFetch<PaginatedResult<PlatformOrganization>>('/platform/organizations', {
-        token: session?.accessToken,
+        token: token ?? undefined,
       });
     },
   });
