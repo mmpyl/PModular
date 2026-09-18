@@ -50,10 +50,10 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="auth-page flex min-h-screen items-center justify-center p-4">
+    <main className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <span className="eyebrow text-sm font-medium text-muted-foreground">PModular</span>
+          <p className="text-sm font-medium text-muted-foreground">PModular</p>
           <CardTitle className="text-2xl font-bold">Iniciar sesión</CardTitle>
           <CardDescription>
             Bienvenido de nuevo. Ingresa tus credenciales para continuar.
