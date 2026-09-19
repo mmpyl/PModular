@@ -19,8 +19,8 @@ export class PlatformService {
     const where = search
       ? {
           OR: [
-            { name: { contains: search, mode: QueryMode.insensitive } },
-            { businessType: { name: { contains: search, mode: QueryMode.insensitive } } },
+            { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            { businessType: { name: { contains: search, mode: Prisma.QueryMode.insensitive } } },
           ],
         }
       : {};
@@ -106,8 +106,8 @@ export class PlatformService {
     const where = search
       ? {
           OR: [
-            { email: { contains: search, mode: QueryMode.insensitive } },
-            { name: { contains: search, mode: QueryMode.insensitive } },
+            { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
           ],
         }
       : {};

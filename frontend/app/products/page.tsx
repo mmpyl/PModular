@@ -37,8 +37,8 @@ export default function ProductsPage() {
   const productSchemaDef = activeMembership?.organization?.businessType?.productSchema ?? {} as Record<string, SchemaField>;
   const schemaFields = Object.entries(productSchemaDef);
 
-  const form = useForm<ProductFormData & { id?: string; attributes: Record<string, unknown> }>({
-    resolver: zodResolver(productSchema),
+  const form = useForm<ProductFormData & { id?: string; attributes: Record<string, unknown>; search?: string; filterCategory?: string }>({
+    resolver: zodResolver(productSchema) as any,
     defaultValues: {
       name: '',
       sku: '',
@@ -47,12 +47,14 @@ export default function ProductsPage() {
       categoryId: null,
       unitId: null,
       attributes: {},
+      search: '',
+      filterCategory: '',
     },
   });
 
   const editingId = form.watch('id') as string | undefined;
-  const search = form.watch('search') as string | undefined;
-  const filterCategory = form.watch('filterCategory') as string | undefined;
+  const search = form.watch('search');
+  const filterCategory = form.watch('filterCategory');
 
   const canWrite = orgRole !== null && WRITE_ROLES.includes(orgRole);
   const canDelete = orgRole !== null && DELETE_ROLES.includes(orgRole);
@@ -239,14 +241,16 @@ export default function ProductsPage() {
                   </FormItem>
                 )}
               />
-              {schemaFields.map(([key, definition]) => (
+              {schemaFields.map(([key, definition]) => {
+                  const def = definition as SchemaField;
+                  return (
                 <FormField
                   key={key}
                   control={form.control}
                   name={`attributes.${key}` as any}
                   render={({ field }) => {
-                    const type = definition.type ?? 'string';
-                    const label = definition.label ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
+                    const type = def.type ?? 'string';
+                    const label = def.label ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
                     if (type === 'boolean') {
                       return (
                         <FormItem>
@@ -286,14 +290,14 @@ export default function ProductsPage() {
                       <FormItem>
                         <FormLabel>{label}</FormLabel>
                         <FormControl>
-                          <Input type="text" {...field} value={field.value ? String(field.value) : String(definition.default ?? '')} onChange={(e) => field.onChange(e.target.value)} />
+                          <Input type="text" {...field} value={field.value ? String(field.value) : String(def.default ?? '')} onChange={(e) => field.onChange(e.target.value)} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     );
                   }}
                 />
-              ))}
+              );})}
               {editingId && (
                 <Button type="button" variant="ghost" onClick={resetForm}>
                   Cancelar edición

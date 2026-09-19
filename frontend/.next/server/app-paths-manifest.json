@@ -5,6 +5,7 @@
   "/create-organization/page": "app/create-organization/page.js",
   "/login/page": "app/login/page.js",
   "/inventory/page": "app/inventory/page.js",
+  "/login/page": "app/login/page.js",
   "/onboarding/page": "app/onboarding/page.js",
   "/page": "app/page.js",
   "/platform/dashboard/page": "app/platform/dashboard/page.js",

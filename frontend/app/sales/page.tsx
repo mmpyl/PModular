@@ -50,11 +50,11 @@ export default function SalesPage() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
 
-  const { data: sales = [], isLoading, refetch } = useSales(organizationId, statusFilter);
-  const { data: products = [] } = useProducts(organizationId);
-  const createSale = useCreateSale(organizationId);
-  const completeSale = useCompleteSale(organizationId);
-  const cancelSale = useCancelSale(organizationId);
+  const { data: sales = [], isLoading, refetch } = useSales(organizationId ?? undefined, statusFilter);
+  const { data: products = [] } = useProducts(organizationId ?? undefined);
+  const createSale = useCreateSale(organizationId ?? undefined);
+  const completeSale = useCompleteSale(organizationId ?? undefined);
+  const cancelSale = useCancelSale(organizationId ?? undefined);
 
   const selectedSale = sales.find((s) => s.id === selectedSaleId);
 
