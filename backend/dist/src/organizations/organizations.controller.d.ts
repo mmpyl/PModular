@@ -10,15 +10,133 @@ export declare class OrganizationsController {
     constructor(organizationsService: OrganizationsService);
     create(createOrgDto: CreateOrganizationDto, user: {
         sub: string;
-    }): Promise<any>;
-    findAll(organizationId: string): any;
-    findOne(id: string, organizationId: string): any;
-    update(id: string, updateOrgDto: Partial<CreateOrganizationDto>, organizationId: string): Promise<any>;
-    remove(id: string, organizationId: string): Promise<any>;
+    }): Promise<{
+        businessType: {
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            defaultModules: import("@prisma/client/runtime/library").JsonValue;
+            productSchema: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.OrganizationStatus;
+        enabledModules: import("@prisma/client/runtime/library").JsonValue;
+        settings: import("@prisma/client/runtime/library").JsonValue;
+        businessTypeId: string;
+    }>;
+    findAll(organizationId: string): import(".prisma/client").Prisma.PrismaPromise<({
+        businessType: {
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            defaultModules: import("@prisma/client/runtime/library").JsonValue;
+            productSchema: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.OrganizationStatus;
+        enabledModules: import("@prisma/client/runtime/library").JsonValue;
+        settings: import("@prisma/client/runtime/library").JsonValue;
+        businessTypeId: string;
+    })[]>;
+    findOne(id: string, organizationId: string): import(".prisma/client").Prisma.Prisma__OrganizationClient<({
+        businessType: {
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            defaultModules: import("@prisma/client/runtime/library").JsonValue;
+            productSchema: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.OrganizationStatus;
+        enabledModules: import("@prisma/client/runtime/library").JsonValue;
+        settings: import("@prisma/client/runtime/library").JsonValue;
+        businessTypeId: string;
+    }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
+    update(id: string, updateOrgDto: Partial<CreateOrganizationDto>, organizationId: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.OrganizationStatus;
+        enabledModules: import("@prisma/client/runtime/library").JsonValue;
+        settings: import("@prisma/client/runtime/library").JsonValue;
+        businessTypeId: string;
+    }>;
+    remove(id: string, organizationId: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.OrganizationStatus;
+        enabledModules: import("@prisma/client/runtime/library").JsonValue;
+        settings: import("@prisma/client/runtime/library").JsonValue;
+        businessTypeId: string;
+    }>;
 }
 export declare class PlatformOrganizationsController {
     private readonly organizationsService;
     constructor(organizationsService: OrganizationsService);
-    suspend(id: string): Promise<any>;
-    reactivate(id: string): Promise<any>;
+    suspend(id: string): Promise<{
+        businessType: {
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            defaultModules: import("@prisma/client/runtime/library").JsonValue;
+            productSchema: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.OrganizationStatus;
+        enabledModules: import("@prisma/client/runtime/library").JsonValue;
+        settings: import("@prisma/client/runtime/library").JsonValue;
+        businessTypeId: string;
+    }>;
+    reactivate(id: string): Promise<{
+        businessType: {
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            defaultModules: import("@prisma/client/runtime/library").JsonValue;
+            productSchema: import("@prisma/client/runtime/library").JsonValue;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.OrganizationStatus;
+        enabledModules: import("@prisma/client/runtime/library").JsonValue;
+        settings: import("@prisma/client/runtime/library").JsonValue;
+        businessTypeId: string;
+    }>;
 }
