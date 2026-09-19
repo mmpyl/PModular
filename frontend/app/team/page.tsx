@@ -111,6 +111,7 @@ export default function TeamPage() {
               <span className="text-sm text-gray-500 mb-1 block">Miembros</span>
               <h2>Usuarios de la organización</h2>
             </div>
+          </div>            
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{members.length} miembros</Badge>
               {canManageTeam && (
