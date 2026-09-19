@@ -131,6 +131,7 @@ export default function SalesPage() {
               <span className="text-sm text-gray-500 mb-1 block">Historial</span>
               <h2>Ventas registradas</h2>
             </div>
+          </div>
             <div className="flex items-center gap-2">
               <Select
                 value={statusFilter || 'all'}
