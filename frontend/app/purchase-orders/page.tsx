@@ -50,12 +50,12 @@ export default function PurchaseOrdersPage() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  const { data: orders = [], isLoading, refetch } = usePurchaseOrders(organizationId, statusFilter);
-  const { data: suppliers = [] } = useBusinessEntities(organizationId, 'PROVEEDOR');
-  const { data: products = [] } = useProducts(organizationId);
-  const createOrder = useCreatePurchaseOrder(organizationId);
-  const receiveOrder = useReceivePurchaseOrder(organizationId);
-  const cancelOrder = useCancelPurchaseOrder(organizationId);
+  const { data: orders = [], isLoading, refetch } = usePurchaseOrders(organizationId ?? undefined, statusFilter);
+  const { data: suppliers = [] } = useBusinessEntities(organizationId ?? undefined, 'PROVEEDOR');
+  const { data: products = [] } = useProducts(organizationId ?? undefined);
+  const createOrder = useCreatePurchaseOrder(organizationId ?? undefined);
+  const receiveOrder = useReceivePurchaseOrder(organizationId ?? undefined);
+  const cancelOrder = useCancelPurchaseOrder(organizationId ?? undefined);
 
   const selectedOrder = orders.find((o) => o.id === selectedOrderId);
 

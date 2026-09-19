@@ -30,6 +30,7 @@ type AuthUser = {
   email: string;
   name?: string | null;
   platformRole?: string | null;
+  imageUrl?: string | null;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);

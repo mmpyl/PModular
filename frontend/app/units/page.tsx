@@ -28,7 +28,7 @@ export default function UnitsPage() {
   const deleteMutation = useDeleteUnit(organizationId ?? undefined);
 
   const form = useForm<UnitFormData & { id?: string }>({
-    resolver: zodResolver(unitSchema),
+    resolver: zodResolver(unitSchema) as any,
     defaultValues: { name: '', symbol: '', isFractionable: false },
   });
 
