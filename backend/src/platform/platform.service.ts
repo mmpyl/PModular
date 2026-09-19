@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { PlatformPaginationQueryDto } from './dto/platform-pagination-query.dto';
 import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse } from './dto/platform-response.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PlatformService {
@@ -18,8 +19,8 @@ export class PlatformService {
     const where = search
       ? {
           OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { businessType: { name: { contains: search, mode: 'insensitive' } } },
+            { name: { contains: search, mode: QueryMode.insensitive } },
+            { businessType: { name: { contains: search, mode: QueryMode.insensitive } } },
           ],
         }
       : {};
@@ -40,7 +41,10 @@ export class PlatformService {
     const totalPages = Math.ceil(total / take);
 
     return {
-      data: organizations,
+      data: organizations.map((org) => ({
+        ...org,
+        businessType: org.businessType,
+      })),
       meta: {
         page: query.page,
         pageSize: query.pageSize,
@@ -102,8 +106,8 @@ export class PlatformService {
     const where = search
       ? {
           OR: [
-            { email: { contains: search, mode: 'insensitive' } },
-            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: QueryMode.insensitive } },
+            { name: { contains: search, mode: QueryMode.insensitive } },
           ],
         }
       : {};
