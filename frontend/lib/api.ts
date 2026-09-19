@@ -1,5 +1,16 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
+// Almacén global para el token - se actualiza desde AuthContext
+let authToken: string | null = null;
+
+export function setAuthToken(token: string | null) {
+  authToken = token;
+}
+
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
 export type ApiOptions = RequestInit & { token?: string; organizationId?: string };
 
 export class ApiError extends Error {
@@ -58,11 +69,15 @@ export type AuthResponse = {
 
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const { token, organizationId, headers, ...init } = options;
+  
+  // Usar token del parámetro o fallback al token global (de AuthContext)
+  const effectiveToken = token ?? getAuthToken();
+  
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(effectiveToken ? { Authorization: `Bearer ${effectiveToken}` } : {}),
       ...(organizationId ? { 'X-Org-Id': organizationId } : {}),
       ...headers,
     },

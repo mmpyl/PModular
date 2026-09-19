@@ -2,7 +2,7 @@
 
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch, AuthResponse, Membership, ApiError } from '@/lib/api';
+import { apiFetch, AuthResponse, Membership, ApiError, setAuthToken } from '@/lib/api';
 
 type Credentials = { email: string; password: string };
 type RegisterPayload = Credentials & { name?: string };
@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setOrgRole(session.orgRole ?? null);
             setPlatformRole(session.platformRole ?? null);
             setMemberships(session.memberships ?? []);
+            setAuthToken(session.accessToken);
             setIsHydrated(true);
             return;
           }
@@ -93,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setOrgRole(session.orgRole ?? null);
           setPlatformRole(session.platformRole ?? null);
           setMemberships(session.memberships ?? []);
+          setAuthToken(session.accessToken);
         } catch {
           // Sesión inválida, limpiar
           window.localStorage.removeItem(STORAGE_KEY);
@@ -111,6 +113,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOrgRole(session.orgRole ?? null);
     setPlatformRole(session.platformRole ?? null);
     setMemberships(session.memberships ?? []);
+
+    // Actualizar token global para apiFetch
+    setAuthToken(session.accessToken);
 
     // Establecer cookie httpOnly vía Route Handler
     try {
@@ -134,6 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOrgRole(null);
     setPlatformRole(null);
     setMemberships([]);
+
+    // Limpiar token global para apiFetch
+    setAuthToken(null);
 
     // Eliminar cookie httpOnly vía Route Handler
     try {
