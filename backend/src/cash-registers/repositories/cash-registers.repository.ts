@@ -1,5 +1,5 @@
 import { PrismaService } from '../../prisma.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CashRegister, CashRegisterMovement } from '@prisma/client';
 import { CreateCashRegisterDto, UpdateCashRegisterDto, OpenCashRegisterDto, CloseCashRegisterDto, CreateCashRegisterMovementDto } from '../dto/create-cash-register.dto';
 
@@ -65,11 +65,11 @@ export class CashRegistersRepository {
     });
 
     if (!cashRegister) {
-      throw new Error('Caja no encontrada');
+      throw new NotFoundException('Caja no encontrada');
     }
 
     if (cashRegister.status === 'ABIERTA') {
-      throw new Error('La caja ya está abierta');
+      throw new BadRequestException('La caja ya está abierta');
     }
 
     const openingBalance = data.openingBalance || 0;
@@ -110,11 +110,11 @@ export class CashRegistersRepository {
     });
 
     if (!cashRegister) {
-      throw new Error('Caja no encontrada');
+      throw new NotFoundException('Caja no encontrada');
     }
 
     if (cashRegister.status !== 'ABIERTA') {
-      throw new Error('La caja no está abierta');
+      throw new BadRequestException('La caja no está abierta');
     }
 
     const actualClosingBalance = data.actualClosingBalance;
@@ -176,11 +176,11 @@ export class CashRegistersRepository {
     });
 
     if (!cashRegister) {
-      throw new Error('Caja no encontrada');
+      throw new NotFoundException('Caja no encontrada');
     }
 
     if (cashRegister.status !== 'ABIERTA' && cashRegister.status !== 'EN_PAUSA') {
-      throw new Error('La caja debe estar abierta o en pausa para registrar movimientos');
+      throw new BadRequestException('La caja debe estar abierta o en pausa para registrar movimientos');
     }
 
     const movement = await this.prisma.cashRegisterMovement.create({
@@ -220,11 +220,11 @@ export class CashRegistersRepository {
     });
 
     if (cashRegister?.status === 'ABIERTA') {
-      throw new Error('Debe cerrar la caja antes de eliminarla');
+      throw new BadRequestException('Debe cerrar la caja antes de eliminarla');
     }
 
     if (cashRegister?.movements && cashRegister.movements.length > 0) {
-      throw new Error('No se puede eliminar una caja con movimientos registrados');
+      throw new BadRequestException('No se puede eliminar una caja con movimientos registrados');
     }
 
     return this.prisma.cashRegister.delete({

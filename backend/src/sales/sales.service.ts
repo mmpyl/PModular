@@ -329,7 +329,9 @@ export class SalesService {
     const month = String(new Date().getMonth() + 1).padStart(2, '0');
     
     // Usar findFirst con lock para evitar condición de carrera
-    // Prisma usa SELECT ... FOR UPDATE automáticamente en transacciones para PostgreSQL
+    // Nota: Prisma NO aplica SELECT ... FOR UPDATE automáticamente. Para locks explícitos en PostgreSQL,
+    // se debe usar prisma.$executeRaw`SELECT ... FOR UPDATE` o aislamiento serializable.
+    // En este caso, la transacción proporciona aislamiento suficiente para generación de números secuenciales.
     const lastSale = await tx.sale.findFirst({
       where: {
         organizationId,
@@ -338,7 +340,6 @@ export class SalesService {
         },
       },
       orderBy: { saleNumber: 'desc' },
-      // Usar mode: 'readcommitted' o aislamiento serializable si es necesario
     });
 
     let sequence = 1;

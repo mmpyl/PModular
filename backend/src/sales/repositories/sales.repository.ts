@@ -1,5 +1,5 @@
 import { PrismaService } from '../../prisma.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Sale, SaleItem, Payment, SaleStatus } from '@prisma/client';
 import { CreateSaleDto, UpdateSaleDto } from '../dto/create-sale.dto';
 
@@ -124,13 +124,13 @@ export class SalesRepository {
     });
 
     if (!sale) {
-      throw new Error('Venta no encontrada');
+      throw new NotFoundException('Venta no encontrada');
     }
 
     // Verificar que los pagos cubran el total
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
     if (totalPaid < sale.total.toNumber()) {
-      throw new Error('El monto pagado no cubre el total de la venta');
+      throw new BadRequestException('El monto pagado no cubre el total de la venta');
     }
 
     // Actualizar estado y crear pagos
@@ -224,7 +224,7 @@ export class SalesRepository {
     });
 
     if (sale?.status !== 'CONFIRMADA') {
-      throw new Error('Solo se pueden eliminar ventas confirmadas');
+      throw new BadRequestException('Solo se pueden eliminar ventas confirmadas');
     }
 
     return this.prisma.sale.delete({

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { OrgRole } from '@prisma/client';
 
@@ -100,7 +100,7 @@ export class MembershipsService {
       });
 
       if (ownerCount <= 1) {
-        throw new Error('No se puede degradar al último OWNER de la organización. Debe haber al menos un OWNER.');
+        throw new ForbiddenException('No se puede degradar al último OWNER de la organización. Debe haber al menos un OWNER.');
       }
     }
 
@@ -140,7 +140,7 @@ export class MembershipsService {
       });
 
       if (ownerCount <= 1) {
-        throw new Error('No se puede eliminar al último OWNER de la organización. Debe haber al menos un OWNER.');
+        throw new ForbiddenException('No se puede eliminar al último OWNER de la organización. Debe haber al menos un OWNER.');
       }
     }
 
