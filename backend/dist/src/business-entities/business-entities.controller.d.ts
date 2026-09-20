@@ -4,15 +4,15 @@ export declare class BusinessEntitiesController {
     private readonly businessEntitiesService;
     constructor(businessEntitiesService: BusinessEntitiesService);
     create(dto: CreateBusinessEntityDto, orgId: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -27,15 +27,15 @@ export declare class BusinessEntitiesController {
         contactPhone: string | null;
     }>;
     findAll(orgId: string, entityType?: EntityType, search?: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -50,15 +50,15 @@ export declare class BusinessEntitiesController {
         contactPhone: string | null;
     }[]>;
     findOne(id: string, orgId: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -73,15 +73,15 @@ export declare class BusinessEntitiesController {
         contactPhone: string | null;
     }>;
     update(id: string, dto: UpdateBusinessEntityDto, orgId: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -96,15 +96,15 @@ export declare class BusinessEntitiesController {
         contactPhone: string | null;
     }>;
     remove(id: string, orgId: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;

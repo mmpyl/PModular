@@ -43,10 +43,10 @@ export declare class InventoryController {
     }[]>;
     getExpiringBatches(req: any, days?: string): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.BatchStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        organizationId: string;
         productId: string;
         batchNumber: string;
         serialNumber: string | null;

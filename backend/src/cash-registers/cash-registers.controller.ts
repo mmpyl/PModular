@@ -49,7 +49,7 @@ export class CashRegistersController {
   }
 
   @Get()
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
   findAll(@Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
     if (!organizationId) {
@@ -59,7 +59,7 @@ export class CashRegistersController {
   }
 
   @Get(':id')
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
   findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
     if (!organizationId) {
@@ -69,7 +69,7 @@ export class CashRegistersController {
   }
 
   @Get(':id/movements')
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
   getMovements(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthRequest) {
     const organizationId = req.user.organizationId;
     if (!organizationId) {
@@ -93,7 +93,7 @@ export class CashRegistersController {
   }
 
   @Post(':id/open')
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   open(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() openCashRegisterDto: OpenCashRegisterDto,
@@ -108,7 +108,7 @@ export class CashRegistersController {
   }
 
   @Post(':id/close')
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   close(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() closeCashRegisterDto: CloseCashRegisterDto,
@@ -123,7 +123,7 @@ export class CashRegistersController {
   }
 
   @Post(':id/movements')
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   addMovement(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() createMovementDto: CreateCashRegisterMovementDto,

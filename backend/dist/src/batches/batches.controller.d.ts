@@ -14,10 +14,10 @@ export declare class BatchesController {
         location?: string;
     }): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.BatchStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        organizationId: string;
         productId: string;
         batchNumber: string;
         serialNumber: string | null;
@@ -30,10 +30,10 @@ export declare class BatchesController {
     }>;
     getBatches(req: any, productId?: string, status?: BatchStatus, expiringSoon?: string, days?: string): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.BatchStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        organizationId: string;
         productId: string;
         batchNumber: string;
         serialNumber: string | null;
@@ -46,10 +46,10 @@ export declare class BatchesController {
     }[]>;
     getBatchById(req: any, id: string): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.BatchStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        organizationId: string;
         productId: string;
         batchNumber: string;
         serialNumber: string | null;
@@ -66,10 +66,10 @@ export declare class BatchesController {
         expirationDate?: Date;
     }): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.BatchStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        organizationId: string;
         productId: string;
         batchNumber: string;
         serialNumber: string | null;
@@ -84,10 +84,10 @@ export declare class BatchesController {
         reason?: string;
     }): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.BatchStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        organizationId: string;
         productId: string;
         batchNumber: string;
         serialNumber: string | null;
@@ -100,10 +100,10 @@ export declare class BatchesController {
     }>;
     releaseBatch(req: any, id: string): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.BatchStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        organizationId: string;
         productId: string;
         batchNumber: string;
         serialNumber: string | null;
@@ -116,10 +116,10 @@ export declare class BatchesController {
     }>;
     markAsExpired(req: any, id: string): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.BatchStatus;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        organizationId: string;
         productId: string;
         batchNumber: string;
         serialNumber: string | null;

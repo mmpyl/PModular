@@ -49,21 +49,21 @@ export declare class AuthController {
     getMemberships(req: Request): Promise<({
         organization: {
             businessType: {
-                id: string;
-                code: string;
                 name: string;
+                id: string;
                 description: string | null;
-                defaultModules: import("@prisma/client/runtime/library").JsonValue;
-                productSchema: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
+                code: string;
+                defaultModules: import("@prisma/client/runtime/library").JsonValue;
+                productSchema: import("@prisma/client/runtime/library").JsonValue;
             };
         } & {
-            id: string;
             name: string;
+            id: string;
+            status: import(".prisma/client").$Enums.OrganizationStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.OrganizationStatus;
             enabledModules: import("@prisma/client/runtime/library").JsonValue;
             settings: import("@prisma/client/runtime/library").JsonValue;
             businessTypeId: string;

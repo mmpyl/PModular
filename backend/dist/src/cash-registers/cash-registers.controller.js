@@ -103,7 +103,7 @@ __decorate([
 ], CashRegistersController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA'),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -111,7 +111,7 @@ __decorate([
 ], CashRegistersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -120,7 +120,7 @@ __decorate([
 ], CashRegistersController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Get)(':id/movements'),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -139,7 +139,7 @@ __decorate([
 ], CashRegistersController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)(':id/open'),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'CAJA'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
@@ -149,7 +149,7 @@ __decorate([
 ], CashRegistersController.prototype, "open", null);
 __decorate([
     (0, common_1.Post)(':id/close'),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'CAJA'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
@@ -159,7 +159,7 @@ __decorate([
 ], CashRegistersController.prototype, "close", null);
 __decorate([
     (0, common_1.Post)(':id/movements'),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'CAJA'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),

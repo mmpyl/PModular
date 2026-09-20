@@ -10,12 +10,12 @@ export declare class MembershipsController {
     constructor(membershipsService: MembershipsService);
     create(createMembershipDto: CreateMembershipDto, organizationId: string): Promise<{
         organization: {
-            id: string;
             name: string;
+            id: string;
         };
         user: {
-            id: string;
             name: string | null;
+            id: string;
             email: string;
         };
     } & {
@@ -30,21 +30,21 @@ export declare class MembershipsController {
     }): import(".prisma/client").Prisma.PrismaPromise<({
         organization: {
             businessType: {
-                id: string;
-                code: string;
                 name: string;
+                id: string;
                 description: string | null;
-                defaultModules: import("@prisma/client/runtime/library").JsonValue;
-                productSchema: import("@prisma/client/runtime/library").JsonValue;
                 createdAt: Date;
                 updatedAt: Date;
+                code: string;
+                defaultModules: import("@prisma/client/runtime/library").JsonValue;
+                productSchema: import("@prisma/client/runtime/library").JsonValue;
             };
         } & {
-            id: string;
             name: string;
+            id: string;
+            status: import(".prisma/client").$Enums.OrganizationStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.OrganizationStatus;
             enabledModules: import("@prisma/client/runtime/library").JsonValue;
             settings: import("@prisma/client/runtime/library").JsonValue;
             businessTypeId: string;
@@ -57,8 +57,8 @@ export declare class MembershipsController {
     })[]>;
     findByOrganization(organizationId: string, currentOrgId: string): import(".prisma/client").Prisma.PrismaPromise<({
         user: {
-            id: string;
             name: string | null;
+            id: string;
             email: string;
         };
     } & {
@@ -69,12 +69,12 @@ export declare class MembershipsController {
     })[]>;
     findOne(userId: string, organizationId: string, currentOrgId: string): import(".prisma/client").Prisma.Prisma__MembershipClient<({
         organization: {
-            id: string;
             name: string;
+            id: string;
         };
         user: {
-            id: string;
             name: string | null;
+            id: string;
             email: string;
         };
     } & {

@@ -4,15 +4,15 @@ export declare class BusinessEntitiesService {
     private prisma;
     constructor(prisma: PrismaService);
     create(organizationId: string, dto: CreateBusinessEntityDto): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -27,15 +27,15 @@ export declare class BusinessEntitiesService {
         contactPhone: string | null;
     }>;
     findAll(organizationId: string, entityType?: EntityType, search?: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -50,15 +50,15 @@ export declare class BusinessEntitiesService {
         contactPhone: string | null;
     }[]>;
     findOne(organizationId: string, id: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -73,15 +73,15 @@ export declare class BusinessEntitiesService {
         contactPhone: string | null;
     }>;
     update(organizationId: string, id: string, dto: UpdateBusinessEntityDto): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -96,15 +96,15 @@ export declare class BusinessEntitiesService {
         contactPhone: string | null;
     }>;
     remove(organizationId: string, id: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;
@@ -119,15 +119,15 @@ export declare class BusinessEntitiesService {
         contactPhone: string | null;
     }>;
     hardDelete(organizationId: string, id: string): Promise<{
-        id: string;
         name: string;
+        id: string;
+        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: string;
+        notes: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
         email: string | null;
-        notes: string | null;
         entityType: import(".prisma/client").$Enums.EntityType;
         taxId: string | null;
         phone: string | null;

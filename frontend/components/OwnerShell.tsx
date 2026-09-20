@@ -23,6 +23,7 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
   })();
   
   const canManage = orgRole === 'OWNER' || orgRole === 'ADMIN';
+  const isCaja = orgRole === 'CAJA';
   const links = [
     { key: 'dashboard', label: 'Resumen', href: '/dashboard', visible: true },
     { key: 'products', label: 'Productos', href: '/products', visible: enabledModules.includes('inventario') },
@@ -31,7 +32,7 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
     { key: 'inventory', label: 'Inventario', href: '/inventory', visible: enabledModules.includes('inventario') },
     { key: 'sales', label: 'Ventas', href: '/sales', visible: enabledModules.includes('ventas') },
     { key: 'purchases', label: 'Compras', href: '/purchase-orders', visible: enabledModules.includes('compras') },
-    { key: 'cash', label: 'Caja', href: '/cash-registers', visible: enabledModules.includes('caja') },
+    { key: 'cash', label: 'Caja', href: '/cash-registers', visible: enabledModules.includes('caja') || isCaja },
     { key: 'team', label: 'Equipo', href: '/team', visible: canManage },
     { key: 'reports', label: 'Reportes', href: '/reports', visible: canManage },
     { key: 'settings', label: 'Configuración', href: '/business-settings', visible: orgRole === 'OWNER' },
