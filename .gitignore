@@ -1,46 +1,55 @@
 ```
+# Next.js build outputs
+.next/
+
 # Dependencies
 node_modules/
-
-# Build outputs
-dist/
-build/
-target/
 
 # Environment variables
 .env
 .env.local
-*.env.*
+.env.*
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Logs
-*.log
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# IDE
+# IDE specific files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# Logs
+*.log
 
 # Temporary files
 *.tmp
-*.temp
 
-# Compressed files
+# macOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+
+# Python cache (if any Python files exist in the project)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Build artifacts
+dist/
+build/
+target/
+*.out
+*.exe
+*.dll
+*.so
+*.a
+
+# Compression files
 *.zip
 *.gz
 *.tar
@@ -59,8 +68,4 @@ Thumbs.db
 *.Z
 *.lz
 *.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
 ```
