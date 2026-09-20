@@ -89,7 +89,7 @@ let MembershipsService = class MembershipsService {
                 },
             });
             if (ownerCount <= 1) {
-                throw new Error('No se puede degradar al último OWNER de la organización. Debe haber al menos un OWNER.');
+                throw new common_1.ForbiddenException('No se puede degradar al último OWNER de la organización. Debe haber al menos un OWNER.');
             }
         }
         return this.prisma.membership.update({
@@ -122,7 +122,7 @@ let MembershipsService = class MembershipsService {
                 },
             });
             if (ownerCount <= 1) {
-                throw new Error('No se puede eliminar al último OWNER de la organización. Debe haber al menos un OWNER.');
+                throw new common_1.ForbiddenException('No se puede eliminar al último OWNER de la organización. Debe haber al menos un OWNER.');
             }
         }
         return this.prisma.membership.delete({
