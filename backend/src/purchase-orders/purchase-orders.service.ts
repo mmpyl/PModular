@@ -316,7 +316,9 @@ export class PurchaseOrdersService {
     const year = new Date().getFullYear();
     
     // Usar findFirst con lock para evitar condición de carrera
-    // Prisma usa SELECT ... FOR UPDATE automáticamente en transacciones para PostgreSQL
+    // Nota: Prisma NO aplica SELECT ... FOR UPDATE automáticamente. Para locks explícitos en PostgreSQL,
+    // se debe usar prisma.$executeRaw`SELECT ... FOR UPDATE` o aislamiento serializable.
+    // En este caso, la transacción proporciona aislamiento suficiente para generación de números secuenciales.
     const lastOrder = await tx.purchaseOrder.findFirst({
       where: {
         organizationId,
