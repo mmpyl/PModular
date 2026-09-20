@@ -1,0 +1,134 @@
+import { BatchesService } from './batches.service';
+import { BatchStatus } from '@prisma/client';
+export declare class BatchesController {
+    private readonly batchesService;
+    constructor(batchesService: BatchesService);
+    createBatch(req: any, dto: {
+        productId: string;
+        batchNumber: string;
+        serialNumber?: string;
+        manufacturingDate?: Date;
+        expirationDate?: Date;
+        initialQuantity: number;
+        unitCost: number;
+        location?: string;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.BatchStatus;
+        organizationId: string;
+        productId: string;
+        batchNumber: string;
+        serialNumber: string | null;
+        manufacturingDate: Date | null;
+        expirationDate: Date | null;
+        initialQuantity: import("@prisma/client/runtime/library").Decimal;
+        currentQuantity: import("@prisma/client/runtime/library").Decimal;
+        unitCost: import("@prisma/client/runtime/library").Decimal;
+        location: string | null;
+    }>;
+    getBatches(req: any, productId?: string, status?: BatchStatus, expiringSoon?: string, days?: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.BatchStatus;
+        organizationId: string;
+        productId: string;
+        batchNumber: string;
+        serialNumber: string | null;
+        manufacturingDate: Date | null;
+        expirationDate: Date | null;
+        initialQuantity: import("@prisma/client/runtime/library").Decimal;
+        currentQuantity: import("@prisma/client/runtime/library").Decimal;
+        unitCost: import("@prisma/client/runtime/library").Decimal;
+        location: string | null;
+    }[]>;
+    getBatchById(req: any, id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.BatchStatus;
+        organizationId: string;
+        productId: string;
+        batchNumber: string;
+        serialNumber: string | null;
+        manufacturingDate: Date | null;
+        expirationDate: Date | null;
+        initialQuantity: import("@prisma/client/runtime/library").Decimal;
+        currentQuantity: import("@prisma/client/runtime/library").Decimal;
+        unitCost: import("@prisma/client/runtime/library").Decimal;
+        location: string | null;
+    }>;
+    updateBatch(req: any, id: string, dto: {
+        status?: BatchStatus;
+        location?: string;
+        expirationDate?: Date;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.BatchStatus;
+        organizationId: string;
+        productId: string;
+        batchNumber: string;
+        serialNumber: string | null;
+        manufacturingDate: Date | null;
+        expirationDate: Date | null;
+        initialQuantity: import("@prisma/client/runtime/library").Decimal;
+        currentQuantity: import("@prisma/client/runtime/library").Decimal;
+        unitCost: import("@prisma/client/runtime/library").Decimal;
+        location: string | null;
+    }>;
+    retainBatch(req: any, id: string, body: {
+        reason?: string;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.BatchStatus;
+        organizationId: string;
+        productId: string;
+        batchNumber: string;
+        serialNumber: string | null;
+        manufacturingDate: Date | null;
+        expirationDate: Date | null;
+        initialQuantity: import("@prisma/client/runtime/library").Decimal;
+        currentQuantity: import("@prisma/client/runtime/library").Decimal;
+        unitCost: import("@prisma/client/runtime/library").Decimal;
+        location: string | null;
+    }>;
+    releaseBatch(req: any, id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.BatchStatus;
+        organizationId: string;
+        productId: string;
+        batchNumber: string;
+        serialNumber: string | null;
+        manufacturingDate: Date | null;
+        expirationDate: Date | null;
+        initialQuantity: import("@prisma/client/runtime/library").Decimal;
+        currentQuantity: import("@prisma/client/runtime/library").Decimal;
+        unitCost: import("@prisma/client/runtime/library").Decimal;
+        location: string | null;
+    }>;
+    markAsExpired(req: any, id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import(".prisma/client").$Enums.BatchStatus;
+        organizationId: string;
+        productId: string;
+        batchNumber: string;
+        serialNumber: string | null;
+        manufacturingDate: Date | null;
+        expirationDate: Date | null;
+        initialQuantity: import("@prisma/client/runtime/library").Decimal;
+        currentQuantity: import("@prisma/client/runtime/library").Decimal;
+        unitCost: import("@prisma/client/runtime/library").Decimal;
+        location: string | null;
+    }>;
+    getBatchStats(req: any): Promise<any>;
+}
