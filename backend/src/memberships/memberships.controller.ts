@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, ForbiddenException, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, ForbiddenException, Patch, UseInterceptors } from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -7,6 +7,8 @@ import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { OrgRole } from '@prisma/client';
+import { AuditLogInterceptor, AuditAction, AuditEntityType } from '../audit-log/audit-log.interceptor';
+import { AuditActionType } from '@prisma/client';
 
 export interface CreateMembershipDto {
   userId: string;
@@ -22,6 +24,9 @@ export class MembershipsController {
   @Post()
   @UseGuards(TenantGuard, OrgRolesGuard)
   @OrgRoles('OWNER')
+  @UseInterceptors(AuditLogInterceptor)
+  @AuditAction(AuditActionType.MEMBER_ADDED)
+  @AuditEntityType('Membership')
   create(@Body() createMembershipDto: CreateMembershipDto, @CurrentOrg() organizationId: string) {
     // Validar que la organización del DTO coincida con la del JWT
     if (createMembershipDto.organizationId !== organizationId) {
@@ -62,6 +67,9 @@ export class MembershipsController {
   @Delete(':userId/:organizationId')
   @UseGuards(TenantGuard, OrgRolesGuard)
   @OrgRoles('OWNER')
+  @UseInterceptors(AuditLogInterceptor)
+  @AuditAction(AuditActionType.MEMBER_REMOVED)
+  @AuditEntityType('Membership')
   remove(
     @Param('userId') userId: string,
     @Param('organizationId') organizationId: string,
@@ -77,6 +85,9 @@ export class MembershipsController {
   @Patch(':userId/:organizationId')
   @UseGuards(TenantGuard, OrgRolesGuard)
   @OrgRoles('OWNER')
+  @UseInterceptors(AuditLogInterceptor)
+  @AuditAction(AuditActionType.MEMBER_ROLE_CHANGED)
+  @AuditEntityType('Membership')
   updateRole(
     @Param('userId') userId: string,
     @Param('organizationId') organizationId: string,

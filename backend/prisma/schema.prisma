@@ -744,3 +744,68 @@ model CashRegisterMovement {
   @@index([performedBy])
   @@map("cash_register_movements")
 }
+
+// ==========================================
+// FASE A: AuditLog - Trazabilidad de plataforma
+// ==========================================
+
+enum AuditActionType {
+  ORGANIZATION_SUSPENDED
+  ORGANIZATION_REACTIVATED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  MEMBER_ROLE_CHANGED
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  PRODUCT_CREATED
+  PRODUCT_UPDATED
+  PRODUCT_DELETED
+  INVENTORY_ADJUSTED
+  PURCHASE_ORDER_CREATED
+  PURCHASE_ORDER_UPDATED
+  PURCHASE_ORDER_COMPLETED
+  SALE_CREATED
+  SALE_CANCELLED
+  SALE_RETURNED
+  BATCH_CREATED
+  BATCH_RETAINED
+  BATCH_EXPIRED
+  CASH_REGISTER_OPENED
+  CASH_REGISTER_CLOSED
+  CASH_REGISTER_ADJUSTMENT
+  OTHER
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  
+  // Quién realizó la acción
+  userId         String?  // Puede ser null si es acción automática del sistema
+  userPlatformRole PlatformRole? // Rol de plataforma en el momento de la acción
+  
+  // Qué acción se realizó
+  action         AuditActionType
+  
+  // Sobre qué entidad/organización
+  entityType     String   // Ej: "Organization", "User", "Membership", "Product"
+  entityId       String   // ID de la entidad afectada
+  organizationId String?  // Contexto organizacional (si aplica)
+  
+  // Metadata específica de cada acción (JSON flexible)
+  metadata       Json     @default("{}")
+  
+  // Cuándo ocurrió
+  createdAt      DateTime @default(now())
+  
+  // Relaciones opcionales para facilitar consultas
+  user           User?    @relation(fields: [userId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  
+  @@index([userId])
+  @@index([organizationId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
