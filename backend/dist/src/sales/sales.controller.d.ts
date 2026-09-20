@@ -6,12 +6,12 @@ export declare class SalesController {
     create(dto: CreateSaleDto, orgId: string, user: any): Promise<{
         items: ({
             product: {
-                id: string;
                 name: string;
+                id: string;
+                organizationId: string;
                 description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: string;
                 sku: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
                 cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -22,10 +22,10 @@ export declare class SalesController {
             };
             batch: {
                 id: string;
+                organizationId: string;
+                status: import(".prisma/client").$Enums.BatchStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import(".prisma/client").$Enums.BatchStatus;
-                organizationId: string;
                 productId: string;
                 batchNumber: string;
                 serialNumber: string | null;
@@ -38,28 +38,28 @@ export declare class SalesController {
             } | null;
         } & {
             id: string;
+            notes: string | null;
+            saleId: string;
             productId: string;
             quantity: import("@prisma/client/runtime/library").Decimal;
             batchId: string | null;
-            notes: string | null;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             taxRate: import("@prisma/client/runtime/library").Decimal;
             taxAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
             total: import("@prisma/client/runtime/library").Decimal;
             unitPrice: import("@prisma/client/runtime/library").Decimal;
-            saleId: string;
         })[];
         customer: {
-            id: string;
             name: string;
+            id: string;
+            organizationId: string;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: string;
+            notes: string | null;
             attributes: import("@prisma/client/runtime/library").JsonValue;
             isActive: boolean;
             email: string | null;
-            notes: string | null;
             entityType: import(".prisma/client").$Enums.EntityType;
             taxId: string | null;
             phone: string | null;
@@ -75,11 +75,11 @@ export declare class SalesController {
         } | null;
     } & {
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.SaleStatus;
         createdAt: Date;
         updatedAt: Date;
         type: import(".prisma/client").$Enums.SaleType;
-        status: import(".prisma/client").$Enums.SaleStatus;
-        organizationId: string;
         notes: string | null;
         paymentTerm: import(".prisma/client").$Enums.PaymentTerm;
         paymentDueDate: Date | null;
@@ -101,12 +101,12 @@ export declare class SalesController {
     findAll(orgId: string, status?: SaleStatus, customerId?: string): Promise<({
         items: ({
             product: {
-                id: string;
                 name: string;
+                id: string;
+                organizationId: string;
                 description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: string;
                 sku: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
                 cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -117,28 +117,28 @@ export declare class SalesController {
             };
         } & {
             id: string;
+            notes: string | null;
+            saleId: string;
             productId: string;
             quantity: import("@prisma/client/runtime/library").Decimal;
             batchId: string | null;
-            notes: string | null;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             taxRate: import("@prisma/client/runtime/library").Decimal;
             taxAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
             total: import("@prisma/client/runtime/library").Decimal;
             unitPrice: import("@prisma/client/runtime/library").Decimal;
-            saleId: string;
         })[];
         customer: {
-            id: string;
             name: string;
+            id: string;
+            organizationId: string;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: string;
+            notes: string | null;
             attributes: import("@prisma/client/runtime/library").JsonValue;
             isActive: boolean;
             email: string | null;
-            notes: string | null;
             entityType: import(".prisma/client").$Enums.EntityType;
             taxId: string | null;
             phone: string | null;
@@ -154,11 +154,11 @@ export declare class SalesController {
         } | null;
     } & {
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.SaleStatus;
         createdAt: Date;
         updatedAt: Date;
         type: import(".prisma/client").$Enums.SaleType;
-        status: import(".prisma/client").$Enums.SaleStatus;
-        organizationId: string;
         notes: string | null;
         paymentTerm: import(".prisma/client").$Enums.PaymentTerm;
         paymentDueDate: Date | null;
@@ -180,29 +180,29 @@ export declare class SalesController {
     findOne(id: string, orgId: string): Promise<{
         stockMovements: {
             id: string;
+            organizationId: string;
             createdAt: Date;
             type: import(".prisma/client").$Enums.MovementType;
-            organizationId: string;
+            isPositive: boolean;
+            notes: string | null;
+            performedBy: string;
             productId: string;
             quantity: import("@prisma/client/runtime/library").Decimal;
             reason: import(".prisma/client").$Enums.MovementReason;
-            isPositive: boolean;
             batchId: string | null;
             referenceType: string | null;
             referenceId: string | null;
-            notes: string | null;
-            performedBy: string;
         }[];
         payments: {
             id: string;
+            organizationId: string;
+            status: import(".prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.PaymentStatus;
-            organizationId: string;
+            amount: import("@prisma/client/runtime/library").Decimal;
+            notes: string | null;
             referenceType: string;
             referenceId: string;
-            notes: string | null;
-            amount: import("@prisma/client/runtime/library").Decimal;
             method: import(".prisma/client").$Enums.PaymentMethod;
             paymentDate: Date;
             cardLastFour: string | null;
@@ -213,12 +213,12 @@ export declare class SalesController {
         }[];
         items: ({
             product: {
-                id: string;
                 name: string;
+                id: string;
+                organizationId: string;
                 description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: string;
                 sku: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
                 cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -229,10 +229,10 @@ export declare class SalesController {
             };
             batch: {
                 id: string;
+                organizationId: string;
+                status: import(".prisma/client").$Enums.BatchStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import(".prisma/client").$Enums.BatchStatus;
-                organizationId: string;
                 productId: string;
                 batchNumber: string;
                 serialNumber: string | null;
@@ -245,28 +245,28 @@ export declare class SalesController {
             } | null;
         } & {
             id: string;
+            notes: string | null;
+            saleId: string;
             productId: string;
             quantity: import("@prisma/client/runtime/library").Decimal;
             batchId: string | null;
-            notes: string | null;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             taxRate: import("@prisma/client/runtime/library").Decimal;
             taxAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
             total: import("@prisma/client/runtime/library").Decimal;
             unitPrice: import("@prisma/client/runtime/library").Decimal;
-            saleId: string;
         })[];
         customer: {
-            id: string;
             name: string;
+            id: string;
+            organizationId: string;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: string;
+            notes: string | null;
             attributes: import("@prisma/client/runtime/library").JsonValue;
             isActive: boolean;
             email: string | null;
-            notes: string | null;
             entityType: import(".prisma/client").$Enums.EntityType;
             taxId: string | null;
             phone: string | null;
@@ -282,11 +282,11 @@ export declare class SalesController {
         } | null;
     } & {
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.SaleStatus;
         createdAt: Date;
         updatedAt: Date;
         type: import(".prisma/client").$Enums.SaleType;
-        status: import(".prisma/client").$Enums.SaleStatus;
-        organizationId: string;
         notes: string | null;
         paymentTerm: import(".prisma/client").$Enums.PaymentTerm;
         paymentDueDate: Date | null;
@@ -307,11 +307,11 @@ export declare class SalesController {
     }>;
     update(id: string, dto: UpdateSaleDto, orgId: string): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.SaleStatus;
         createdAt: Date;
         updatedAt: Date;
         type: import(".prisma/client").$Enums.SaleType;
-        status: import(".prisma/client").$Enums.SaleStatus;
-        organizationId: string;
         notes: string | null;
         paymentTerm: import(".prisma/client").$Enums.PaymentTerm;
         paymentDueDate: Date | null;
@@ -333,12 +333,12 @@ export declare class SalesController {
     complete(id: string, orgId: string, user: any): Promise<{
         items: ({
             product: {
-                id: string;
                 name: string;
+                id: string;
+                organizationId: string;
                 description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: string;
                 sku: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
                 cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -349,10 +349,10 @@ export declare class SalesController {
             };
             batch: {
                 id: string;
+                organizationId: string;
+                status: import(".prisma/client").$Enums.BatchStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import(".prisma/client").$Enums.BatchStatus;
-                organizationId: string;
                 productId: string;
                 batchNumber: string;
                 serialNumber: string | null;
@@ -365,28 +365,28 @@ export declare class SalesController {
             } | null;
         } & {
             id: string;
+            notes: string | null;
+            saleId: string;
             productId: string;
             quantity: import("@prisma/client/runtime/library").Decimal;
             batchId: string | null;
-            notes: string | null;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             taxRate: import("@prisma/client/runtime/library").Decimal;
             taxAmount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
             total: import("@prisma/client/runtime/library").Decimal;
             unitPrice: import("@prisma/client/runtime/library").Decimal;
-            saleId: string;
         })[];
         customer: {
-            id: string;
             name: string;
+            id: string;
+            organizationId: string;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: string;
+            notes: string | null;
             attributes: import("@prisma/client/runtime/library").JsonValue;
             isActive: boolean;
             email: string | null;
-            notes: string | null;
             entityType: import(".prisma/client").$Enums.EntityType;
             taxId: string | null;
             phone: string | null;
@@ -402,11 +402,11 @@ export declare class SalesController {
         } | null;
     } & {
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.SaleStatus;
         createdAt: Date;
         updatedAt: Date;
         type: import(".prisma/client").$Enums.SaleType;
-        status: import(".prisma/client").$Enums.SaleStatus;
-        organizationId: string;
         notes: string | null;
         paymentTerm: import(".prisma/client").$Enums.PaymentTerm;
         paymentDueDate: Date | null;
@@ -428,14 +428,14 @@ export declare class SalesController {
     processPayment(id: string, dto: ProcessPaymentDto, orgId: string, user: any): Promise<{
         payment: {
             id: string;
+            organizationId: string;
+            status: import(".prisma/client").$Enums.PaymentStatus;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.PaymentStatus;
-            organizationId: string;
+            amount: import("@prisma/client/runtime/library").Decimal;
+            notes: string | null;
             referenceType: string;
             referenceId: string;
-            notes: string | null;
-            amount: import("@prisma/client/runtime/library").Decimal;
             method: import(".prisma/client").$Enums.PaymentMethod;
             paymentDate: Date;
             cardLastFour: string | null;
@@ -447,14 +447,14 @@ export declare class SalesController {
         sale: {
             payments: {
                 id: string;
+                organizationId: string;
+                status: import(".prisma/client").$Enums.PaymentStatus;
                 createdAt: Date;
                 updatedAt: Date;
-                status: import(".prisma/client").$Enums.PaymentStatus;
-                organizationId: string;
+                amount: import("@prisma/client/runtime/library").Decimal;
+                notes: string | null;
                 referenceType: string;
                 referenceId: string;
-                notes: string | null;
-                amount: import("@prisma/client/runtime/library").Decimal;
                 method: import(".prisma/client").$Enums.PaymentMethod;
                 paymentDate: Date;
                 cardLastFour: string | null;
@@ -465,12 +465,12 @@ export declare class SalesController {
             }[];
             items: ({
                 product: {
-                    id: string;
                     name: string;
+                    id: string;
+                    organizationId: string;
                     description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
-                    organizationId: string;
                     sku: string | null;
                     price: import("@prisma/client/runtime/library").Decimal;
                     cost: import("@prisma/client/runtime/library").Decimal | null;
@@ -481,28 +481,28 @@ export declare class SalesController {
                 };
             } & {
                 id: string;
+                notes: string | null;
+                saleId: string;
                 productId: string;
                 quantity: import("@prisma/client/runtime/library").Decimal;
                 batchId: string | null;
-                notes: string | null;
                 subtotal: import("@prisma/client/runtime/library").Decimal;
                 taxRate: import("@prisma/client/runtime/library").Decimal;
                 taxAmount: import("@prisma/client/runtime/library").Decimal;
                 discount: import("@prisma/client/runtime/library").Decimal;
                 total: import("@prisma/client/runtime/library").Decimal;
                 unitPrice: import("@prisma/client/runtime/library").Decimal;
-                saleId: string;
             })[];
             customer: {
-                id: string;
                 name: string;
+                id: string;
+                organizationId: string;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: string;
+                notes: string | null;
                 attributes: import("@prisma/client/runtime/library").JsonValue;
                 isActive: boolean;
                 email: string | null;
-                notes: string | null;
                 entityType: import(".prisma/client").$Enums.EntityType;
                 taxId: string | null;
                 phone: string | null;
@@ -518,11 +518,11 @@ export declare class SalesController {
             } | null;
         } & {
             id: string;
+            organizationId: string;
+            status: import(".prisma/client").$Enums.SaleStatus;
             createdAt: Date;
             updatedAt: Date;
             type: import(".prisma/client").$Enums.SaleType;
-            status: import(".prisma/client").$Enums.SaleStatus;
-            organizationId: string;
             notes: string | null;
             paymentTerm: import(".prisma/client").$Enums.PaymentTerm;
             paymentDueDate: Date | null;
@@ -544,11 +544,11 @@ export declare class SalesController {
     }>;
     cancel(id: string, orgId: string): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.SaleStatus;
         createdAt: Date;
         updatedAt: Date;
         type: import(".prisma/client").$Enums.SaleType;
-        status: import(".prisma/client").$Enums.SaleStatus;
-        organizationId: string;
         notes: string | null;
         paymentTerm: import(".prisma/client").$Enums.PaymentTerm;
         paymentDueDate: Date | null;
@@ -569,11 +569,11 @@ export declare class SalesController {
     }>;
     remove(id: string, orgId: string): Promise<{
         id: string;
+        organizationId: string;
+        status: import(".prisma/client").$Enums.SaleStatus;
         createdAt: Date;
         updatedAt: Date;
         type: import(".prisma/client").$Enums.SaleType;
-        status: import(".prisma/client").$Enums.SaleStatus;
-        organizationId: string;
         notes: string | null;
         paymentTerm: import(".prisma/client").$Enums.PaymentTerm;
         paymentDueDate: Date | null;
