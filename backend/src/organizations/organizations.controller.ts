@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, ForbiddenException, UseInterceptors } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -7,6 +7,9 @@ import { OrgRoles, PlatformRoles } from '../auth/decorators/org-roles.decorator'
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
+import { Reflector } from '@nestjs/core';
+import { AuditLogInterceptor, AuditAction, AuditEntityType } from '../audit-log/audit-log.interceptor';
+import { AuditActionType } from '@prisma/client';
 
 export interface CreateOrganizationDto {
   name: string;
@@ -74,6 +77,7 @@ export class OrganizationsController {
 // ==========================================
 @Controller('platform/organizations')
 @UseGuards(JwtAuthGuard, PlatformRolesGuard)
+@UseInterceptors(AuditLogInterceptor)
 export class PlatformOrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
@@ -83,6 +87,8 @@ export class PlatformOrganizationsController {
    */
   @Patch(':id/suspend')
   @PlatformRoles('PLATFORM_ADMIN')
+  @AuditAction(AuditActionType.ORGANIZATION_SUSPENDED)
+  @AuditEntityType('Organization')
   async suspend(@Param('id') id: string) {
     return this.organizationsService.suspendOrganization(id);
   }
@@ -92,6 +98,8 @@ export class PlatformOrganizationsController {
    */
   @Patch(':id/reactivate')
   @PlatformRoles('PLATFORM_ADMIN')
+  @AuditAction(AuditActionType.ORGANIZATION_REACTIVATED)
+  @AuditEntityType('Organization')
   async reactivate(@Param('id') id: string) {
     return this.organizationsService.reactivateOrganization(id);
   }
