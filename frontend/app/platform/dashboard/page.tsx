@@ -68,6 +68,21 @@ export default function PlatformDashboardPage() {
               </button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Audit Log</CardTitle>
+              <CardDescription>Historial de acciones sensibles en la plataforma</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <button 
+                onClick={() => router.push('/platform/audit-log')}
+                className="text-primary hover:underline"
+              >
+                Ver audit log →
+              </button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </main>
