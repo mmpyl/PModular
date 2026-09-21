@@ -68,8 +68,11 @@ export class ReportsController {
    */
   @Get('inventory/summary')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
-  async getInventorySummary(@CurrentOrg() organizationId: string) {
-    return this.reportsService.getInventorySummary(organizationId);
+  async getInventorySummary(
+    @CurrentOrg() organizationId: string,
+    @Query() query?: DateRangeDto,
+  ) {
+    return this.reportsService.getInventorySummary(organizationId, query);
   }
 
   /**
@@ -77,8 +80,11 @@ export class ReportsController {
    */
   @Get('inventory/by-category')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
-  async getInventoryByCategory(@CurrentOrg() organizationId: string) {
-    return this.reportsService.getInventoryByCategory(organizationId);
+  async getInventoryByCategory(
+    @CurrentOrg() organizationId: string,
+    @Query() query?: DateRangeDto,
+  ) {
+    return this.reportsService.getInventoryByCategory(organizationId, query);
   }
 
   /**
@@ -278,9 +284,139 @@ export class ReportsController {
   async exportInventoryByCategoryToCsv(
     @CurrentOrg() organizationId: string,
     @Res({ passthrough: true }) res: Response,
+    @Query() query?: DateRangeDto,
   ) {
-    const inventoryData = await this.reportsService.getInventoryByCategory(organizationId);
+    const inventoryData = await this.reportsService.getInventoryByCategory(organizationId, query);
     const csvBuffer = this.reportsService.exportToCSV(inventoryData);
+    res.end(csvBuffer);
+  }
+
+  /**
+   * Exportar reporte de ventas a Excel - OWNER/ADMIN
+   */
+  @Get('export/sales/xlsx')
+  @OrgRoles('OWNER', 'ADMIN')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header('Content-Disposition', 'attachment; filename="sales_report.xlsx"')
+  async exportSalesToExcel(
+    @CurrentOrg() organizationId: string,
+    @Query() query: DateRangeDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const salesData = await this.reportsService.getSalesSummary(organizationId, query);
+    const excelBuffer = await this.reportsService.exportToExcel(
+      [salesData],
+      'Ventas',
+      [
+        { header: 'Total Ventas', key: 'totalSales' },
+        { header: 'Ingresos Totales', key: 'totalRevenue' },
+        { header: 'Impuestos', key: 'totalTax' },
+        { header: 'Descuentos', key: 'totalDiscount' },
+        { header: 'Ticket Promedio', key: 'averageTicket' },
+        { header: 'Cantidad Ventas', key: 'salesCount' },
+      ],
+    );
+    res.end(excelBuffer);
+  }
+
+  /**
+   * Exportar top productos a Excel - OWNER/ADMIN
+   */
+  @Get('export/top-products/xlsx')
+  @OrgRoles('OWNER', 'ADMIN')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header('Content-Disposition', 'attachment; filename="top_products.xlsx"')
+  async exportTopProductsToExcel(
+    @CurrentOrg() organizationId: string,
+    @Query() query: DateRangeDto,
+    @Res({ passthrough: true }) res: Response,
+    @Query('limit') limit?: number,
+  ) {
+    const productsData = await this.reportsService.getTopProducts(
+      organizationId,
+      query,
+      limit ? parseInt(limit.toString(), 10) : 10,
+    );
+    const excelBuffer = await this.reportsService.exportToExcel(
+      productsData,
+      'Top Productos',
+      [
+        { header: 'Ranking', key: 'rank' },
+        { header: 'Producto', key: 'productName' },
+        { header: 'SKU', key: 'sku' },
+        { header: 'Cantidad Vendida', key: 'totalQuantity' },
+        { header: 'Ingresos', key: 'totalRevenue' },
+      ],
+    );
+    res.end(excelBuffer);
+  }
+
+  /**
+   * Exportar compras por proveedor a Excel - OWNER/ADMIN/INVENTARIO
+   */
+  @Get('export/purchases-by-supplier/xlsx')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header('Content-Disposition', 'attachment; filename="purchases_by_supplier.xlsx"')
+  async exportPurchasesBySupplierToExcel(
+    @CurrentOrg() organizationId: string,
+    @Query() query: DateRangeDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const purchasesData = await this.reportsService.getPurchasesBySupplier(organizationId, query);
+    const excelBuffer = await this.reportsService.exportToExcel(
+      purchasesData,
+      'Compras por Proveedor',
+      [
+        { header: 'Proveedor', key: 'supplierName' },
+        { header: 'Total Órdenes', key: 'totalOrders' },
+        { header: 'Total Gastado', key: 'totalSpent' },
+        { header: 'Porcentaje', key: 'percentage' },
+      ],
+    );
+    res.end(excelBuffer);
+  }
+
+  /**
+   * Exportar inventario por categoría a Excel - OWNER/ADMIN/INVENTARIO
+   */
+  @Get('export/inventory-by-category/xlsx')
+  @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @Header('Content-Disposition', 'attachment; filename="inventory_by_category.xlsx"')
+  async exportInventoryByCategoryToExcel(
+    @CurrentOrg() organizationId: string,
+    @Res({ passthrough: true }) res: Response,
+    @Query() query?: DateRangeDto,
+  ) {
+    const inventoryData = await this.reportsService.getInventoryByCategory(organizationId, query);
+    const excelBuffer = await this.reportsService.exportToExcel(
+      inventoryData,
+      'Inventario por Categoría',
+      [
+        { header: 'Categoría', key: 'categoryName' },
+        { header: 'Cantidad Productos', key: 'productCount' },
+        { header: 'Cantidad Total', key: 'totalQuantity' },
+        { header: 'Valor Total', key: 'totalValue' },
+      ],
+    );
+    res.end(excelBuffer);
+  }
+
+  /**
+   * Exportar métricas de actividad a CSV - OWNER/ADMIN
+   */
+  @Get('export/activity-metrics/csv')
+  @OrgRoles('OWNER', 'ADMIN')
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename="activity_metrics.csv"')
+  async exportActivityMetricsToCsv(
+    @CurrentOrg() organizationId: string,
+    @Query() query: DateRangeDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const activityData = await this.reportsService.getActivityMetrics(organizationId, query);
+    const csvBuffer = this.reportsService.exportToCSV([activityData]);
     res.end(csvBuffer);
   }
 }

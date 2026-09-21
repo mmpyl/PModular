@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsEnum, IsObject } from 'class-validator';
-import { AuditActionType } from '@prisma/client';
+import { AuditActionType, PlatformRole } from '@prisma/client';
 
 export class CreateAuditLogDto {
   @IsOptional()
@@ -7,17 +7,17 @@ export class CreateAuditLogDto {
   userId?: string;
 
   @IsOptional()
-  @IsString()
-  userPlatformRole?: string;
+  @IsEnum(PlatformRole)
+  userPlatformRole?: PlatformRole;
 
   @IsEnum(AuditActionType)
-  action: AuditActionType;
+  action!: AuditActionType;
 
   @IsString()
-  entityType: string;
+  entityType!: string;
 
   @IsString()
-  entityId: string;
+  entityId!: string;
 
   @IsOptional()
   @IsString()
