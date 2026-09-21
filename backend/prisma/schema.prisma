@@ -204,6 +204,7 @@ model Product {
 
   // FASE E: Inventario por almacén
   warehouseInventory WarehouseInventory[]
+  transferItems      StockTransferItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -379,8 +380,8 @@ model Warehouse {
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   inventory      WarehouseInventory[]
-  transfers      StockTransfer[]
-  transferItems  StockTransferItem[]
+  transfersFrom  StockTransfer[] @relation("TransferFrom")
+  transfersTo    StockTransfer[] @relation("TransferTo")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
