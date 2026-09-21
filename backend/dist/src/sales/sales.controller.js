@@ -54,7 +54,7 @@ let SalesController = class SalesController {
 exports.SalesController = SalesController;
 __decorate([
     (0, common_1.Post)(),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA'),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_org_decorator_1.CurrentOrg)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -64,7 +64,7 @@ __decorate([
 ], SalesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO', 'CAJA'),
     __param(0, (0, current_org_decorator_1.CurrentOrg)()),
     __param(1, (0, common_1.Query)('status')),
     __param(2, (0, common_1.Query)('customerId')),
@@ -74,7 +74,7 @@ __decorate([
 ], SalesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO', 'CAJA'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
@@ -93,7 +93,7 @@ __decorate([
 ], SalesController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)(':id/complete'),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, current_org_decorator_1.CurrentOrg)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
@@ -103,7 +103,7 @@ __decorate([
 ], SalesController.prototype, "complete", null);
 __decorate([
     (0, common_1.Post)(':id/payment'),
-    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_org_decorator_1.CurrentOrg)()),

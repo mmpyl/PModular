@@ -23,6 +23,8 @@ const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
 const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const client_1 = require("@prisma/client");
+const audit_log_interceptor_1 = require("../audit-log/audit-log.interceptor");
+const client_2 = require("@prisma/client");
 let MembershipsController = class MembershipsController {
     constructor(membershipsService) {
         this.membershipsService = membershipsService;
@@ -69,6 +71,9 @@ __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     (0, org_roles_decorator_1.OrgRoles)('OWNER'),
+    (0, common_1.UseInterceptors)(audit_log_interceptor_1.AuditLogInterceptor),
+    (0, audit_log_interceptor_1.AuditAction)(client_2.AuditActionType.MEMBER_ADDED),
+    (0, audit_log_interceptor_1.AuditEntityType)('Membership'),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_org_decorator_1.CurrentOrg)()),
     __metadata("design:type", Function),
@@ -106,6 +111,9 @@ __decorate([
     (0, common_1.Delete)(':userId/:organizationId'),
     (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     (0, org_roles_decorator_1.OrgRoles)('OWNER'),
+    (0, common_1.UseInterceptors)(audit_log_interceptor_1.AuditLogInterceptor),
+    (0, audit_log_interceptor_1.AuditAction)(client_2.AuditActionType.MEMBER_REMOVED),
+    (0, audit_log_interceptor_1.AuditEntityType)('Membership'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Param)('organizationId')),
     __param(2, (0, current_org_decorator_1.CurrentOrg)()),
@@ -117,6 +125,9 @@ __decorate([
     (0, common_1.Patch)(':userId/:organizationId'),
     (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
     (0, org_roles_decorator_1.OrgRoles)('OWNER'),
+    (0, common_1.UseInterceptors)(audit_log_interceptor_1.AuditLogInterceptor),
+    (0, audit_log_interceptor_1.AuditAction)(client_2.AuditActionType.MEMBER_ROLE_CHANGED),
+    (0, audit_log_interceptor_1.AuditEntityType)('Membership'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Param)('organizationId')),
     __param(2, (0, current_org_decorator_1.CurrentOrg)()),

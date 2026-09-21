@@ -22,6 +22,8 @@ const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const current_org_decorator_1 = require("../auth/decorators/current-org.decorator");
 const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const platform_roles_guard_1 = require("../auth/guards/platform-roles.guard");
+const audit_log_interceptor_1 = require("../audit-log/audit-log.interceptor");
+const client_1 = require("@prisma/client");
 let OrganizationsController = class OrganizationsController {
     constructor(organizationsService) {
         this.organizationsService = organizationsService;
@@ -119,6 +121,8 @@ exports.PlatformOrganizationsController = PlatformOrganizationsController;
 __decorate([
     (0, common_1.Patch)(':id/suspend'),
     (0, org_roles_decorator_1.PlatformRoles)('PLATFORM_ADMIN'),
+    (0, audit_log_interceptor_1.AuditAction)(client_1.AuditActionType.ORGANIZATION_SUSPENDED),
+    (0, audit_log_interceptor_1.AuditEntityType)('Organization'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -127,6 +131,8 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id/reactivate'),
     (0, org_roles_decorator_1.PlatformRoles)('PLATFORM_ADMIN'),
+    (0, audit_log_interceptor_1.AuditAction)(client_1.AuditActionType.ORGANIZATION_REACTIVATED),
+    (0, audit_log_interceptor_1.AuditEntityType)('Organization'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -135,6 +141,7 @@ __decorate([
 exports.PlatformOrganizationsController = PlatformOrganizationsController = __decorate([
     (0, common_1.Controller)('platform/organizations'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, platform_roles_guard_1.PlatformRolesGuard),
+    (0, common_1.UseInterceptors)(audit_log_interceptor_1.AuditLogInterceptor),
     __metadata("design:paramtypes", [organizations_service_1.OrganizationsService])
 ], PlatformOrganizationsController);
 //# sourceMappingURL=organizations.controller.js.map
