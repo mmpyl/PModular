@@ -121,10 +121,10 @@ PModular/
 │   │   └── schema.prisma       # Modelos Prisma
 │   ├── scripts/                # Scripts de utilidad
 │   └── src/
-│       ├── auth/               # Autenticación JWT
-│       │   ├── decorators/     # @Roles(), @CurrentUser()
+│       ├── auth/               # Autenticación JWT y RBAC
+│       │   ├── decorators/     # @Roles(), @OrgRoles(), @CurrentUser()
 │       │   ├── dto/            # Contratos de entrada
-│       │   ├── guards/         # JwtAuthGuard, RolesGuard
+│       │   ├── guards/         # JwtAuthGuard, OrgRolesGuard, PlatformRolesGuard, TenantGuard
 │       │   ├── auth.controller.ts
 │       │   ├── auth.service.ts
 │       │   └── jwt.strategy.ts
@@ -133,8 +133,15 @@ PModular/
 │       │   ├── repositories/
 │       │   └── users.service.ts
 │       ├── organizations/      # Multi-tenant
-│       ├── platform/           # Configuración de plataforma
+│       ├── platform/           # Configuración de plataforma y administración global
+│       ├── audit-log/          # Sistema de auditoría y trazabilidad
+│       │   ├── dto/
+│       │   ├── audit-log.controller.ts
+│       │   ├── audit-log.service.ts
+│       │   └── audit-log.interceptor.ts
 │       ├── business-entities/  # Entidades de negocio
+│       │   ├── dto/
+│       │   └── business-entities.service.ts
 │       ├── business-types/     # Tipos de negocio
 │       ├── categories/         # Categorías
 │       ├── products/           # Productos
@@ -142,12 +149,23 @@ PModular/
 │       ├── inventory/          # Inventario
 │       ├── stock-movements/    # Movimientos de stock
 │       ├── purchase-orders/    # Órdenes de compra
+│       │   ├── dto/
+│       │   └── purchase-orders.service.ts
 │       ├── sales/              # Ventas
+│       │   ├── dto/
+│       │   ├── repositories/
+│       │   └── sales.service.ts
 │       ├── cash-registers/     # Cajas registradoras
+│       │   ├── dto/
+│       │   ├── repositories/
+│       │   └── cash-registers.service.ts
 │       ├── memberships/        # Membresías
 │       ├── batches/            # Lotes
 │       ├── reports/            # Reportes
+│       │   ├── dto/
+│       │   └── reports.service.ts
 │       ├── common/             # Utilidades compartidas
+│       │   ├── dto/
 │       │   ├── filters/        # Filtros de excepciones
 │       │   └── interceptors/   # Interceptores HTTP
 │       ├── app.module.ts
@@ -163,6 +181,11 @@ PModular/
 │   │   ├── select-organization/# Seleccionar organización
 │   │   ├── onboarding/         # Onboarding
 │   │   ├── platform/           # Administración plataforma
+│   │   │   ├── dashboard/
+│   │   │   ├── users/
+│   │   │   ├── organizations/
+│   │   │   ├── audit-log/      # Auditoría del sistema
+│   │   │   └── login/
 │   │   ├── team/               # Gestión de equipo
 │   │   ├── business-settings/  # Configuración negocio
 │   │   ├── products/           # Productos
@@ -183,7 +206,6 @@ PModular/
 ├── package.json                # Workspace raíz
 └── README.md
 ```
-
 ---
 
 ## 📦 Scripts disponibles
@@ -229,13 +251,16 @@ Desde el frontend (`-w frontend`):
 
 ## ✨ Características principales
 
-- **🏢 Multi-tenant:** Soporte para organizaciones múltiples con guards dedicados
+- **🏢 Multi-tenant:** Soporte para organizaciones múltiples con guards dedicados (TenantGuard, OrgRolesGuard)
 - **🔐 Autenticación JWT:** Sistema completo con refresh tokens y roles por organización
+- **🛡️ RBAC avanzado:** Guards de roles a nivel plataforma y organización con decoradores @OrgRoles() y @PlatformRoles()
+- **📝 Auditoría completa:** Sistema de audit-log con interceptor automático para trazabilidad de operaciones
 - **🧹 Arquitectura limpia:** Separación de responsabilidades con controladores, servicios y repositorios
 - **✅ Validación robusta:** DTOs con class-validator y transformación automática
 - **📦 Flexibilidad de datos:** Campos JSON para metadatos personalizables
 - **📊 Gestión de inventario:** Control de stock, movimientos y lotes
-- **💼 Módulos empresariales:** Productos, categorías, unidades de medida, compras, ventas y cajas
+- **💼 Módulos empresariales:** Productos, categorías, unidades de medida, compras, ventas, cajas y membresías
+- **🏛️ Administración de plataforma:** Módulo platform para gestión global de usuarios y organizaciones
 
 ---
 
@@ -255,13 +280,15 @@ Para crear una nueva funcionalidad, por ejemplo `ventas`:
 
 6. **Servicio:** Crea `backend/src/ventas/ventas.service.ts` con la lógica de aplicación.
 
-7. **Controlador:** Crea `backend/src/ventas/ventas.controller.ts` con rutas REST. Protege rutas con `JwtAuthGuard` y `RolesGuard` cuando aplique.
+7. **Controlador:** Crea `backend/src/ventas/ventas.controller.ts` con rutas REST. Protege rutas con `JwtAuthGuard`, `OrgRolesGuard` o `PlatformRolesGuard` según corresponda. Usa el decorador `@OrgRoles()` para definir permisos específicos.
 
-8. **Frontend:** Crea rutas en `frontend/app/ventas`, componentes en `frontend/components/ventas` y funciones de API en `frontend/lib`.
+8. **Auditoría (opcional):** Si el módulo requiere trazabilidad, importa `AuditLogModule` y usa el interceptor `AuditLogInterceptor` para registrar automáticamente las operaciones.
 
-9. **Pruebas:** Añade tests unitarios para servicios/repositorios y tests de integración para controladores críticos.
+9. **Frontend:** Crea rutas en `frontend/app/ventas`, componentes en `frontend/components/ventas` y funciones de API en `frontend/lib`.
 
-10. **Escalabilidad:** Si el módulo crece, separa subdominios y eventos sin romper la interfaz pública del módulo.
+10. **Pruebas:** Añade tests unitarios para servicios/repositorios y tests de integración para controladores críticos.
+
+11. **Escalabilidad:** Si el módulo crece, separa subdominios y eventos sin romper la interfaz pública del módulo.
 
 ---
 
@@ -287,3 +314,4 @@ Este proyecto está bajo la licencia MIT. Ver el archivo [LICENSE](LICENSE) para
 - [Documentación de Next.js](https://nextjs.org/docs)
 - [Documentación de Prisma](https://www.prisma.io/docs)
 - [RBAC Matrix](RBAC_MATRIX.md) - Matriz de roles y permisos
+- [Audit Log Interceptor](backend/src/audit-log/audit-log.interceptor.ts) - Implementación del interceptor de auditoría
