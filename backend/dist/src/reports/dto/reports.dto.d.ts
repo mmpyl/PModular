@@ -134,3 +134,39 @@ export interface LowStockDto {
         expirationDate?: Date;
     }[];
 }
+export interface PeriodComparisonDto {
+    currentPeriod: {
+        startDate: Date;
+        endDate: Date;
+        totalRevenue: number;
+        totalSales: number;
+    };
+    previousPeriod: {
+        startDate: Date;
+        endDate: Date;
+        totalRevenue: number;
+        totalSales: number;
+    };
+    growth: {
+        revenueGrowth: number;
+        salesGrowth: number;
+    };
+}
+export interface ActivityMetricsDto {
+    totalActions: number;
+    actionsByType: Record<string, number>;
+    topUsers: {
+        userId: string;
+        userName: string;
+        actionCount: number;
+    }[];
+    topEntities: {
+        entityType: string;
+        actionCount: number;
+    }[];
+    period: {
+        startDate: Date;
+        endDate: Date;
+    };
+}
+export type ExportFormat = 'csv' | 'json';

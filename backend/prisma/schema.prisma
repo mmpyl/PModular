@@ -29,6 +29,7 @@ model User {
   // El rol global ha sido eliminado. 
   // La pertenencia y roles ahora viven en Membership.
   memberships Membership[]
+  auditLogs   AuditLog[]
 
   @@map("users")
 }
