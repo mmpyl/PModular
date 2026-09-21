@@ -86,13 +86,13 @@
 | Endpoint | OWNER | ADMIN | INVENTARIO | VENDEDOR | CAJA |
 |----------|-------|-------|------------|----------|------|
 | POST / (crear) | ✅ | ✅ | ❌ | ❌ | ❌ |
-| GET / (listar) | ✅ | ✅ | ❌ | ✅ | ❌ |
-| GET /:id | ✅ | ✅ | ❌ | ✅ | ❌ |
-| GET /:id/movements | ✅ | ✅ | ❌ | ✅ | ❌ |
+| GET / (listar) | ✅ | ✅ | ❌ | ✅ | ✅ |
+| GET /:id | ✅ | ✅ | ❌ | ✅ | ✅ |
+| GET /:id/movements | ✅ | ✅ | ❌ | ✅ | ✅ |
 | PATCH /:id | ✅ | ✅ | ❌ | ❌ | ❌ |
-| POST /:id/open | ✅ | ✅ | ❌ | ✅ | ❌ |
-| POST /:id/close | ✅ | ✅ | ❌ | ✅ | ❌ |
-| POST /:id/movements | ✅ | ✅ | ❌ | ✅ | ❌ |
+| POST /:id/open | ✅ | ✅ | ❌ | ❌ | ✅ |
+| POST /:id/close | ✅ | ✅ | ❌ | ❌ | ✅ |
+| POST /:id/movements | ✅ | ✅ | ❌ | ❌ | ✅ |
 | DELETE /:id | ✅ | ✅ | ❌ | ❌ | ❌ |
 
 ### 👥 MEMBRESÍAS (`/memberships`)
