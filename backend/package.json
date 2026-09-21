@@ -15,7 +15,9 @@
     "prisma:migrate": "prisma migrate dev",
     "test:user": "ts-node scripts/create-test-user.ts",
     "test:admin": "ts-node scripts/create-test-admin.ts",
-    "grant:platform-admin": "ts-node scripts/grant-platform-admin.ts"
+    "grant:platform-admin": "ts-node scripts/grant-platform-admin.ts",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrations:check": "prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url \"$SHADOW_DATABASE_URL\" --exit-code"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",

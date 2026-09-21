@@ -15,9 +15,28 @@ jobs:
   build-and-lint:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pmodular_ci
+        options: >-
+          --health-cmd "pg_isready -U postgres -d pmodular_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     defaults:
       run:
         working-directory: ./backend
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pmodular_ci?schema=public
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pmodular_ci_shadow?schema=public
 
     steps:
       - name: Checkout code
@@ -32,6 +51,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Create Prisma shadow database
+        run: docker exec ${{ job.services.postgres.id }} createdb -U postgres pmodular_ci_shadow
+
+      - name: Verify Prisma migration history matches schema
+        run: npm run prisma:migrations:check
+
+      - name: Verify migrations deploy to a clean database
+        run: npm run prisma:migrate:deploy
 
       - name: Run lint
         run: npm run lint

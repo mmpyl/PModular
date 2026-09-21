@@ -57,6 +57,29 @@ La API queda disponible en `http://localhost:3001` y la aplicación web en `http
 
 > **Nota:** Para producción usa `npm run start:backend` y `npm run start:frontend`.
 
+### Migraciones de base de datos
+
+El historial de Prisma es la fuente de verdad del esquema. **No uses `prisma db push`** en entornos compartidos, staging o producción, porque omite las migraciones versionadas.
+
+1. Modifica `backend/prisma/schema.prisma`.
+2. Genera y revisa la migración localmente: `npm run prisma:migrate -w backend -- --name descripcion-del-cambio`.
+3. Confirma la nueva carpeta y su `migration.sql` en `backend/prisma/migrations/`.
+4. Despliega exclusivamente con `npm run prisma:migrate:deploy`.
+
+La migración `20260921_baseline_unversioned_schema` captura los cambios históricos que llegaron mediante `db push`, incluidos almacenes, transferencias, compras, ventas, cajas, auditoría, `Organization.status` y `Product.lowStockThreshold`. En una base que ya contiene esas estructuras, no ejecutes esta migración otra vez: primero márcala como aplicada con:
+
+```bash
+npm exec --workspace backend prisma migrate resolve --applied 20260921_baseline_unversioned_schema
+```
+
+Después, `npm run prisma:migrate:deploy` aplicará únicamente las migraciones posteriores. Las bases nuevas deben ejecutar `prisma:migrate:deploy` sin usar `migrate resolve`.
+
+Para comprobar que el schema y el historial siguen sincronizados, crea una base temporal vacía para `SHADOW_DATABASE_URL` y ejecuta:
+
+```bash
+SHADOW_DATABASE_URL=postgresql://... npm run prisma:migrations:check -w backend
+```
+
 ### Variables de entorno
 
 **Backend (`backend/.env`):**
