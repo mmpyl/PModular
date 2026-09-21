@@ -4,57 +4,10 @@ export declare class InventoryController {
     private readonly inventoryService;
     private readonly stockMovementService;
     constructor(inventoryService: InventoryService, stockMovementService: StockMovementService);
-    getInventory(req: any, productId?: string): Promise<{
-        id: string;
-        organizationId: string;
-        productId: string;
-        quantity: import("@prisma/client/runtime/library").Decimal;
-        reserved: import("@prisma/client/runtime/library").Decimal;
-        averageCost: import("@prisma/client/runtime/library").Decimal;
-        lastCountedAt: Date | null;
-    }[]>;
-    getInventoryById(req: any, id: string): Promise<{
-        id: string;
-        organizationId: string;
-        productId: string;
-        quantity: import("@prisma/client/runtime/library").Decimal;
-        reserved: import("@prisma/client/runtime/library").Decimal;
-        averageCost: import("@prisma/client/runtime/library").Decimal;
-        lastCountedAt: Date | null;
-    }>;
+    getInventory(req: any, productId?: string): Promise<InventoryItem[]>;
+    getInventoryById(req: any, id: string): Promise<InventoryItem>;
     updateInventory(req: any, id: string, dto: any): Promise<any>;
-    recalculateInventory(req: any, productId: string): Promise<{
-        id: string;
-        organizationId: string;
-        productId: string;
-        quantity: import("@prisma/client/runtime/library").Decimal;
-        reserved: import("@prisma/client/runtime/library").Decimal;
-        averageCost: import("@prisma/client/runtime/library").Decimal;
-        lastCountedAt: Date | null;
-    }>;
-    getLowStock(req: any, threshold?: string): Promise<{
-        id: string;
-        organizationId: string;
-        productId: string;
-        quantity: import("@prisma/client/runtime/library").Decimal;
-        reserved: import("@prisma/client/runtime/library").Decimal;
-        averageCost: import("@prisma/client/runtime/library").Decimal;
-        lastCountedAt: Date | null;
-    }[]>;
-    getExpiringBatches(req: any, days?: string): Promise<{
-        id: string;
-        organizationId: string;
-        status: import(".prisma/client").$Enums.BatchStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        productId: string;
-        batchNumber: string;
-        serialNumber: string | null;
-        manufacturingDate: Date | null;
-        expirationDate: Date | null;
-        initialQuantity: import("@prisma/client/runtime/library").Decimal;
-        currentQuantity: import("@prisma/client/runtime/library").Decimal;
-        unitCost: import("@prisma/client/runtime/library").Decimal;
-        location: string | null;
-    }[]>;
+    recalculateInventory(req: any, productId: string): Promise<InventoryItem>;
+    getLowStock(req: any, threshold?: string): Promise<InventoryItem[]>;
+    getExpiringBatches(req: any, days?: string): Promise<Batch[]>;
 }

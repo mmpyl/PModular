@@ -28,6 +28,7 @@ const cash_registers_module_1 = require("./cash-registers/cash-registers.module"
 const reports_module_1 = require("./reports/reports.module");
 const auth_shared_module_1 = require("./auth/auth-shared.module");
 const platform_module_1 = require("./platform/platform.module");
+const audit_log_module_1 = require("./audit-log/audit-log.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -54,6 +55,7 @@ exports.AppModule = AppModule = __decorate([
             cash_registers_module_1.CashRegistersModule,
             reports_module_1.ReportsModule,
             platform_module_1.PlatformModule,
+            audit_log_module_1.AuditLogModule,
         ],
     })
 ], AppModule);

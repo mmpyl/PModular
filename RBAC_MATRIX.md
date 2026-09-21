@@ -28,12 +28,12 @@
 ### 🛒 VENTAS (`/sales`)
 | Endpoint | OWNER | ADMIN | INVENTARIO | VENDEDOR | CAJA |
 |----------|-------|-------|------------|----------|------|
-| POST / (crear) | ✅ | ✅ | ❌ | ✅ | ❌ |
-| GET / (listar) | ✅ | ✅ | ✅ | ✅ | ❌ |
-| GET /:id | ✅ | ✅ | ✅ | ✅ | ❌ |
+| POST / (crear) | ✅ | ✅ | ❌ | ✅ | ✅ |
+| GET / (listar) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GET /:id | ✅ | ✅ | ✅ | ✅ | ✅ |
 | PATCH /:id | ✅ | ✅ | ❌ | ✅ | ❌ |
-| POST /:id/complete | ✅ | ✅ | ❌ | ✅ | ❌ |
-| POST /:id/payment | ✅ | ✅ | ❌ | ✅ | ❌ |
+| POST /:id/complete | ✅ | ✅ | ❌ | ✅ | ✅ |
+| POST /:id/payment | ✅ | ✅ | ❌ | ✅ | ✅ |
 | POST /:id/cancel | ✅ | ✅ | ❌ | ❌ | ❌ |
 | DELETE /:id | ✅ | ✅ | ❌ | ❌ | ❌ |
 
