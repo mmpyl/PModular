@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReportsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
+const json2csv_1 = require("json2csv");
 let ReportsService = class ReportsService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -592,6 +593,147 @@ let ReportsService = class ReportsService {
                 expirationDate: batch.expirationDate || undefined,
             })),
         }));
+    }
+    exportToCSV(data, fields) {
+        try {
+            const parser = new json2csv_1.Parser({ fields });
+            const csv = parser.parse(data);
+            return Buffer.from(csv, 'utf-8');
+        }
+        catch (error) {
+            throw new common_1.BadRequestException('Failed to export data to CSV');
+        }
+    }
+    async getSalesComparison(organizationId, currentPeriod, previousPeriod) {
+        const currentSales = await this.prisma.sale.aggregate({
+            where: {
+                organizationId,
+                saleDate: {
+                    gte: currentPeriod.startDate,
+                    lte: currentPeriod.endDate,
+                },
+                status: { in: ['CONFIRMADA', 'COMPLETADA', 'EN_PROCESO'] },
+            },
+            _sum: { total: true },
+            _count: { id: true },
+        });
+        const previousSales = await this.prisma.sale.aggregate({
+            where: {
+                organizationId,
+                saleDate: {
+                    gte: previousPeriod.startDate,
+                    lte: previousPeriod.endDate,
+                },
+                status: { in: ['CONFIRMADA', 'COMPLETADA', 'EN_PROCESO'] },
+            },
+            _sum: { total: true },
+            _count: { id: true },
+        });
+        const currentRevenue = Number(currentSales._sum.total || 0);
+        const previousRevenue = Number(previousSales._sum.total || 0);
+        const currentCount = currentSales._count.id;
+        const previousCount = previousSales._count.id;
+        const revenueGrowth = previousRevenue > 0
+            ? ((currentRevenue - previousRevenue) / previousRevenue) * 100
+            : 0;
+        const salesGrowth = previousCount > 0
+            ? ((currentCount - previousCount) / previousCount) * 100
+            : 0;
+        return {
+            currentPeriod: {
+                startDate: currentPeriod.startDate,
+                endDate: currentPeriod.endDate,
+                totalRevenue: currentRevenue,
+                totalSales: currentCount,
+            },
+            previousPeriod: {
+                startDate: previousPeriod.startDate,
+                endDate: previousPeriod.endDate,
+                totalRevenue: previousRevenue,
+                totalSales: previousCount,
+            },
+            growth: {
+                revenueGrowth,
+                salesGrowth,
+            },
+        };
+    }
+    async getActivityMetrics(organizationId, dto) {
+        const { startDate, endDate } = this.getDateRange(dto);
+        const actions = await this.prisma.auditLog.groupBy({
+            by: ['action'],
+            where: {
+                organizationId,
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+            _count: { id: true },
+        });
+        const userActivities = await this.prisma.auditLog.groupBy({
+            by: ['userId'],
+            where: {
+                organizationId,
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+                userId: { not: null },
+            },
+            _count: { id: true },
+            orderBy: { _count: { id: 'desc' } },
+            take: 10,
+        });
+        const userIds = userActivities
+            .map((u) => u.userId)
+            .filter((id) => id !== null);
+        const users = await this.prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, name: true, email: true },
+        });
+        const entityActivities = await this.prisma.auditLog.groupBy({
+            by: ['entityType'],
+            where: {
+                organizationId,
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+            _count: { id: true },
+            orderBy: { _count: { id: 'desc' } },
+            take: 10,
+        });
+        const actionMap = new Map();
+        actions.forEach((a) => {
+            actionMap.set(a.action, a._count.id);
+        });
+        return {
+            totalActions: actions.reduce((sum, a) => sum + a._count.id, 0),
+            actionsByType: Object.fromEntries(actionMap),
+            topUsers: userActivities.map((u) => {
+                const user = users.find((usr) => usr.id === u.userId);
+                return {
+                    userId: u.userId,
+                    userName: user?.name || user?.email || 'Unknown',
+                    actionCount: u._count.id,
+                };
+            }),
+            topEntities: entityActivities.map((e) => ({
+                entityType: e.entityType,
+                actionCount: e._count.id,
+            })),
+            period: { startDate, endDate },
+        };
+    }
+    async getMonthOverMonthComparison(organizationId, referenceDate) {
+        const refDate = referenceDate || new Date();
+        const currentMonthStart = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+        const currentMonthEnd = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0);
+        const previousMonthStart = new Date(refDate.getFullYear(), refDate.getMonth() - 1, 1);
+        const previousMonthEnd = new Date(refDate.getFullYear(), refDate.getMonth(), 0);
+        return this.getSalesComparison(organizationId, { startDate: currentMonthStart, endDate: currentMonthEnd }, { startDate: previousMonthStart, endDate: previousMonthEnd });
     }
 };
 exports.ReportsService = ReportsService;

@@ -1,5 +1,5 @@
 import { PrismaService } from '../prisma.service';
-import { DateRangeDto, SalesSummaryDto, SalesByCategoryDto, TopProductDto, InventorySummaryDto, InventoryByCategoryDto, StockMovementSummaryDto, PurchaseSummaryDto, PurchasesBySupplierDto, CashRegisterSummaryDto, DashboardMetricsDto, ExpiringBatchesDto, LowStockDto } from './dto/reports.dto';
+import { DateRangeDto, SalesSummaryDto, SalesByCategoryDto, TopProductDto, InventorySummaryDto, InventoryByCategoryDto, StockMovementSummaryDto, PurchaseSummaryDto, PurchasesBySupplierDto, CashRegisterSummaryDto, DashboardMetricsDto, ExpiringBatchesDto, LowStockDto, PeriodComparisonDto, ActivityMetricsDto } from './dto/reports.dto';
 export declare class ReportsService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -16,4 +16,14 @@ export declare class ReportsService {
     getDashboardMetrics(organizationId: string): Promise<DashboardMetricsDto>;
     getExpiringBatches(organizationId: string, daysThreshold?: number): Promise<ExpiringBatchesDto[]>;
     getLowStockProducts(organizationId: string, threshold?: number): Promise<LowStockDto[]>;
+    exportToCSV<T>(data: T[], fields?: string[]): Buffer;
+    getSalesComparison(organizationId: string, currentPeriod: {
+        startDate: Date;
+        endDate: Date;
+    }, previousPeriod: {
+        startDate: Date;
+        endDate: Date;
+    }): Promise<PeriodComparisonDto>;
+    getActivityMetrics(organizationId: string, dto: DateRangeDto): Promise<ActivityMetricsDto>;
+    getMonthOverMonthComparison(organizationId: string, referenceDate?: Date): Promise<PeriodComparisonDto>;
 }

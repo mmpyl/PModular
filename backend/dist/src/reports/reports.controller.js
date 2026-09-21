@@ -60,6 +60,36 @@ let ReportsController = class ReportsController {
     async getLowStockProducts(organizationId, threshold) {
         return this.reportsService.getLowStockProducts(organizationId, threshold ? parseInt(threshold.toString(), 10) : 10);
     }
+    async getMonthOverMonthComparison(organizationId, referenceDate) {
+        const refDate = referenceDate ? new Date(referenceDate) : undefined;
+        return this.reportsService.getMonthOverMonthComparison(organizationId, refDate);
+    }
+    async getSalesComparison(organizationId, currentStart, currentEnd, previousStart, previousEnd) {
+        return this.reportsService.getSalesComparison(organizationId, { startDate: new Date(currentStart), endDate: new Date(currentEnd) }, { startDate: new Date(previousStart), endDate: new Date(previousEnd) });
+    }
+    async getActivityMetrics(organizationId, query) {
+        return this.reportsService.getActivityMetrics(organizationId, query);
+    }
+    async exportSalesToCsv(organizationId, query, res) {
+        const salesData = await this.reportsService.getSalesSummary(organizationId, query);
+        const csvBuffer = this.reportsService.exportToCSV([salesData]);
+        res.end(csvBuffer);
+    }
+    async exportTopProductsToCsv(organizationId, query, res, limit) {
+        const productsData = await this.reportsService.getTopProducts(organizationId, query, limit ? parseInt(limit.toString(), 10) : 10);
+        const csvBuffer = this.reportsService.exportToCSV(productsData);
+        res.end(csvBuffer);
+    }
+    async exportPurchasesBySupplierToCsv(organizationId, query, res) {
+        const purchasesData = await this.reportsService.getPurchasesBySupplier(organizationId, query);
+        const csvBuffer = this.reportsService.exportToCSV(purchasesData);
+        res.end(csvBuffer);
+    }
+    async exportInventoryByCategoryToCsv(organizationId, res) {
+        const inventoryData = await this.reportsService.getInventoryByCategory(organizationId);
+        const csvBuffer = this.reportsService.exportToCSV(inventoryData);
+        res.end(csvBuffer);
+    }
 };
 exports.ReportsController = ReportsController;
 __decorate([
@@ -168,6 +198,84 @@ __decorate([
     __metadata("design:paramtypes", [String, Number]),
     __metadata("design:returntype", Promise)
 ], ReportsController.prototype, "getLowStockProducts", null);
+__decorate([
+    (0, common_1.Get)('sales/month-over-month'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)('referenceDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "getMonthOverMonthComparison", null);
+__decorate([
+    (0, common_1.Get)('sales/comparison'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)('currentStart')),
+    __param(2, (0, common_1.Query)('currentEnd')),
+    __param(3, (0, common_1.Query)('previousStart')),
+    __param(4, (0, common_1.Query)('previousEnd')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "getSalesComparison", null);
+__decorate([
+    (0, common_1.Get)('activity/metrics'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "getActivityMetrics", null);
+__decorate([
+    (0, common_1.Get)('export/sales/csv'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    (0, common_1.Header)('Content-Type', 'text/csv'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="sales_report.csv"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportSalesToCsv", null);
+__decorate([
+    (0, common_1.Get)('export/top-products/csv'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    (0, common_1.Header)('Content-Type', 'text/csv'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="top_products.csv"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __param(3, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object, Number]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportTopProductsToCsv", null);
+__decorate([
+    (0, common_1.Get)('export/purchases-by-supplier/csv'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'INVENTARIO'),
+    (0, common_1.Header)('Content-Type', 'text/csv'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="purchases_by_supplier.csv"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportPurchasesBySupplierToCsv", null);
+__decorate([
+    (0, common_1.Get)('export/inventory-by-category/csv'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'INVENTARIO'),
+    (0, common_1.Header)('Content-Type', 'text/csv'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="inventory_by_category.csv"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportInventoryByCategoryToCsv", null);
 exports.ReportsController = ReportsController = __decorate([
     (0, common_1.Controller)('reports'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),
