@@ -7,8 +7,8 @@ export declare class ReportsService {
     getSalesSummary(organizationId: string, dto: DateRangeDto): Promise<SalesSummaryDto>;
     getSalesByCategory(organizationId: string, dto: DateRangeDto): Promise<SalesByCategoryDto[]>;
     getTopProducts(organizationId: string, dto: DateRangeDto, limit?: number): Promise<TopProductDto[]>;
-    getInventorySummary(organizationId: string): Promise<InventorySummaryDto>;
-    getInventoryByCategory(organizationId: string): Promise<InventoryByCategoryDto[]>;
+    getInventorySummary(organizationId: string, dto?: DateRangeDto): Promise<InventorySummaryDto>;
+    getInventoryByCategory(organizationId: string, dto?: DateRangeDto): Promise<InventoryByCategoryDto[]>;
     getStockMovementSummary(organizationId: string, dto: DateRangeDto): Promise<StockMovementSummaryDto>;
     getPurchaseSummary(organizationId: string, dto: DateRangeDto): Promise<PurchaseSummaryDto>;
     getPurchasesBySupplier(organizationId: string, dto: DateRangeDto): Promise<PurchasesBySupplierDto[]>;
@@ -17,6 +17,10 @@ export declare class ReportsService {
     getExpiringBatches(organizationId: string, daysThreshold?: number): Promise<ExpiringBatchesDto[]>;
     getLowStockProducts(organizationId: string, threshold?: number): Promise<LowStockDto[]>;
     exportToCSV<T>(data: T[], fields?: string[]): Buffer;
+    exportToExcel<T>(data: T[], sheetName: string | undefined, columns: {
+        header: string;
+        key: string;
+    }[]): Promise<Buffer>;
     getSalesComparison(organizationId: string, currentPeriod: {
         startDate: Date;
         endDate: Date;

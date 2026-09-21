@@ -8,7 +8,7 @@ import {
 import { Observable, tap } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { AuditLogService } from './audit-log.service';
-import { AuditActionType } from '@prisma/client';
+import { AuditActionType, PlatformRole } from '@prisma/client';
 import { Request } from 'express';
 
 /**
@@ -20,19 +20,19 @@ export const AUDIT_EXTRACT_ID_FROM_BODY = 'audit_extract_id_from_body';
 
 export function AuditAction(action: AuditActionType) {
   return (target: any, propertyKey: string) => {
-    Reflect.setMetadata(AUDIT_ACTION, action, target, propertyKey);
+    Reflect.defineMetadata(AUDIT_ACTION, action, target, propertyKey);
   };
 }
 
 export function AuditEntityType(entityType: string) {
   return (target: any, propertyKey: string) => {
-    Reflect.setMetadata(AUDIT_ENTITY_TYPE, entityType, target, propertyKey);
+    Reflect.defineMetadata(AUDIT_ENTITY_TYPE, entityType, target, propertyKey);
   };
 }
 
 export function AuditExtractIdFromBody(fieldName: string = 'id') {
   return (target: any, propertyKey: string) => {
-    Reflect.setMetadata(AUDIT_EXTRACT_ID_FROM_BODY, fieldName, target, propertyKey);
+    Reflect.defineMetadata(AUDIT_EXTRACT_ID_FROM_BODY, fieldName, target, propertyKey);
   };
 }
 
@@ -75,9 +75,10 @@ export class AuditLogInterceptor implements NestInterceptor {
         next: async (response) => {
           try {
             // Extraer información del contexto
-            const userId = request['user']?.sub; // Asumiendo que JWT payload tiene 'sub'
-            const userPlatformRole = request['user']?.platformRole;
-            const organizationId = request['organizationId'];
+            const user = request['user'] as any;
+            const userId = user?.sub || user?.id;
+            const userPlatformRole = user?.platformRole as PlatformRole | undefined;
+            const organizationId = (request as any).organizationId;
 
             // Determinar el entityId
             let entityId: string;
@@ -133,8 +134,9 @@ export class AuditLogInterceptor implements NestInterceptor {
             this.logger.debug(
               `Audit logged: ${auditAction} on ${entityType}(${entityId}) by user ${userId}`,
             );
-          } catch (error) {
+          } catch (err) {
             // No bloquear la respuesta si falla el audit log
+            const error = err as Error;
             this.logger.error(`Failed to log audit: ${error.message}`, error.stack);
           }
         },

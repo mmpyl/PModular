@@ -13,6 +13,7 @@ exports.ReportsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
 const json2csv_1 = require("json2csv");
+const ExcelJS = require("exceljs");
 let ReportsService = class ReportsService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -157,15 +158,23 @@ let ReportsService = class ReportsService {
             };
         });
     }
-    async getInventorySummary(organizationId) {
+    async getInventorySummary(organizationId, dto) {
         const totalProducts = await this.prisma.product.count({
             where: {
                 organizationId,
                 isActive: true,
             },
         });
+        let whereClause = { organizationId };
+        if (dto?.startDate || dto?.endDate) {
+            const { startDate, endDate } = this.getDateRange(dto);
+            whereClause.updatedAt = {
+                gte: startDate,
+                lte: endDate,
+            };
+        }
         const inventoryItems = await this.prisma.inventoryItem.findMany({
-            where: { organizationId },
+            where: whereClause,
             select: {
                 quantity: true,
                 averageCost: true,
@@ -200,12 +209,20 @@ let ReportsService = class ReportsService {
             expiringSoonItems,
         };
     }
-    async getInventoryByCategory(organizationId) {
+    async getInventoryByCategory(organizationId, dto) {
+        let whereClause = {
+            organizationId,
+            isActive: true,
+        };
+        if (dto?.startDate || dto?.endDate) {
+            const { startDate, endDate } = this.getDateRange(dto);
+            whereClause.updatedAt = {
+                gte: startDate,
+                lte: endDate,
+            };
+        }
         const products = await this.prisma.product.findMany({
-            where: {
-                organizationId,
-                isActive: true,
-            },
+            where: whereClause,
             include: {
                 category: true,
                 inventory: true,
@@ -602,6 +619,39 @@ let ReportsService = class ReportsService {
         }
         catch (error) {
             throw new common_1.BadRequestException('Failed to export data to CSV');
+        }
+    }
+    async exportToExcel(data, sheetName = 'Reporte', columns) {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Sistema ERP';
+            workbook.created = new Date();
+            const worksheet = workbook.addWorksheet(sheetName, {
+                properties: { tabColor: { argb: 'FF007BFF' } },
+            });
+            worksheet.columns = columns.map((col) => ({
+                header: col.header,
+                key: col.key,
+                width: 20,
+            }));
+            worksheet.getRow(1).font = { bold: true };
+            worksheet.getRow(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF007BFF' },
+            };
+            worksheet.getRow(1).font = { color: { argb: 'FFFFFFFF' }, bold: true };
+            data.forEach((row) => {
+                worksheet.addRow(row);
+            });
+            worksheet.eachRow((row) => {
+                row.height = 20;
+            });
+            const buffer = await workbook.xlsx.writeBuffer();
+            return Buffer.from(buffer);
+        }
+        catch (error) {
+            throw new common_1.BadRequestException('Failed to export data to Excel');
         }
     }
     async getSalesComparison(organizationId, currentPeriod, previousPeriod) {

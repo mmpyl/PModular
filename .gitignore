@@ -1,6 +1,21 @@
 ```
+# Build artifacts
+backend/dist/
+backend/build/
+
 # Dependencies
+backend/node_modules/
 node_modules/
+
+# TypeScript
+*.tsbuildinfo
+*.js.map
+
+# Python (if any Python in backend)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # Logs
 *.log
@@ -21,20 +36,26 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Build artifacts and compiled files
-*.pyc
-__pycache__/
-*.o
-*.obj
-*.out
-dist/
-build/
-target/
-.coverage
+# Coverage reports
 coverage/
 htmlcov/
+*.coverage
 
-# Compression files
+# MyPy cache
+.mypy_cache/
+# Pytest cache
+.pytest_cache/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Java/Maven (if applicable)
+target/
+.gradle/
+
+# Compressed files
 *.zip
 *.gz
 *.tar
@@ -57,82 +78,4 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# Python specific
-*.pyc
-__pycache__/
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/
-.mypy_cache/
-.pytest_cache/
-.hypothesis/
-
-# Node.js specific
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-node_modules/
-dist/
-build/
-.nyc_output/
-coverage/
-*.lcov
-package-lock.json
-yarn.lock
-
-# TypeScript specific
-*.tsbuildinfo
-.next/
-.nuxt/
-dist/
-
-# Webpack specific
-webpack-stats.json
-
-# Jest specific
-jest.config.js
-coverage/
-*.lcov
-
-# Babel specific
-.babelrc
-.babelrc.js
-.babelrc.json
-
-# ESLint specific
-.eslintcache
-
-# Prettier specific
-.prettierrc
-.prettierignore
-
-# VSCode specific
-.vscode/
-
-# IntelliJ IDEA specific
-.idea/
-
-# macOS specific
-.DS_Store
-
-# Windows specific
-Thumbs.db
-ehthumbs.db
-Icon?
 ```

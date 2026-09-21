@@ -19,8 +19,8 @@ import {
   ActivityMetricsDto,
   ExportFormat,
 } from './dto/reports.dto';
-import { MovementType, MovementReason, AuditActionType } from '@prisma/client';
 import { Parser } from 'json2csv';
+import * as ExcelJS from 'exceljs';
 
 @Injectable()
 export class ReportsService {
@@ -229,9 +229,12 @@ export class ReportsService {
   }
 
   /**
-   * Resumen general de inventario
+   * Resumen de inventario en un período determinado
    */
-  async getInventorySummary(organizationId: string): Promise<InventorySummaryDto> {
+  async getInventorySummary(
+    organizationId: string,
+    dto?: DateRangeDto,
+  ): Promise<InventorySummaryDto> {
     // Total de productos activos
     const totalProducts = await this.prisma.product.count({
       where: {
@@ -240,9 +243,19 @@ export class ReportsService {
       },
     });
 
+    // Si hay filtro de fechas, aplicarlo al inventario
+    let whereClause: any = { organizationId };
+    if (dto?.startDate || dto?.endDate) {
+      const { startDate, endDate } = this.getDateRange(dto);
+      whereClause.updatedAt = {
+        gte: startDate,
+        lte: endDate,
+      };
+    }
+
     // Items de inventario
     const inventoryItems = await this.prisma.inventoryItem.findMany({
-      where: { organizationId },
+      where: whereClause,
       select: {
         quantity: true,
         averageCost: true,
@@ -301,12 +314,24 @@ export class ReportsService {
    */
   async getInventoryByCategory(
     organizationId: string,
+    dto?: DateRangeDto,
   ): Promise<InventoryByCategoryDto[]> {
+    let whereClause: any = {
+      organizationId,
+      isActive: true,
+    };
+
+    // Si hay filtro de fechas, aplicarlo a productos actualizados en ese período
+    if (dto?.startDate || dto?.endDate) {
+      const { startDate, endDate } = this.getDateRange(dto);
+      whereClause.updatedAt = {
+        gte: startDate,
+        lte: endDate,
+      };
+    }
+
     const products = await this.prisma.product.findMany({
-      where: {
-        organizationId,
-        isActive: true,
-      },
+      where: whereClause,
       include: {
         category: true,
         inventory: true,
@@ -828,6 +853,57 @@ export class ReportsService {
       return Buffer.from(csv, 'utf-8');
     } catch (error) {
       throw new BadRequestException('Failed to export data to CSV');
+    }
+  }
+
+  /**
+   * Exportar datos a Excel (.xlsx)
+   */
+  async exportToExcel<T>(
+    data: T[],
+    sheetName: string = 'Reporte',
+    columns: { header: string; key: string }[],
+  ): Promise<Buffer> {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Sistema ERP';
+      workbook.created = new Date();
+
+      const worksheet = workbook.addWorksheet(sheetName, {
+        properties: { tabColor: { argb: 'FF007BFF' } },
+      });
+
+      // Configurar columnas
+      worksheet.columns = columns.map((col) => ({
+        header: col.header,
+        key: col.key,
+        width: 20,
+      }));
+
+      // Estilar encabezados
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF007BFF' },
+      };
+      worksheet.getRow(1).font = { color: { argb: 'FFFFFFFF' }, bold: true };
+
+      // Agregar datos
+      data.forEach((row) => {
+        worksheet.addRow(row as any);
+      });
+
+      // Autoajustar filas
+      worksheet.eachRow((row) => {
+        row.height = 20;
+      });
+
+      // Generar buffer
+      const buffer = await workbook.xlsx.writeBuffer();
+      return Buffer.from(buffer);
+    } catch (error) {
+      throw new BadRequestException('Failed to export data to Excel');
     }
   }
 

@@ -33,11 +33,11 @@ let ReportsController = class ReportsController {
     async getTopProducts(organizationId, query, limit) {
         return this.reportsService.getTopProducts(organizationId, query, limit ? parseInt(limit.toString(), 10) : 10);
     }
-    async getInventorySummary(organizationId) {
-        return this.reportsService.getInventorySummary(organizationId);
+    async getInventorySummary(organizationId, query) {
+        return this.reportsService.getInventorySummary(organizationId, query);
     }
-    async getInventoryByCategory(organizationId) {
-        return this.reportsService.getInventoryByCategory(organizationId);
+    async getInventoryByCategory(organizationId, query) {
+        return this.reportsService.getInventoryByCategory(organizationId, query);
     }
     async getStockMovementSummary(organizationId, query) {
         return this.reportsService.getStockMovementSummary(organizationId, query);
@@ -85,9 +85,57 @@ let ReportsController = class ReportsController {
         const csvBuffer = this.reportsService.exportToCSV(purchasesData);
         res.end(csvBuffer);
     }
-    async exportInventoryByCategoryToCsv(organizationId, res) {
-        const inventoryData = await this.reportsService.getInventoryByCategory(organizationId);
+    async exportInventoryByCategoryToCsv(organizationId, res, query) {
+        const inventoryData = await this.reportsService.getInventoryByCategory(organizationId, query);
         const csvBuffer = this.reportsService.exportToCSV(inventoryData);
+        res.end(csvBuffer);
+    }
+    async exportSalesToExcel(organizationId, query, res) {
+        const salesData = await this.reportsService.getSalesSummary(organizationId, query);
+        const excelBuffer = await this.reportsService.exportToExcel([salesData], 'Ventas', [
+            { header: 'Total Ventas', key: 'totalSales' },
+            { header: 'Ingresos Totales', key: 'totalRevenue' },
+            { header: 'Impuestos', key: 'totalTax' },
+            { header: 'Descuentos', key: 'totalDiscount' },
+            { header: 'Ticket Promedio', key: 'averageTicket' },
+            { header: 'Cantidad Ventas', key: 'salesCount' },
+        ]);
+        res.end(excelBuffer);
+    }
+    async exportTopProductsToExcel(organizationId, query, res, limit) {
+        const productsData = await this.reportsService.getTopProducts(organizationId, query, limit ? parseInt(limit.toString(), 10) : 10);
+        const excelBuffer = await this.reportsService.exportToExcel(productsData, 'Top Productos', [
+            { header: 'Ranking', key: 'rank' },
+            { header: 'Producto', key: 'productName' },
+            { header: 'SKU', key: 'sku' },
+            { header: 'Cantidad Vendida', key: 'totalQuantity' },
+            { header: 'Ingresos', key: 'totalRevenue' },
+        ]);
+        res.end(excelBuffer);
+    }
+    async exportPurchasesBySupplierToExcel(organizationId, query, res) {
+        const purchasesData = await this.reportsService.getPurchasesBySupplier(organizationId, query);
+        const excelBuffer = await this.reportsService.exportToExcel(purchasesData, 'Compras por Proveedor', [
+            { header: 'Proveedor', key: 'supplierName' },
+            { header: 'Total Órdenes', key: 'totalOrders' },
+            { header: 'Total Gastado', key: 'totalSpent' },
+            { header: 'Porcentaje', key: 'percentage' },
+        ]);
+        res.end(excelBuffer);
+    }
+    async exportInventoryByCategoryToExcel(organizationId, res, query) {
+        const inventoryData = await this.reportsService.getInventoryByCategory(organizationId, query);
+        const excelBuffer = await this.reportsService.exportToExcel(inventoryData, 'Inventario por Categoría', [
+            { header: 'Categoría', key: 'categoryName' },
+            { header: 'Cantidad Productos', key: 'productCount' },
+            { header: 'Cantidad Total', key: 'totalQuantity' },
+            { header: 'Valor Total', key: 'totalValue' },
+        ]);
+        res.end(excelBuffer);
+    }
+    async exportActivityMetricsToCsv(organizationId, query, res) {
+        const activityData = await this.reportsService.getActivityMetrics(organizationId, query);
+        const csvBuffer = this.reportsService.exportToCSV([activityData]);
         res.end(csvBuffer);
     }
 };
@@ -124,16 +172,18 @@ __decorate([
     (0, common_1.Get)('inventory/summary'),
     (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'INVENTARIO'),
     __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ReportsController.prototype, "getInventorySummary", null);
 __decorate([
     (0, common_1.Get)('inventory/by-category'),
     (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'INVENTARIO'),
     __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ReportsController.prototype, "getInventoryByCategory", null);
 __decorate([
@@ -272,10 +322,72 @@ __decorate([
     (0, common_1.Header)('Content-Disposition', 'attachment; filename="inventory_by_category.csv"'),
     __param(0, (0, current_org_decorator_1.CurrentOrg)()),
     __param(1, (0, common_1.Res)({ passthrough: true })),
+    __param(2, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], ReportsController.prototype, "exportInventoryByCategoryToCsv", null);
+__decorate([
+    (0, common_1.Get)('export/sales/xlsx'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    (0, common_1.Header)('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="sales_report.xlsx"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportSalesToExcel", null);
+__decorate([
+    (0, common_1.Get)('export/top-products/xlsx'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    (0, common_1.Header)('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="top_products.xlsx"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __param(3, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object, Number]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportTopProductsToExcel", null);
+__decorate([
+    (0, common_1.Get)('export/purchases-by-supplier/xlsx'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'INVENTARIO'),
+    (0, common_1.Header)('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="purchases_by_supplier.xlsx"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportPurchasesBySupplierToExcel", null);
+__decorate([
+    (0, common_1.Get)('export/inventory-by-category/xlsx'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'INVENTARIO'),
+    (0, common_1.Header)('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="inventory_by_category.xlsx"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __param(2, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportInventoryByCategoryToExcel", null);
+__decorate([
+    (0, common_1.Get)('export/activity-metrics/csv'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    (0, common_1.Header)('Content-Type', 'text/csv'),
+    (0, common_1.Header)('Content-Disposition', 'attachment; filename="activity_metrics.csv"'),
+    __param(0, (0, current_org_decorator_1.CurrentOrg)()),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "exportActivityMetricsToCsv", null);
 exports.ReportsController = ReportsController = __decorate([
     (0, common_1.Controller)('reports'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),

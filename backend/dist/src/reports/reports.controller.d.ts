@@ -7,8 +7,8 @@ export declare class ReportsController {
     getSalesSummary(organizationId: string, query: DateRangeDto): Promise<import("./dto/reports.dto").SalesSummaryDto>;
     getSalesByCategory(organizationId: string, query: DateRangeDto): Promise<import("./dto/reports.dto").SalesByCategoryDto[]>;
     getTopProducts(organizationId: string, query: DateRangeDto, limit?: number): Promise<import("./dto/reports.dto").TopProductDto[]>;
-    getInventorySummary(organizationId: string): Promise<import("./dto/reports.dto").InventorySummaryDto>;
-    getInventoryByCategory(organizationId: string): Promise<import("./dto/reports.dto").InventoryByCategoryDto[]>;
+    getInventorySummary(organizationId: string, query?: DateRangeDto): Promise<import("./dto/reports.dto").InventorySummaryDto>;
+    getInventoryByCategory(organizationId: string, query?: DateRangeDto): Promise<import("./dto/reports.dto").InventoryByCategoryDto[]>;
     getStockMovementSummary(organizationId: string, query: DateRangeDto): Promise<import("./dto/reports.dto").StockMovementSummaryDto>;
     getPurchaseSummary(organizationId: string, query: DateRangeDto): Promise<import("./dto/reports.dto").PurchaseSummaryDto>;
     getPurchasesBySupplier(organizationId: string, query: DateRangeDto): Promise<import("./dto/reports.dto").PurchasesBySupplierDto[]>;
@@ -22,5 +22,10 @@ export declare class ReportsController {
     exportSalesToCsv(organizationId: string, query: DateRangeDto, res: Response): Promise<void>;
     exportTopProductsToCsv(organizationId: string, query: DateRangeDto, res: Response, limit?: number): Promise<void>;
     exportPurchasesBySupplierToCsv(organizationId: string, query: DateRangeDto, res: Response): Promise<void>;
-    exportInventoryByCategoryToCsv(organizationId: string, res: Response): Promise<void>;
+    exportInventoryByCategoryToCsv(organizationId: string, res: Response, query?: DateRangeDto): Promise<void>;
+    exportSalesToExcel(organizationId: string, query: DateRangeDto, res: Response): Promise<void>;
+    exportTopProductsToExcel(organizationId: string, query: DateRangeDto, res: Response, limit?: number): Promise<void>;
+    exportPurchasesBySupplierToExcel(organizationId: string, query: DateRangeDto, res: Response): Promise<void>;
+    exportInventoryByCategoryToExcel(organizationId: string, res: Response, query?: DateRangeDto): Promise<void>;
+    exportActivityMetricsToCsv(organizationId: string, query: DateRangeDto, res: Response): Promise<void>;
 }

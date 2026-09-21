@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { AuditLogQueryDto } from './dto/audit-log-query.dto';
 import { PaginatedAuditLogResult } from './dto/audit-log-response.dto';
-import { AuditActionType, Prisma } from '@prisma/client';
+import { AuditActionType, PlatformRole, Prisma } from '@prisma/client';
 
 export interface CreateAuditLogParams {
   userId?: string;
-  userPlatformRole?: string;
+  userPlatformRole?: PlatformRole;
   action: AuditActionType;
   entityType: string;
   entityId: string;
@@ -28,7 +28,7 @@ export class AuditLogService {
       await this.prisma.auditLog.create({
         data: {
           userId: params.userId,
-          userPlatformRole: params.userPlatformRole,
+          userPlatformRole: params.userPlatformRole as any,
           action: params.action,
           entityType: params.entityType,
           entityId: params.entityId,
@@ -39,8 +39,9 @@ export class AuditLogService {
       this.logger.debug(
         `Audit log created: ${params.action} on ${params.entityType}(${params.entityId})`,
       );
-    } catch (error) {
+    } catch (err) {
       // No bloquear la operación principal si falla el audit log
+      const error = err as Error;
       this.logger.error(`Failed to create audit log: ${error.message}`, error.stack);
     }
   }
@@ -147,7 +148,7 @@ export class AuditLogService {
   async logOrganizationSuspended(
     organizationId: string,
     userId?: string,
-    userPlatformRole?: string,
+    userPlatformRole?: PlatformRole,
     reason?: string,
   ): Promise<void> {
     await this.create({
@@ -164,7 +165,7 @@ export class AuditLogService {
   async logOrganizationReactivated(
     organizationId: string,
     userId?: string,
-    userPlatformRole?: string,
+    userPlatformRole?: PlatformRole,
   ): Promise<void> {
     await this.create({
       userId,

@@ -82,6 +82,7 @@ model Organization {
   sales             Sale[]
   payments          Payment[]
   cashRegisters     CashRegister[]
+  auditLogs         AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
