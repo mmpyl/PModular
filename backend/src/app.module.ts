@@ -20,6 +20,7 @@ import { ReportsModule } from './reports/reports.module';
 import { AuthSharedModule } from './auth/auth-shared.module';
 import { PlatformModule } from './platform/platform.module';
 import { AuditLogModule } from './audit-log/audit-log.module';
+import { WarehousesModule } from './warehouses/warehouses.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
     ReportsModule,
     PlatformModule,
     AuditLogModule,
+    WarehousesModule,
   ],
 })
 export class AppModule {}
