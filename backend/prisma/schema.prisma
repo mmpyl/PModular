@@ -528,6 +528,10 @@ model BusinessEntity {
   notes          String?
   attributes     Json @default("{}") // Atributos dinámicos específicos
   
+  // Fase 5: Gestión financiera básica
+  creditLimit    Decimal? @db.Decimal(12, 2) // Límite de crédito (null = sin límite)
+  currentBalance Decimal  @default(0) @db.Decimal(12, 2) // Saldo pendiente (positivo = debe, negativo = haber)
+  
   isActive       Boolean @default(true)
   
   // Relaciones
