@@ -43,6 +43,33 @@ export class BusinessEntitiesController {
   findOne(@Param('id') id: string, @CurrentOrg() orgId: string) {
     return this.businessEntitiesService.findOne(orgId, id);
   }
+
+  /**
+   * Fase 5: Obtiene entidad con historial de transacciones y saldo
+   */
+  @Get(':id/history')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  findOneWithHistory(@Param('id') id: string, @CurrentOrg() orgId: string) {
+    return this.businessEntitiesService.findOneWithHistory(orgId, id);
+  }
+
+  /**
+   * Fase 5: Recalcula el saldo basado en transacciones
+   */
+  @Post(':id/recalculate-balance')
+  @OrgRoles('OWNER', 'ADMIN')
+  recalculateBalance(@Param('id') id: string, @CurrentOrg() orgId: string) {
+    return this.businessEntitiesService.recalculateBalance(orgId, id);
+  }
+
+  /**
+   * Fase 5: Verifica límite de crédito
+   */
+  @Get(':id/check-credit-limit')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  checkCreditLimit(@Param('id') id: string, @CurrentOrg() orgId: string) {
+    return this.businessEntitiesService.checkCreditLimit(orgId, id);
+  }
   
   @Patch(':id')
   @OrgRoles('OWNER', 'ADMIN')

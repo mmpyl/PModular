@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsEmail, IsBoolean, IsObject, MinLength } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsEmail, IsBoolean, IsObject, MinLength, IsNumber } from 'class-validator';
 
 export enum EntityType {
   PROVEEDOR = 'PROVEEDOR',
@@ -71,6 +71,15 @@ export class CreateBusinessEntityDto {
   @IsObject()
   @IsOptional()
   attributes?: Record<string, any>;
+
+  // Fase 5: Gestión financiera básica
+  @IsNumber()
+  @IsOptional()
+  creditLimit?: number;
+
+  @IsNumber()
+  @IsOptional()
+  currentBalance?: number;
 }
 
 export class UpdateBusinessEntityDto {
@@ -140,6 +149,15 @@ export class UpdateBusinessEntityDto {
   @IsObject()
   @IsOptional()
   attributes?: Record<string, any>;
+
+  // Fase 5: Gestión financiera básica
+  @IsNumber()
+  @IsOptional()
+  creditLimit?: number;
+
+  @IsNumber()
+  @IsOptional()
+  currentBalance?: number;
 
   @IsBoolean()
   @IsOptional()
