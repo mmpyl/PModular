@@ -5,14 +5,14 @@ export declare class BusinessEntitiesService {
     constructor(prisma: PrismaService);
     create(organizationId: string, dto: CreateBusinessEntityDto): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        entityType: import(".prisma/client").$Enums.EntityType;
         organizationId: string;
+        createdAt: Date;
+        email: string | null;
+        name: string;
+        updatedAt: Date;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
-        email: string | null;
-        entityType: import(".prisma/client").$Enums.EntityType;
         notes: string | null;
         taxId: string | null;
         phone: string | null;
@@ -28,14 +28,14 @@ export declare class BusinessEntitiesService {
     }>;
     findAll(organizationId: string, entityType?: EntityType, search?: string): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        entityType: import(".prisma/client").$Enums.EntityType;
         organizationId: string;
+        createdAt: Date;
+        email: string | null;
+        name: string;
+        updatedAt: Date;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
-        email: string | null;
-        entityType: import(".prisma/client").$Enums.EntityType;
         notes: string | null;
         taxId: string | null;
         phone: string | null;
@@ -51,14 +51,14 @@ export declare class BusinessEntitiesService {
     }[]>;
     findOne(organizationId: string, id: string): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        entityType: import(".prisma/client").$Enums.EntityType;
         organizationId: string;
+        createdAt: Date;
+        email: string | null;
+        name: string;
+        updatedAt: Date;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
-        email: string | null;
-        entityType: import(".prisma/client").$Enums.EntityType;
         notes: string | null;
         taxId: string | null;
         phone: string | null;
@@ -74,14 +74,14 @@ export declare class BusinessEntitiesService {
     }>;
     update(organizationId: string, id: string, dto: UpdateBusinessEntityDto): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        entityType: import(".prisma/client").$Enums.EntityType;
         organizationId: string;
+        createdAt: Date;
+        email: string | null;
+        name: string;
+        updatedAt: Date;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
-        email: string | null;
-        entityType: import(".prisma/client").$Enums.EntityType;
         notes: string | null;
         taxId: string | null;
         phone: string | null;
@@ -97,14 +97,14 @@ export declare class BusinessEntitiesService {
     }>;
     remove(organizationId: string, id: string): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        entityType: import(".prisma/client").$Enums.EntityType;
         organizationId: string;
+        createdAt: Date;
+        email: string | null;
+        name: string;
+        updatedAt: Date;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
-        email: string | null;
-        entityType: import(".prisma/client").$Enums.EntityType;
         notes: string | null;
         taxId: string | null;
         phone: string | null;
@@ -120,14 +120,14 @@ export declare class BusinessEntitiesService {
     }>;
     hardDelete(organizationId: string, id: string): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        entityType: import(".prisma/client").$Enums.EntityType;
         organizationId: string;
+        createdAt: Date;
+        email: string | null;
+        name: string;
+        updatedAt: Date;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         isActive: boolean;
-        email: string | null;
-        entityType: import(".prisma/client").$Enums.EntityType;
         notes: string | null;
         taxId: string | null;
         phone: string | null;

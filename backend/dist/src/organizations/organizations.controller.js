@@ -40,6 +40,12 @@ let OrganizationsController = class OrganizationsController {
         }
         return this.organizationsService.findOne(id);
     }
+    async getBusinessSettings(id, organizationId) {
+        if (id !== organizationId) {
+            throw new common_1.ForbiddenException('No tienes acceso a esta organización');
+        }
+        return this.organizationsService.getBusinessSettings(id);
+    }
     update(id, updateOrgDto, organizationId) {
         if (id !== organizationId) {
             throw new common_1.ForbiddenException('No puedes editar otra organización');
@@ -80,6 +86,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], OrganizationsController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Get)(':id/settings'),
+    (0, common_1.UseGuards)(tenant_guard_1.TenantGuard),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_org_decorator_1.CurrentOrg)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], OrganizationsController.prototype, "getBusinessSettings", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(tenant_guard_1.TenantGuard, org_roles_guard_1.OrgRolesGuard),

@@ -5,24 +5,29 @@ export interface CreateOrganizationDto {
     enabledModules?: string[];
     settings?: Record<string, any>;
 }
+export interface BusinessSettingsDto {
+    currency: string;
+    timezone: string;
+    defaultTaxRate: number;
+}
 export declare class OrganizationsService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     create(data: CreateOrganizationDto, creatorUserId: string): Promise<{
         businessType: {
             id: string;
-            code: string;
+            createdAt: Date;
             name: string;
+            updatedAt: Date;
             description: string | null;
+            code: string;
             defaultModules: import("@prisma/client/runtime/library").JsonValue;
             productSchema: import("@prisma/client/runtime/library").JsonValue;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         updatedAt: Date;
         status: import(".prisma/client").$Enums.OrganizationStatus;
         enabledModules: import("@prisma/client/runtime/library").JsonValue;
@@ -32,18 +37,18 @@ export declare class OrganizationsService {
     findAll(organizationId: string): import(".prisma/client").Prisma.PrismaPromise<({
         businessType: {
             id: string;
-            code: string;
+            createdAt: Date;
             name: string;
+            updatedAt: Date;
             description: string | null;
+            code: string;
             defaultModules: import("@prisma/client/runtime/library").JsonValue;
             productSchema: import("@prisma/client/runtime/library").JsonValue;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         updatedAt: Date;
         status: import(".prisma/client").$Enums.OrganizationStatus;
         enabledModules: import("@prisma/client/runtime/library").JsonValue;
@@ -53,28 +58,33 @@ export declare class OrganizationsService {
     findOne(id: string): import(".prisma/client").Prisma.Prisma__OrganizationClient<({
         businessType: {
             id: string;
-            code: string;
+            createdAt: Date;
             name: string;
+            updatedAt: Date;
             description: string | null;
+            code: string;
             defaultModules: import("@prisma/client/runtime/library").JsonValue;
             productSchema: import("@prisma/client/runtime/library").JsonValue;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         updatedAt: Date;
         status: import(".prisma/client").$Enums.OrganizationStatus;
         enabledModules: import("@prisma/client/runtime/library").JsonValue;
         settings: import("@prisma/client/runtime/library").JsonValue;
         businessTypeId: string;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
+    getBusinessSettings(organizationId: string): Promise<{
+        currency: any;
+        timezone: any;
+        defaultTaxRate: any;
+    }>;
     update(id: string, data: Partial<CreateOrganizationDto>): Promise<{
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         updatedAt: Date;
         status: import(".prisma/client").$Enums.OrganizationStatus;
         enabledModules: import("@prisma/client/runtime/library").JsonValue;
@@ -83,8 +93,8 @@ export declare class OrganizationsService {
     }>;
     remove(id: string): Promise<{
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         updatedAt: Date;
         status: import(".prisma/client").$Enums.OrganizationStatus;
         enabledModules: import("@prisma/client/runtime/library").JsonValue;
@@ -94,18 +104,18 @@ export declare class OrganizationsService {
     suspendOrganization(id: string): Promise<{
         businessType: {
             id: string;
-            code: string;
+            createdAt: Date;
             name: string;
+            updatedAt: Date;
             description: string | null;
+            code: string;
             defaultModules: import("@prisma/client/runtime/library").JsonValue;
             productSchema: import("@prisma/client/runtime/library").JsonValue;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         updatedAt: Date;
         status: import(".prisma/client").$Enums.OrganizationStatus;
         enabledModules: import("@prisma/client/runtime/library").JsonValue;
@@ -115,18 +125,18 @@ export declare class OrganizationsService {
     reactivateOrganization(id: string): Promise<{
         businessType: {
             id: string;
-            code: string;
+            createdAt: Date;
             name: string;
+            updatedAt: Date;
             description: string | null;
+            code: string;
             defaultModules: import("@prisma/client/runtime/library").JsonValue;
             productSchema: import("@prisma/client/runtime/library").JsonValue;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         updatedAt: Date;
         status: import(".prisma/client").$Enums.OrganizationStatus;
         enabledModules: import("@prisma/client/runtime/library").JsonValue;

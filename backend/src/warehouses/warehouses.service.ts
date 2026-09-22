@@ -106,7 +106,7 @@ export class WarehousesService {
     }
 
     // Check if warehouse has inventory
-    if (warehouse.inventory.some(i => i.quantity > 0)) {
+    if (warehouse.inventory.some(i => i.quantity.toNumber() > 0)) {
       throw new BadRequestException('Cannot delete warehouse with existing inventory. Transfer or remove stock first.');
     }
 

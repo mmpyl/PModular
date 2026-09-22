@@ -21,6 +21,7 @@ import { AuthSharedModule } from './auth/auth-shared.module';
 import { PlatformModule } from './platform/platform.module';
 import { AuditLogModule } from './audit-log/audit-log.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
     PlatformModule,
     AuditLogModule,
     WarehousesModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

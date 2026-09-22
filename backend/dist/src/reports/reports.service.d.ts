@@ -15,7 +15,7 @@ export declare class ReportsService {
     getCashRegisterSummary(organizationId: string, dto: DateRangeDto): Promise<CashRegisterSummaryDto>;
     getDashboardMetrics(organizationId: string): Promise<DashboardMetricsDto>;
     getExpiringBatches(organizationId: string, daysThreshold?: number): Promise<ExpiringBatchesDto[]>;
-    getLowStockProducts(organizationId: string, threshold?: number): Promise<LowStockDto[]>;
+    getLowStockProducts(organizationId: string, _threshold?: number): Promise<LowStockDto[]>;
     exportToCSV<T>(data: T[], fields?: string[]): Buffer;
     exportToExcel<T>(data: T[], sheetName: string | undefined, columns: {
         header: string;

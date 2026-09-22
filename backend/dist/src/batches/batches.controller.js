@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BatchesController = void 0;
 const common_1 = require("@nestjs/common");
@@ -85,7 +84,7 @@ __decorate([
     __param(3, (0, common_1.Query)('expiringSoon')),
     __param(4, (0, common_1.Query)('days')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, typeof (_a = typeof client_1.BatchStatus !== "undefined" && client_1.BatchStatus) === "function" ? _a : Object, String, String]),
+    __metadata("design:paramtypes", [Object, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], BatchesController.prototype, "getBatches", null);
 __decorate([
