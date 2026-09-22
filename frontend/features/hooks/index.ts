@@ -479,27 +479,138 @@ export function useProducts(organizationId: string | undefined) {
 
 // ==================== BUSINESS ENTITIES ====================
 
-export type BusinessEntityType = 'PROVEEDOR' | 'CLIENTE' | 'TRANSPORTISTA';
+export type BusinessEntityType = 'PROVEEDOR' | 'CLIENTE' | 'AMBOS';
 
 export type BusinessEntity = {
   id: string;
   name: string;
-  type: BusinessEntityType;
+  entityType: BusinessEntityType;
   taxId?: string | null;
   email?: string | null;
   phone?: string | null;
+  mobile?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  notes?: string | null;
+  creditLimit?: number | null;
+  currentBalance?: number | null;
 };
 
-export function useBusinessEntities(organizationId: string | undefined, type?: BusinessEntityType) {
+export type BusinessEntityWithHistory = BusinessEntity & {
+  purchaseOrders?: Array<{
+    id: string;
+    orderNumber: string;
+    totalAmount: number;
+    status: string;
+    createdAt: string;
+  }>;
+  sales?: Array<{
+    id: string;
+    invoiceNumber: string;
+    totalAmount: number;
+    status: string;
+    createdAt: string;
+  }>;
+  totalPurchases?: number;
+  totalSales?: number;
+  calculatedBalance?: number;
+};
+
+export function useBusinessEntities(organizationId: string | undefined, type?: BusinessEntityType, search?: string) {
   return useQuery<BusinessEntity[]>({
-    queryKey: ['business-entities', organizationId, type],
+    queryKey: ['business-entities', organizationId, type, search],
     queryFn: async () => {
       if (!organizationId) throw new Error('Organization ID required');
       const params = new URLSearchParams();
       if (type) params.set('type', type);
+      if (search) params.set('search', search);
       const qs = params.toString();
       return apiFetch<BusinessEntity[]>(`/business-entities${qs ? `?${qs}` : ''}`, { organizationId });
     },
     enabled: !!organizationId,
+  });
+}
+
+export function useCreateBusinessEntity(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      name: string;
+      entityType: BusinessEntityType;
+      taxId?: string;
+      email?: string;
+      phone?: string;
+      mobile?: string;
+      address?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country?: string;
+      contactName?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      notes?: string;
+      creditLimit?: number;
+    }) => {
+      if (!organizationId) throw new Error('Organization ID required');
+      return apiFetch<BusinessEntity>('/business-entities', {
+        method: 'POST',
+        organizationId,
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-entities'] });
+    },
+  });
+}
+
+export function useUpdateBusinessEntity(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<BusinessEntity> }) => {
+      if (!organizationId) throw new Error('Organization ID required');
+      return apiFetch<BusinessEntity>(`/business-entities/${id}`, {
+        method: 'PATCH',
+        organizationId,
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-entities'] });
+    },
+  });
+}
+
+export function useDeleteBusinessEntity(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!organizationId) throw new Error('Organization ID required');
+      return apiFetch<void>(`/business-entities/${id}`, {
+        method: 'DELETE',
+        organizationId,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-entities'] });
+    },
+  });
+}
+
+export function useBusinessEntityWithHistory(organizationId: string | undefined, id: string | undefined) {
+  return useQuery<BusinessEntityWithHistory>({
+    queryKey: ['business-entity-history', organizationId, id],
+    queryFn: async () => {
+      if (!organizationId || !id) throw new Error('Organization ID and Entity ID required');
+      return apiFetch<BusinessEntityWithHistory>(`/business-entities/${id}/history`, { organizationId });
+    },
+    enabled: !!organizationId && !!id,
   });
 }
