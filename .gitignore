@@ -1,70 +1,28 @@
-# Dependencies
-node_modules/
-**/node_modules/
-
-# Build outputs
-dist/
-build/
+```
+# Next.js build output
 .next/
-.nuxt/
-public/build/
+
+# TypeScript build output
+*.tsbuildinfo
+dist/
 
 # Environment variables
+.env
 .env.local
-.env.*
-!.env.example
+*.env.*
+
+# Dependencies
+node_modules/
 
 # IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
-
-# Python specific (if applicable)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.DS_Store
-Thumbs.db
 
 # Logs
 *.log
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Next.js cache
-/.next/cache/
-
-# Temporary folders
-tmp/
-temp/
+# Temporary files
+*.tmp
+```

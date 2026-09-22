@@ -8,6 +8,12 @@ export interface CreateOrganizationDto {
   settings?: Record<string, any>;
 }
 
+export interface BusinessSettingsDto {
+  currency: string;
+  timezone: string;
+  defaultTaxRate: number;
+}
+
 @Injectable()
 export class OrganizationsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -61,6 +67,30 @@ export class OrganizationsService {
         businessType: true,
       },
     });
+  }
+
+  /**
+   * Obtener configuración de negocio de una organización
+   * Retorna valores por defecto si no están configurados
+   */
+  async getBusinessSettings(organizationId: string) {
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+
+    if (!organization) {
+      throw new NotFoundException(`Organización con ID ${organizationId} no encontrada`);
+    }
+
+    const settings = (organization.settings as Record<string, any>) || {};
+    
+    // Retornar configuración con valores por defecto
+    return {
+      currency: settings.currency || 'PEN',
+      timezone: settings.timezone || 'America/Lima',
+      defaultTaxRate: settings.defaultTaxRate ?? 0.18,
+    };
   }
 
   async update(id: string, data: Partial<CreateOrganizationDto>) {
