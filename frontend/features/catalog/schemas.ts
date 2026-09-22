@@ -23,6 +23,7 @@ export const productSchema = z.object({
   categoryId: z.string().nullable(),
   unitId: z.string().nullable(),
   attributes: z.record(z.string(), z.unknown()).optional(),
+  lowStockThreshold: z.number().min(0, 'El umbral debe ser mayor o igual a 0').optional().default(10),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;
