@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, ForbiddenException, UseInterceptors } from '@nestjs/common';
-import { OrganizationsService } from './organizations.service';
+import { OrganizationsService, BusinessSettingsDto } from './organizations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
@@ -43,6 +43,18 @@ export class OrganizationsController {
       throw new ForbiddenException('No tienes acceso a esta organización');
     }
     return this.organizationsService.findOne(id);
+  }
+
+  @Get(':id/settings')
+  @UseGuards(TenantGuard)
+  async getBusinessSettings(
+    @Param('id') id: string,
+    @CurrentOrg() organizationId: string,
+  ): Promise<BusinessSettingsDto> {
+    if (id !== organizationId) {
+      throw new ForbiddenException('No tienes acceso a esta organización');
+    }
+    return this.organizationsService.getBusinessSettings(id);
   }
 
   @Patch(':id')
