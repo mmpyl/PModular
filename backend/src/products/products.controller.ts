@@ -15,6 +15,7 @@ export interface CreateProductDto {
   categoryId?: string;
   unitId?: string;
   attributes?: Record<string, any>;
+  lowStockThreshold?: number;
   isActive?: boolean;
 }
 

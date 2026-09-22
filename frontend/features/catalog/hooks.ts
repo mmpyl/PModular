@@ -24,6 +24,7 @@ export type Product = {
   sku?: string | null;
   price: number | string;
   cost?: number | string | null;
+  lowStockThreshold?: number | string | null;
   isActive: boolean;
   attributes?: Record<string, unknown>;
   category?: { id: string; name: string } | null;
@@ -181,6 +182,7 @@ export function useCreateProduct(organizationId: string | undefined) {
       categoryId: string | null;
       unitId: string | null;
       attributes?: Record<string, unknown>;
+      lowStockThreshold?: number;
     }) => {
       if (!organizationId) throw new Error('Organization ID required');
       return apiFetch<Product>('/products', {
@@ -206,6 +208,7 @@ export function useUpdateProduct(organizationId: string | undefined) {
       categoryId: string | null;
       unitId: string | null;
       attributes?: Record<string, unknown>;
+      lowStockThreshold?: number;
     }}) => {
       if (!organizationId) throw new Error('Organization ID required');
       return apiFetch<Product>(`/products/${id}`, {

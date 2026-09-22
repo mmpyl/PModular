@@ -47,6 +47,7 @@ export default function ProductsPage() {
       categoryId: null,
       unitId: null,
       attributes: {},
+      lowStockThreshold: 10,
       search: '',
       filterCategory: '',
     },
@@ -69,6 +70,7 @@ export default function ProductsPage() {
       categoryId: null,
       unitId: null,
       attributes: {},
+      lowStockThreshold: 10,
     });
   }
 
@@ -82,6 +84,7 @@ export default function ProductsPage() {
       categoryId: product.category?.id ?? null,
       unitId: product.unit?.id ?? null,
       attributes: (product.attributes ?? {}) as Record<string, unknown>,
+      lowStockThreshold: product.lowStockThreshold != null ? Number(product.lowStockThreshold) : 10,
     });
   }
 
@@ -241,6 +244,19 @@ export default function ProductsPage() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="lowStockThreshold"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Umbral de stock bajo</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="1" {...field} onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               {schemaFields.map(([key, definition]) => {
                   const def = definition as SchemaField;
                   return (
@@ -355,6 +371,7 @@ export default function ProductsPage() {
                     <div>
                       <strong className="block">{product.name}</strong>
                       <small className="text-gray-500">{product.sku || 'Sin SKU'} · {product.category?.name || 'Sin categoría'} · {product.unit?.name || 'Sin unidad'}</small>
+                      <div className="text-xs text-gray-400 mt-1">Umbral stock bajo: {product.lowStockThreshold ?? 10}</div>
                     </div>
                     <div className="flex items-center gap-4">
                       <strong>{Number(product.price).toFixed(2)}</strong>

@@ -790,18 +790,15 @@ export class ReportsService {
   }
 
   /**
-   * Productos con stock bajo
+   * Productos con stock bajo - usa el lowStockThreshold de cada producto
    */
   async getLowStockProducts(
     organizationId: string,
-    threshold: number = 10,
+    _threshold?: number, // Deprecated: ahora se usa el threshold por producto
   ): Promise<LowStockDto[]> {
     const inventoryItems = await this.prisma.inventoryItem.findMany({
       where: {
         organizationId,
-        quantity: {
-          lte: threshold,
-        },
       },
       include: {
         product: {
@@ -814,6 +811,7 @@ export class ReportsService {
                 name: true,
               },
             },
+            lowStockThreshold: true,
           },
         },
         batches: {
@@ -829,18 +827,22 @@ export class ReportsService {
       },
     });
 
-    return inventoryItems.map((item) => ({
-      productId: item.productId,
-      productName: item.product.name,
-      sku: item.product.sku,
-      currentQuantity: Number(item.quantity),
-      unitName: item.product.unit?.name,
-      batches: item.batches.map((batch) => ({
-        batchId: batch.id,
-        quantity: Number(batch.currentQuantity),
-        expirationDate: batch.expirationDate || undefined,
-      })),
-    }));
+    // Filtrar productos donde el stock actual está por debajo de su umbral específico
+    return inventoryItems
+      .filter((item) => Number(item.quantity) <= Number(item.product.lowStockThreshold))
+      .map((item) => ({
+        productId: item.productId,
+        productName: item.product.name,
+        sku: item.product.sku,
+        currentQuantity: Number(item.quantity),
+        lowStockThreshold: Number(item.product.lowStockThreshold),
+        unitName: item.product.unit?.name,
+        batches: item.batches.map((batch) => ({
+          batchId: batch.id,
+          quantity: Number(batch.currentQuantity),
+          expirationDate: batch.expirationDate || undefined,
+        })),
+      }));
   }
 
   /**

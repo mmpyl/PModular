@@ -140,6 +140,7 @@ export interface LowStockDto {
   productName: string;
   sku?: string | null;
   currentQuantity: number;
+  lowStockThreshold?: number;
   unitName?: string;
   batches: {
     batchId: string;
