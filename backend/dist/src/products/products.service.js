@@ -28,6 +28,7 @@ let ProductsService = class ProductsService {
                 categoryId: data.categoryId,
                 unitId: data.unitId,
                 attributes: data.attributes || {},
+                lowStockThreshold: data.lowStockThreshold ?? 10,
                 isActive: data.isActive ?? true,
             },
             include: {

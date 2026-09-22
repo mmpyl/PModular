@@ -11,8 +11,8 @@ export declare class MembershipsController {
     create(createMembershipDto: CreateMembershipDto, organizationId: string): Promise<{
         user: {
             id: string;
-            name: string | null;
             email: string;
+            name: string | null;
         };
         organization: {
             id: string;
@@ -34,8 +34,8 @@ export declare class MembershipsController {
                 createdAt: Date;
                 name: string;
                 updatedAt: Date;
-                code: string;
                 description: string | null;
+                code: string;
                 defaultModules: import("@prisma/client/runtime/library").JsonValue;
                 productSchema: import("@prisma/client/runtime/library").JsonValue;
             };
@@ -44,10 +44,10 @@ export declare class MembershipsController {
             createdAt: Date;
             name: string;
             updatedAt: Date;
-            businessTypeId: string;
             status: import(".prisma/client").$Enums.OrganizationStatus;
             enabledModules: import("@prisma/client/runtime/library").JsonValue;
             settings: import("@prisma/client/runtime/library").JsonValue;
+            businessTypeId: string;
         };
     } & {
         id: string;
@@ -58,8 +58,8 @@ export declare class MembershipsController {
     findByOrganization(organizationId: string, currentOrgId: string): import(".prisma/client").Prisma.PrismaPromise<({
         user: {
             id: string;
-            name: string | null;
             email: string;
+            name: string | null;
         };
     } & {
         id: string;
@@ -70,8 +70,8 @@ export declare class MembershipsController {
     findOne(userId: string, organizationId: string, currentOrgId: string): import(".prisma/client").Prisma.Prisma__MembershipClient<({
         user: {
             id: string;
-            name: string | null;
             email: string;
+            name: string | null;
         };
         organization: {
             id: string;

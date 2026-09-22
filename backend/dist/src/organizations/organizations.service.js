@@ -57,6 +57,21 @@ let OrganizationsService = class OrganizationsService {
             },
         });
     }
+    async getBusinessSettings(organizationId) {
+        const organization = await this.prisma.organization.findUnique({
+            where: { id: organizationId },
+            select: { settings: true },
+        });
+        if (!organization) {
+            throw new common_1.NotFoundException(`Organización con ID ${organizationId} no encontrada`);
+        }
+        const settings = organization.settings || {};
+        return {
+            currency: settings.currency || 'PEN',
+            timezone: settings.timezone || 'America/Lima',
+            defaultTaxRate: settings.defaultTaxRate ?? 0.18,
+        };
+    }
     async update(id, data) {
         const existing = await this.prisma.organization.findUnique({ where: { id } });
         if (!existing) {

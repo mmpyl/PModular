@@ -565,13 +565,10 @@ let ReportsService = class ReportsService {
             };
         });
     }
-    async getLowStockProducts(organizationId, threshold = 10) {
+    async getLowStockProducts(organizationId, _threshold) {
         const inventoryItems = await this.prisma.inventoryItem.findMany({
             where: {
                 organizationId,
-                quantity: {
-                    lte: threshold,
-                },
             },
             include: {
                 product: {
@@ -584,6 +581,7 @@ let ReportsService = class ReportsService {
                                 name: true,
                             },
                         },
+                        lowStockThreshold: true,
                     },
                 },
                 batches: {
@@ -598,11 +596,14 @@ let ReportsService = class ReportsService {
                 },
             },
         });
-        return inventoryItems.map((item) => ({
+        return inventoryItems
+            .filter((item) => Number(item.quantity) <= Number(item.product.lowStockThreshold))
+            .map((item) => ({
             productId: item.productId,
             productName: item.product.name,
             sku: item.product.sku,
             currentQuantity: Number(item.quantity),
+            lowStockThreshold: Number(item.product.lowStockThreshold),
             unitName: item.product.unit?.name,
             batches: item.batches.map((batch) => ({
                 batchId: batch.id,

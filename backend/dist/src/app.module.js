@@ -29,6 +29,8 @@ const reports_module_1 = require("./reports/reports.module");
 const auth_shared_module_1 = require("./auth/auth-shared.module");
 const platform_module_1 = require("./platform/platform.module");
 const audit_log_module_1 = require("./audit-log/audit-log.module");
+const warehouses_module_1 = require("./warehouses/warehouses.module");
+const notifications_module_1 = require("./notifications/notifications.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -56,6 +58,8 @@ exports.AppModule = AppModule = __decorate([
             reports_module_1.ReportsModule,
             platform_module_1.PlatformModule,
             audit_log_module_1.AuditLogModule,
+            warehouses_module_1.WarehousesModule,
+            notifications_module_1.NotificationsModule,
         ],
     })
 ], AppModule);

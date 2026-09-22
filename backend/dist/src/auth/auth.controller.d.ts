@@ -50,18 +50,18 @@ export declare class AuthController {
         organization: {
             businessType: {
                 id: string;
-                code: string;
+                createdAt: Date;
                 name: string;
+                updatedAt: Date;
                 description: string | null;
+                code: string;
                 defaultModules: import("@prisma/client/runtime/library").JsonValue;
                 productSchema: import("@prisma/client/runtime/library").JsonValue;
-                createdAt: Date;
-                updatedAt: Date;
             };
         } & {
             id: string;
-            name: string;
             createdAt: Date;
+            name: string;
             updatedAt: Date;
             status: import(".prisma/client").$Enums.OrganizationStatus;
             enabledModules: import("@prisma/client/runtime/library").JsonValue;
@@ -70,8 +70,8 @@ export declare class AuthController {
         };
     } & {
         id: string;
-        organizationId: string;
         userId: string;
+        organizationId: string;
         role: import(".prisma/client").$Enums.OrgRole;
     })[]>;
     adminCheck(): {
