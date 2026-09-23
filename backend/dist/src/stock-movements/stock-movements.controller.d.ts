@@ -11,9 +11,51 @@ export declare class StockMovementsController {
         referenceType?: string;
         referenceId?: string;
         notes?: string;
-    }): Promise<StockMovement>;
-    getMovements(req: any, productId?: string, type?: string, reason?: string, referenceType?: string, referenceId?: string): Promise<StockMovement[]>;
-    getMovementById(req: any, id: string): Promise<StockMovement>;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        type: import(".prisma/client").$Enums.MovementType;
+        organizationId: string;
+        productId: string;
+        quantity: import("@prisma/client/runtime/library").Decimal;
+        reason: import(".prisma/client").$Enums.MovementReason;
+        isPositive: boolean;
+        batchId: string | null;
+        referenceType: string | null;
+        referenceId: string | null;
+        notes: string | null;
+        performedBy: string;
+    }>;
+    getMovements(req: any, productId?: string, type?: string, reason?: string, referenceType?: string, referenceId?: string): Promise<{
+        id: string;
+        createdAt: Date;
+        type: import(".prisma/client").$Enums.MovementType;
+        organizationId: string;
+        productId: string;
+        quantity: import("@prisma/client/runtime/library").Decimal;
+        reason: import(".prisma/client").$Enums.MovementReason;
+        isPositive: boolean;
+        batchId: string | null;
+        referenceType: string | null;
+        referenceId: string | null;
+        notes: string | null;
+        performedBy: string;
+    }[]>;
+    getMovementById(req: any, id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        type: import(".prisma/client").$Enums.MovementType;
+        organizationId: string;
+        productId: string;
+        quantity: import("@prisma/client/runtime/library").Decimal;
+        reason: import(".prisma/client").$Enums.MovementReason;
+        isPositive: boolean;
+        batchId: string | null;
+        referenceType: string | null;
+        referenceId: string | null;
+        notes: string | null;
+        performedBy: string;
+    }>;
     registerInitialStock(req: any, dto: {
         productId: string;
         quantity: number;
@@ -21,7 +63,7 @@ export declare class StockMovementsController {
         batchNumber?: string;
         expirationDate?: Date;
     }): Promise<{
-        movement: StockMovement;
-        batch?: Batch;
+        movement: import(".prisma/client").StockMovement;
+        batch?: import(".prisma/client").Batch;
     }>;
 }

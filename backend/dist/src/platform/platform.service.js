@@ -193,6 +193,49 @@ let PlatformService = class PlatformService {
             recentActivity,
         };
     }
+    async updatePlatformRole(targetUserId, requestingUserId, newRole) {
+        const targetUser = await this.prisma.user.findUnique({
+            where: { id: targetUserId },
+            select: {
+                id: true,
+                email: true,
+                platformRole: true,
+            },
+        });
+        if (!targetUser) {
+            throw new common_1.NotFoundException(`Usuario con ID ${targetUserId} no encontrado`);
+        }
+        if (newRole === null || newRole === undefined) {
+            const platformAdminCount = await this.prisma.user.count({
+                where: {
+                    platformRole: client_1.PlatformRole.PLATFORM_ADMIN,
+                },
+            });
+            if (targetUser.platformRole === client_1.PlatformRole.PLATFORM_ADMIN && platformAdminCount <= 1) {
+                throw new common_1.ForbiddenException('No se puede remover el rol del último PLATFORM_ADMIN. Debe haber al menos un administrador de plataforma.');
+            }
+        }
+        if (newRole !== client_1.PlatformRole.PLATFORM_ADMIN && targetUser.platformRole === client_1.PlatformRole.PLATFORM_ADMIN) {
+            const platformAdminCount = await this.prisma.user.count({
+                where: {
+                    platformRole: client_1.PlatformRole.PLATFORM_ADMIN,
+                },
+            });
+            if (platformAdminCount <= 1) {
+                throw new common_1.ForbiddenException('No se puede degradar al último PLATFORM_ADMIN. Debe haber al menos un administrador de plataforma.');
+            }
+        }
+        const updatedUser = await this.prisma.user.update({
+            where: { id: targetUserId },
+            data: { platformRole: newRole },
+            select: {
+                id: true,
+                email: true,
+                platformRole: true,
+            },
+        });
+        return updatedUser;
+    }
 };
 exports.PlatformService = PlatformService;
 exports.PlatformService = PlatformService = __decorate([
