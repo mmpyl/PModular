@@ -20,6 +20,8 @@ export declare class CreateBusinessEntityDto {
     contactPhone?: string;
     notes?: string;
     attributes?: Record<string, any>;
+    creditLimit?: number;
+    currentBalance?: number;
 }
 export declare class UpdateBusinessEntityDto {
     entityType?: EntityType;
@@ -38,5 +40,7 @@ export declare class UpdateBusinessEntityDto {
     contactPhone?: string;
     notes?: string;
     attributes?: Record<string, any>;
+    creditLimit?: number;
+    currentBalance?: number;
     isActive?: boolean;
 }

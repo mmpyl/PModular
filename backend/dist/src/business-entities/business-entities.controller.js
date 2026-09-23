@@ -34,6 +34,15 @@ let BusinessEntitiesController = class BusinessEntitiesController {
     findOne(id, orgId) {
         return this.businessEntitiesService.findOne(orgId, id);
     }
+    findOneWithHistory(id, orgId) {
+        return this.businessEntitiesService.findOneWithHistory(orgId, id);
+    }
+    recalculateBalance(id, orgId) {
+        return this.businessEntitiesService.recalculateBalance(orgId, id);
+    }
+    checkCreditLimit(id, orgId) {
+        return this.businessEntitiesService.checkCreditLimit(orgId, id);
+    }
     update(id, dto, orgId) {
         return this.businessEntitiesService.update(orgId, id, dto);
     }
@@ -70,6 +79,33 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], BusinessEntitiesController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Get)(':id/history'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_org_decorator_1.CurrentOrg)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], BusinessEntitiesController.prototype, "findOneWithHistory", null);
+__decorate([
+    (0, common_1.Post)(':id/recalculate-balance'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_org_decorator_1.CurrentOrg)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], BusinessEntitiesController.prototype, "recalculateBalance", null);
+__decorate([
+    (0, common_1.Get)(':id/check-credit-limit'),
+    (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN', 'VENDEDOR'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_org_decorator_1.CurrentOrg)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], BusinessEntitiesController.prototype, "checkCreditLimit", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, org_roles_decorator_1.OrgRoles)('OWNER', 'ADMIN'),

@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
 import { PlatformRoles, ALLOWED_PLATFORM_ROLES } from '../auth/decorators/org-roles.decorator';
 import { PlatformPaginationQueryDto } from './dto/platform-pagination-query.dto';
-import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse } from './dto/platform-response.dto';
+import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse, PlatformMetricsResponse } from './dto/platform-response.dto';
 
 /**
  * Módulo de plataforma para administración global.
@@ -53,5 +53,17 @@ export class PlatformController {
     @Query() query: PlatformPaginationQueryDto,
   ): Promise<PaginatedPlatformResult<PlatformUserResponse>> {
     return this.platformService.findUsers(query);
+  }
+
+  /**
+   * GET /platform/metrics
+   * Métricas agregadas de la plataforma: totales de organizaciones, usuarios,
+   * altas recientes y actividad reciente (basado en AuditLog).
+   * Requiere rol PLATFORM_ADMIN o SUPPORT.
+   */
+  @Get('metrics')
+  @PlatformRoles(...ALLOWED_PLATFORM_ROLES)
+  async getMetrics(): Promise<PlatformMetricsResponse> {
+    return this.platformService.getMetrics();
   }
 }

@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { PlatformPaginationQueryDto } from './dto/platform-pagination-query.dto';
-import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse } from './dto/platform-response.dto';
-import { Prisma } from '@prisma/client';
+import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse, PlatformMetricsResponse, RecentActivity } from './dto/platform-response.dto';
+import { Prisma, AuditActionType } from '@prisma/client';
 
 @Injectable()
 export class PlatformService {
@@ -145,6 +145,84 @@ export class PlatformService {
         total,
         totalPages,
       },
+    };
+  }
+
+  /**
+   * Obtiene métricas agregadas de la plataforma
+   */
+  async getMetrics(): Promise<PlatformMetricsResponse> {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Totales de organizaciones
+    const [totalOrganizations, activeOrganizations, suspendedOrganizations] = await Promise.all([
+      this.prisma.organization.count(),
+      this.prisma.organization.count({ where: { status: 'ACTIVE' } }),
+      this.prisma.organization.count({ where: { status: 'SUSPENDED' } }),
+    ]);
+
+    // Total de usuarios
+    const totalUsers = await this.prisma.user.count();
+
+    // Altas de organizaciones en los últimos 7 y 30 días
+    const [organizationsLast7Days, organizationsLast30Days] = await Promise.all([
+      this.prisma.organization.count({
+        where: { createdAt: { gte: sevenDaysAgo } },
+      }),
+      this.prisma.organization.count({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+      }),
+    ]);
+
+    // Actividad reciente basada en AuditLog (últimos 7 días)
+    const recentAuditLogs = await this.prisma.auditLog.findMany({
+      where: {
+        createdAt: { gte: sevenDaysAgo },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            platformRole: true,
+          },
+        },
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    const recentActivity: RecentActivity[] = recentAuditLogs.map((log) => ({
+      id: log.id,
+      action: log.action,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      timestamp: log.createdAt,
+      userName: log.user?.name ?? log.user?.email ?? 'Desconocido',
+      organizationName: log.organization?.name ?? null,
+    }));
+
+    return {
+      organizations: {
+        total: totalOrganizations,
+        active: activeOrganizations,
+        suspended: suspendedOrganizations,
+        newLast7Days: organizationsLast7Days,
+        newLast30Days: organizationsLast30Days,
+      },
+      users: {
+        total: totalUsers,
+      },
+      recentActivity,
     };
   }
 }

@@ -42,18 +42,18 @@ export declare class InventoryController {
         lastCountedAt: Date | null;
     }[]>;
     getExpiringBatches(req: any, days?: string): Promise<{
-        currentQuantity: import("@prisma/client/runtime/library").Decimal;
-        batchNumber: string;
-        expirationDate: Date | null;
         id: string;
-        organizationId: string;
         createdAt: Date;
         updatedAt: Date;
         status: import(".prisma/client").$Enums.BatchStatus;
+        organizationId: string;
         productId: string;
+        batchNumber: string;
         serialNumber: string | null;
         manufacturingDate: Date | null;
+        expirationDate: Date | null;
         initialQuantity: import("@prisma/client/runtime/library").Decimal;
+        currentQuantity: import("@prisma/client/runtime/library").Decimal;
         unitCost: import("@prisma/client/runtime/library").Decimal;
         location: string | null;
     }[]>;

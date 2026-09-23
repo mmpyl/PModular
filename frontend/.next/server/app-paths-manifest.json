@@ -1,8 +1,6 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/api/auth/cookie/route": "app/api/auth/cookie/route.js",
-  "/business-entities/page": "app/business-entities/page.js",
-  "/business-settings/page": "app/business-settings/page.js",
   "/cash-registers/page": "app/cash-registers/page.js",
   "/categories/page": "app/categories/page.js",
   "/create-organization/page": "app/create-organization/page.js",
@@ -11,10 +9,11 @@
   "/login/page": "app/login/page.js",
   "/onboarding/page": "app/onboarding/page.js",
   "/page": "app/page.js",
-  "/platform/audit-log/page": "app/platform/audit-log/page.js",
   "/platform/dashboard/page": "app/platform/dashboard/page.js",
   "/platform/login/page": "app/platform/login/page.js",
+  "/platform/audit-log/page": "app/platform/audit-log/page.js",
   "/platform/organizations/page": "app/platform/organizations/page.js",
+  "/platform/organizations/[id]/page": "app/platform/organizations/[id]/page.js",
   "/platform/users/page": "app/platform/users/page.js",
   "/products/page": "app/products/page.js",
   "/purchase-orders/page": "app/purchase-orders/page.js",
@@ -24,5 +23,6 @@
   "/select-organization/page": "app/select-organization/page.js",
   "/team/page": "app/team/page.js",
   "/units/page": "app/units/page.js",
-  "/platform/organizations/[id]/page": "app/platform/organizations/[id]/page.js"
+  "/business-entities/page": "app/business-entities/page.js",
+  "/business-settings/page": "app/business-settings/page.js"
 }

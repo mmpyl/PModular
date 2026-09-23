@@ -17,123 +17,123 @@ export declare class ProductsController {
     create(createProductDto: CreateProductDto, organizationId: string): Promise<{
         category: {
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             parentId: string | null;
         } | null;
         unit: {
             symbol: string | null;
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             isFractionable: boolean;
         } | null;
     } & {
         id: string;
-        organizationId: string;
-        createdAt: Date;
         name: string;
-        updatedAt: Date;
         description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
-        categoryId: string | null;
-        unitId: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         lowStockThreshold: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
+        categoryId: string | null;
+        unitId: string | null;
     }>;
     findAll(organizationId: string, categoryId?: string, search?: string): import(".prisma/client").Prisma.PrismaPromise<({
         category: {
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             parentId: string | null;
         } | null;
         unit: {
             symbol: string | null;
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             isFractionable: boolean;
         } | null;
     } & {
         id: string;
-        organizationId: string;
-        createdAt: Date;
         name: string;
-        updatedAt: Date;
         description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
-        categoryId: string | null;
-        unitId: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         lowStockThreshold: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
+        categoryId: string | null;
+        unitId: string | null;
     })[]>;
     findOne(id: string, organizationId: string): import(".prisma/client").Prisma.Prisma__ProductClient<({
         category: {
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             parentId: string | null;
         } | null;
         unit: {
             symbol: string | null;
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             isFractionable: boolean;
         } | null;
     } & {
         id: string;
-        organizationId: string;
-        createdAt: Date;
         name: string;
-        updatedAt: Date;
         description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
-        categoryId: string | null;
-        unitId: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         lowStockThreshold: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
+        categoryId: string | null;
+        unitId: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateProductDto: Partial<CreateProductDto>, organizationId: string): Promise<{
         id: string;
-        organizationId: string;
-        createdAt: Date;
         name: string;
-        updatedAt: Date;
         description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
-        categoryId: string | null;
-        unitId: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         lowStockThreshold: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
+        categoryId: string | null;
+        unitId: string | null;
     }>;
     remove(id: string, organizationId: string): Promise<{
         id: string;
-        organizationId: string;
-        createdAt: Date;
         name: string;
-        updatedAt: Date;
         description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        organizationId: string;
         sku: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
         cost: import("@prisma/client/runtime/library").Decimal | null;
-        categoryId: string | null;
-        unitId: string | null;
         attributes: import("@prisma/client/runtime/library").JsonValue;
         lowStockThreshold: import("@prisma/client/runtime/library").Decimal;
         isActive: boolean;
+        categoryId: string | null;
+        unitId: string | null;
     }>;
 }
