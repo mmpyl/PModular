@@ -89,6 +89,9 @@ model Organization {
   payments          Payment[]
   cashRegisters     CashRegister[]
   auditLogs         AuditLog[]
+  
+  // FE2: Configuración fiscal por organización
+  fiscalSettings OrganizationFiscalSettings?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1039,4 +1042,80 @@ model Invoice {
   @@index([saleId])
   @@index([series, correlation])
   @@map("invoices")
+}
+
+// ==========================================
+// FE2: Configuración Fiscal por Organización (Multi-tenant)
+// ==========================================
+
+model OrganizationFiscalSettings {
+  id             String @id @default(uuid())
+  organizationId String @unique
+  
+  // Datos fiscales de la organización
+  ruc            String // RUC único de la organización
+  razonSocial    String // Razón social registrada
+  nombreComercial String? // Nombre comercial (opcional)
+  
+  // Dirección fiscal
+  direccion      String
+  ubige          String // Código de ubige del distrito
+  departamento   String
+  provincia      String
+  distrito       String
+  
+  // Teléfono y contacto
+  telefono       String?
+  email          String?
+  
+  // Configuración de series autorizadas por tipo de comprobante
+  // Ej: { "FACTURA": ["F001", "F002"], "BOLETA": ["B001"], "NOTA_CREDITO": ["FC01"], "NOTA_DEBITO": ["FD01"] }
+  seriesAutorizadas Json @default("{}")
+  
+  // Serie actual por tipo de comprobante (para correlativo automático)
+  serieActualFactura String @default("F001")
+  serieActualBoleta String @default("B001")
+  serieActualNotaCredito String @default("FC01")
+  serieActualNotaDebito String @default("FD01")
+  
+  // Último correlativo usado por serie
+  // Ej: { "F001": 1234, "B001": 5678 }
+  ultimosCorrelativos Json @default("{}")
+  
+  // Credenciales del PSE (Proveedor de Servicios Electrónicos)
+  pseProvider    String? // Nombre del proveedor PSE (ej: "NUBEFACT", "SOLUTEC", etc.)
+  pseUsername    String? // Usuario/API key del PSE
+  psePassword    String? // Contraseña/secret del PSE (encriptada)
+  pseEnvironment String @default("BETA") // BETA o PRODUCCION
+  
+  // Certificado digital (opcional, para firmado de XML)
+  certificadoDigital String? // Ruta o contenido del certificado .pfx/.p12
+  certificadoPassword String? // Contraseña del certificado
+  
+  // Configuración de impuestos
+  igvRate        Decimal @default(18.00) @db.Decimal(5, 2) // IGV por defecto
+  icbperRate     Decimal? @db.Decimal(5, 2) // ICBPER si aplica
+  
+  // Configuración de moneda
+  moneda         String @default("PEN") // PEN o USD
+  
+  // Estado de la configuración fiscal
+  isActive       Boolean @default(true)
+  isConfigured   Boolean @default(false) // true cuando todos los datos requeridos están completos
+  
+  // Fecha de última sincronización con SUNAT
+  lastSunatSync DateTime?
+  
+  // Notas internas
+  notasInternas  String?
+  
+  // Relación con Organization
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([ruc])
+  @@map("organization_fiscal_settings")
 }
