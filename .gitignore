@@ -1,29 +1,18 @@
 ```
-# Next.js build outputs
-.next/
-out/
-
-# TypeScript compiled output
+# Compiled and build artifacts
+*.d.ts
 dist/
-*.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Dependencies
 node_modules/
 
-# Environment variables
+# Editors
+.vscode/
+.idea/
+
+# Environment
 .env
 .env.local
 *.env.*
-
-# IDE specific files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
-*.log
-
-# Temporary files
-*.tmp
 ```
