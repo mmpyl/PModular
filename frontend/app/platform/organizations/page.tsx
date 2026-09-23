@@ -81,7 +81,11 @@ export default function PlatformOrganizationsPage() {
 
         <div className="grid gap-4">
           {data?.data.map((org) => (
-            <Card key={org.id}>
+            <Card 
+              key={org.id}
+              className="cursor-pointer transition-colors hover:bg-muted/50"
+              onClick={() => router.push(`/platform/organizations/${org.id}`)}
+            >
               <CardHeader>
                 <CardTitle>{org.name}</CardTitle>
                 <CardDescription>
