@@ -50,6 +50,50 @@ let BusinessEntitiesService = class BusinessEntitiesService {
         }
         return entity;
     }
+    async findOneWithHistory(organizationId, id) {
+        const entity = await this.prisma.businessEntity.findFirst({
+            where: { id, organizationId },
+            include: {
+                purchaseOrders: {
+                    select: {
+                        id: true,
+                        orderNumber: true,
+                        totalAmount: true,
+                        status: true,
+                        createdAt: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: 20,
+                },
+                sales: {
+                    select: {
+                        id: true,
+                        invoiceNumber: true,
+                        totalAmount: true,
+                        status: true,
+                        createdAt: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: 20,
+                },
+            },
+        });
+        if (!entity) {
+            throw new common_1.NotFoundException(`Business entity with ID ${id} not found`);
+        }
+        const totalPurchases = entity.purchaseOrders
+            .filter(po => po.status === 'COMPLETADA')
+            .reduce((sum, po) => sum + Number(po.totalAmount), 0);
+        const totalSales = entity.sales
+            .filter(sale => sale.status === 'COMPLETADA' || sale.status === 'PENDIENTE_PAGO')
+            .reduce((sum, sale) => sum + Number(sale.totalAmount), 0);
+        return {
+            ...entity,
+            calculatedBalance: totalSales - totalPurchases,
+            totalPurchases,
+            totalSales,
+        };
+    }
     async update(organizationId, id, dto) {
         await this.findOne(organizationId, id);
         return this.prisma.businessEntity.update({
@@ -69,6 +113,45 @@ let BusinessEntitiesService = class BusinessEntitiesService {
         return this.prisma.businessEntity.delete({
             where: { id },
         });
+    }
+    async recalculateBalance(organizationId, id) {
+        const entity = await this.findOne(organizationId, id);
+        const purchases = await this.prisma.purchaseOrder.findMany({
+            where: {
+                organizationId,
+                supplierId: id,
+                status: 'COMPLETADA',
+            },
+            select: { totalAmount: true },
+        });
+        const sales = await this.prisma.sale.findMany({
+            where: {
+                organizationId,
+                customerId: id,
+                status: { in: ['COMPLETADA', 'PENDIENTE_PAGO'] },
+            },
+            select: { totalAmount: true },
+        });
+        const totalPurchases = purchases.reduce((sum, p) => sum + Number(p.totalAmount), 0);
+        const totalSales = sales.reduce((sum, s) => sum + Number(s.totalAmount), 0);
+        const newBalance = totalSales - totalPurchases;
+        return this.prisma.businessEntity.update({
+            where: { id },
+            data: { currentBalance: newBalance },
+        });
+    }
+    async checkCreditLimit(organizationId, id) {
+        const entity = await this.findOne(organizationId, id);
+        if (!entity.creditLimit) {
+            return { withinLimit: true, currentBalance: Number(entity.currentBalance), creditLimit: null };
+        }
+        const creditLimit = Number(entity.creditLimit);
+        const currentBalance = Number(entity.currentBalance);
+        return {
+            withinLimit: currentBalance <= creditLimit,
+            currentBalance,
+            creditLimit,
+        };
     }
 };
 exports.BusinessEntitiesService = BusinessEntitiesService;

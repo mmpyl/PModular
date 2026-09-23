@@ -129,6 +129,70 @@ let PlatformService = class PlatformService {
             },
         };
     }
+    async getMetrics() {
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const [totalOrganizations, activeOrganizations, suspendedOrganizations] = await Promise.all([
+            this.prisma.organization.count(),
+            this.prisma.organization.count({ where: { status: 'ACTIVE' } }),
+            this.prisma.organization.count({ where: { status: 'SUSPENDED' } }),
+        ]);
+        const totalUsers = await this.prisma.user.count();
+        const [organizationsLast7Days, organizationsLast30Days] = await Promise.all([
+            this.prisma.organization.count({
+                where: { createdAt: { gte: sevenDaysAgo } },
+            }),
+            this.prisma.organization.count({
+                where: { createdAt: { gte: thirtyDaysAgo } },
+            }),
+        ]);
+        const recentAuditLogs = await this.prisma.auditLog.findMany({
+            where: {
+                createdAt: { gte: sevenDaysAgo },
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        platformRole: true,
+                    },
+                },
+                organization: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+        });
+        const recentActivity = recentAuditLogs.map((log) => ({
+            id: log.id,
+            action: log.action,
+            entityType: log.entityType,
+            entityId: log.entityId,
+            timestamp: log.createdAt,
+            userName: log.user?.name ?? log.user?.email ?? 'Desconocido',
+            organizationName: log.organization?.name ?? null,
+        }));
+        return {
+            organizations: {
+                total: totalOrganizations,
+                active: activeOrganizations,
+                suspended: suspendedOrganizations,
+                newLast7Days: organizationsLast7Days,
+                newLast30Days: organizationsLast30Days,
+            },
+            users: {
+                total: totalUsers,
+            },
+            recentActivity,
+        };
+    }
 };
 exports.PlatformService = PlatformService;
 exports.PlatformService = PlatformService = __decorate([

@@ -9,30 +9,30 @@ export declare class CategoriesService {
     create(organizationId: string, data: CreateCategoryDto): Promise<{
         parent: {
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             parentId: string | null;
         } | null;
     } & {
         id: string;
-        organizationId: string;
         name: string;
+        organizationId: string;
         parentId: string | null;
     }>;
     findAll(organizationId: string): import(".prisma/client").Prisma.PrismaPromise<({
+        parent: {
+            id: string;
+            name: string;
+            organizationId: string;
+            parentId: string | null;
+        } | null;
         _count: {
             products: number;
         };
-        parent: {
-            id: string;
-            organizationId: string;
-            name: string;
-            parentId: string | null;
-        } | null;
     } & {
         id: string;
-        organizationId: string;
         name: string;
+        organizationId: string;
         parentId: string | null;
     })[]>;
     findOne(organizationId: string, id: string): import(".prisma/client").Prisma.Prisma__CategoryClient<({
@@ -43,32 +43,32 @@ export declare class CategoriesService {
         }[];
         parent: {
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             parentId: string | null;
         } | null;
         children: {
             id: string;
-            organizationId: string;
             name: string;
+            organizationId: string;
             parentId: string | null;
         }[];
     } & {
         id: string;
-        organizationId: string;
         name: string;
+        organizationId: string;
         parentId: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(organizationId: string, id: string, data: Partial<CreateCategoryDto>): Promise<{
         id: string;
-        organizationId: string;
         name: string;
+        organizationId: string;
         parentId: string | null;
     }>;
     remove(organizationId: string, id: string): Promise<{
         id: string;
-        organizationId: string;
         name: string;
+        organizationId: string;
         parentId: string | null;
     }>;
 }

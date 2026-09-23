@@ -1,4 +1,4 @@
-import { PlatformRole, OrgRole } from '@prisma/client';
+import { PlatformRole, OrgRole, AuditActionType } from '@prisma/client';
 export interface PlatformOrganizationResponse {
     id: string;
     name: string;
@@ -38,6 +38,28 @@ export interface PlatformUserResponse {
     _count?: {
         memberships: number;
     };
+}
+export interface RecentActivity {
+    id: string;
+    action: AuditActionType;
+    entityType: string;
+    entityId: string;
+    timestamp: Date;
+    userName: string;
+    organizationName: string | null;
+}
+export interface PlatformMetricsResponse {
+    organizations: {
+        total: number;
+        active: number;
+        suspended: number;
+        newLast7Days: number;
+        newLast30Days: number;
+    };
+    users: {
+        total: number;
+    };
+    recentActivity: RecentActivity[];
 }
 export type PaginatedPlatformResult<T> = {
     data: T[];

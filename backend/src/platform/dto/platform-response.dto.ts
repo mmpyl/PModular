@@ -1,4 +1,4 @@
-import { PlatformRole, OrgRole } from '@prisma/client';
+import { PlatformRole, OrgRole, AuditActionType } from '@prisma/client';
 
 /**
  * Interfaz para respuesta de organización con detalles completos
@@ -46,6 +46,36 @@ export interface PlatformUserResponse {
   _count?: {
     memberships: number;
   };
+}
+
+/**
+ * Actividad reciente del sistema
+ */
+export interface RecentActivity {
+  id: string;
+  action: AuditActionType;
+  entityType: string;
+  entityId: string;
+  timestamp: Date;
+  userName: string;
+  organizationName: string | null;
+}
+
+/**
+ * Métricas agregadas de la plataforma
+ */
+export interface PlatformMetricsResponse {
+  organizations: {
+    total: number;
+    active: number;
+    suspended: number;
+    newLast7Days: number;
+    newLast30Days: number;
+  };
+  users: {
+    total: number;
+  };
+  recentActivity: RecentActivity[];
 }
 
 /**

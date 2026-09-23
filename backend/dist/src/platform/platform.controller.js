@@ -32,6 +32,9 @@ let PlatformController = class PlatformController {
     async findUsers(query) {
         return this.platformService.findUsers(query);
     }
+    async getMetrics() {
+        return this.platformService.getMetrics();
+    }
 };
 exports.PlatformController = PlatformController;
 __decorate([
@@ -58,6 +61,13 @@ __decorate([
     __metadata("design:paramtypes", [platform_pagination_query_dto_1.PlatformPaginationQueryDto]),
     __metadata("design:returntype", Promise)
 ], PlatformController.prototype, "findUsers", null);
+__decorate([
+    (0, common_1.Get)('metrics'),
+    (0, org_roles_decorator_1.PlatformRoles)(...org_roles_decorator_1.ALLOWED_PLATFORM_ROLES),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], PlatformController.prototype, "getMetrics", null);
 exports.PlatformController = PlatformController = __decorate([
     (0, common_1.Controller)('platform'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, platform_roles_guard_1.PlatformRolesGuard),

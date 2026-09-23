@@ -56,22 +56,22 @@ export declare class BusinessTypesController {
     })[]>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
-        name: string;
-        updatedAt: Date;
-        description: string | null;
         code: string;
+        name: string;
+        description: string | null;
         defaultModules: import("@prisma/client/runtime/library").JsonValue;
         productSchema: import("@prisma/client/runtime/library").JsonValue;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     findOne(code: string): import(".prisma/client").Prisma.Prisma__BusinessTypeClient<{
         id: string;
-        createdAt: Date;
-        name: string;
-        updatedAt: Date;
-        description: string | null;
         code: string;
+        name: string;
+        description: string | null;
         defaultModules: import("@prisma/client/runtime/library").JsonValue;
         productSchema: import("@prisma/client/runtime/library").JsonValue;
+        createdAt: Date;
+        updatedAt: Date;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
 }
