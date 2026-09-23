@@ -19,6 +19,9 @@ const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const platform_roles_guard_1 = require("../auth/guards/platform-roles.guard");
 const org_roles_decorator_1 = require("../auth/decorators/org-roles.decorator");
 const platform_pagination_query_dto_1 = require("./dto/platform-pagination-query.dto");
+const update_platform_role_dto_1 = require("./dto/update-platform-role.dto");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
+const client_1 = require("@prisma/client");
 let PlatformController = class PlatformController {
     constructor(platformService) {
         this.platformService = platformService;
@@ -34,6 +37,9 @@ let PlatformController = class PlatformController {
     }
     async getMetrics() {
         return this.platformService.getMetrics();
+    }
+    async updatePlatformRole(userId, updateRoleDto, currentUser) {
+        return this.platformService.updatePlatformRole(userId, currentUser.sub, updateRoleDto.role ?? null);
     }
 };
 exports.PlatformController = PlatformController;
@@ -68,6 +74,16 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], PlatformController.prototype, "getMetrics", null);
+__decorate([
+    (0, common_1.Patch)('users/:id/role'),
+    (0, org_roles_decorator_1.PlatformRoles)(client_1.PlatformRole.PLATFORM_ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_platform_role_dto_1.UpdatePlatformRoleDto, Object]),
+    __metadata("design:returntype", Promise)
+], PlatformController.prototype, "updatePlatformRole", null);
 exports.PlatformController = PlatformController = __decorate([
     (0, common_1.Controller)('platform'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, platform_roles_guard_1.PlatformRolesGuard),

@@ -1,10 +1,13 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, Patch, Body } from '@nestjs/common';
 import { PlatformService } from './platform.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
 import { PlatformRoles, ALLOWED_PLATFORM_ROLES } from '../auth/decorators/org-roles.decorator';
 import { PlatformPaginationQueryDto } from './dto/platform-pagination-query.dto';
 import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse, PlatformMetricsResponse } from './dto/platform-response.dto';
+import { UpdatePlatformRoleDto } from './dto/update-platform-role.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PlatformRole } from '@prisma/client';
 
 /**
  * Módulo de plataforma para administración global.
@@ -65,5 +68,25 @@ export class PlatformController {
   @PlatformRoles(...ALLOWED_PLATFORM_ROLES)
   async getMetrics(): Promise<PlatformMetricsResponse> {
     return this.platformService.getMetrics();
+  }
+
+  /**
+   * PATCH /platform/users/:id/role
+   * Actualiza el rol de plataforma de un usuario.
+   * Solo permitido para PLATFORM_ADMIN (no para SUPPORT, para evitar auto-promoción).
+   * Incluye protección contra dejar al último PLATFORM_ADMIN sin rol.
+   */
+  @Patch('users/:id/role')
+  @PlatformRoles(PlatformRole.PLATFORM_ADMIN)
+  async updatePlatformRole(
+    @Param('id') userId: string,
+    @Body() updateRoleDto: UpdatePlatformRoleDto,
+    @CurrentUser() currentUser: { sub: string },
+  ) {
+    return this.platformService.updatePlatformRole(
+      userId,
+      currentUser.sub,
+      updateRoleDto.role ?? null,
+    );
   }
 }

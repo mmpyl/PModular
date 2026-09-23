@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { PlatformPaginationQueryDto } from './dto/platform-pagination-query.dto';
 import { PaginatedPlatformResult, PlatformOrganizationResponse, PlatformUserResponse, PlatformMetricsResponse, RecentActivity } from './dto/platform-response.dto';
-import { Prisma, AuditActionType } from '@prisma/client';
+import { Prisma, AuditActionType, PlatformRole } from '@prisma/client';
 
 @Injectable()
 export class PlatformService {
@@ -224,5 +224,81 @@ export class PlatformService {
       },
       recentActivity,
     };
+  }
+
+  /**
+   * Actualiza el rol de plataforma de un usuario.
+   * Solo PLATFORM_ADMIN puede ejecutar esta operación.
+   * 
+   * Reglas de seguridad:
+   * 1. No permitir que el último PLATFORM_ADMIN se quite el rol a sí mismo
+   * 2. No permitir que quede ningún usuario sin ningún admin de plataforma
+   * 3. Solo PLATFORM_ADMIN puede asignar/revocar roles (no SUPPORT)
+   */
+  async updatePlatformRole(
+    targetUserId: string,
+    requestingUserId: string,
+    newRole: PlatformRole | null,
+  ): Promise<{ id: string; email: string; platformRole: PlatformRole | null }> {
+    // Verificar que el usuario objetivo existe
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: {
+        id: true,
+        email: true,
+        platformRole: true,
+      },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundException(`Usuario con ID ${targetUserId} no encontrado`);
+    }
+
+    // Si se está quitando el rol (newRole === null), verificar que no sea el último PLATFORM_ADMIN
+    if (newRole === null || newRole === undefined) {
+      // Contar cuántos PLATFORM_ADMIN hay actualmente
+      const platformAdminCount = await this.prisma.user.count({
+        where: {
+          platformRole: PlatformRole.PLATFORM_ADMIN,
+        },
+      });
+
+      // Si el usuario objetivo es PLATFORM_ADMIN y es el único, no permitir quitarle el rol
+      if (targetUser.platformRole === PlatformRole.PLATFORM_ADMIN && platformAdminCount <= 1) {
+        throw new ForbiddenException(
+          'No se puede remover el rol del último PLATFORM_ADMIN. Debe haber al menos un administrador de plataforma.',
+        );
+      }
+    }
+
+    // Si se está cambiando a PLATFORM_ADMIN desde otro rol, o viceversa, verificar la misma regla
+    if (newRole !== PlatformRole.PLATFORM_ADMIN && targetUser.platformRole === PlatformRole.PLATFORM_ADMIN) {
+      // Contar cuántos PLATFORM_ADMIN hay actualmente (incluyendo al usuario objetivo)
+      const platformAdminCount = await this.prisma.user.count({
+        where: {
+          platformRole: PlatformRole.PLATFORM_ADMIN,
+        },
+      });
+
+      // Si es el único PLATFORM_ADMIN, no permitir el cambio
+      if (platformAdminCount <= 1) {
+        throw new ForbiddenException(
+          'No se puede degradar al último PLATFORM_ADMIN. Debe haber al menos un administrador de plataforma.',
+        );
+      }
+    }
+
+    // Actualizar el rol
+    const updatedUser = await this.prisma.user.update({
+      where: { id: targetUserId },
+      data: { platformRole: newRole },
+      select: {
+        id: true,
+        email: true,
+        platformRole: true,
+      },
+    });
+
+    return updatedUser;
   }
 }

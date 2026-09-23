@@ -84,6 +84,7 @@ export default function PlatformUsersPage() {
   const handleRoleChange = (userId: string, newRole: string) => {
     const role = newRole === 'none' ? null : (newRole as 'PLATFORM_ADMIN' | 'SUPPORT');
     assignRoleMutation.mutate({ userId, role });
+    setSelectedRole(null);
   };
 
   return (
@@ -118,11 +119,8 @@ export default function PlatformUsersPage() {
                   <CardTitle>{userItem.name ?? userItem.email}</CardTitle>
                   {isPlatformAdmin && (
                     <Select
-                      value={selectedRole === userItem.id ? (userItem.platformRole ?? 'none') : (userItem.platformRole ?? 'none')}
-                      onValueChange={(value) => {
-                        setSelectedRole(userItem.id);
-                        handleRoleChange(userItem.id, value);
-                      }}
+                      value={userItem.platformRole ?? 'none'}
+                      onValueChange={(value) => handleRoleChange(userItem.id, value)}
                       disabled={assignRoleMutation.isPending}
                     >
                       <SelectTrigger className="w-[180px]">
