@@ -71,13 +71,13 @@ export declare class CashRegistersController {
         createdAt: Date;
         type: import(".prisma/client").$Enums.CashRegisterMovementType;
         organizationId: string;
-        notes: string | null;
-        cashRegisterId: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         isPositive: boolean;
-        paymentMethod: string | null;
-        saleId: string | null;
+        notes: string | null;
         performedBy: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        saleId: string | null;
+        cashRegisterId: string;
+        paymentMethod: string | null;
     }[]>;
     update(id: string, updateCashRegisterDto: UpdateCashRegisterDto, req: AuthRequest): Promise<{
         id: string;
@@ -139,13 +139,13 @@ export declare class CashRegistersController {
         createdAt: Date;
         type: import(".prisma/client").$Enums.CashRegisterMovementType;
         organizationId: string;
-        notes: string | null;
-        cashRegisterId: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         isPositive: boolean;
-        paymentMethod: string | null;
-        saleId: string | null;
+        notes: string | null;
         performedBy: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        saleId: string | null;
+        cashRegisterId: string;
+        paymentMethod: string | null;
     }>;
     remove(id: string, req: AuthRequest): Promise<{
         id: string;

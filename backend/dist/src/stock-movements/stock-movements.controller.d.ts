@@ -18,13 +18,13 @@ export declare class StockMovementsController {
         organizationId: string;
         productId: string;
         quantity: import("@prisma/client/runtime/library").Decimal;
-        notes: string | null;
-        isPositive: boolean;
-        performedBy: string;
-        batchId: string | null;
         reason: import(".prisma/client").$Enums.MovementReason;
+        isPositive: boolean;
+        batchId: string | null;
         referenceType: string | null;
         referenceId: string | null;
+        notes: string | null;
+        performedBy: string;
     }>;
     getMovements(req: any, productId?: string, type?: string, reason?: string, referenceType?: string, referenceId?: string): Promise<{
         id: string;
@@ -33,13 +33,13 @@ export declare class StockMovementsController {
         organizationId: string;
         productId: string;
         quantity: import("@prisma/client/runtime/library").Decimal;
-        notes: string | null;
-        isPositive: boolean;
-        performedBy: string;
-        batchId: string | null;
         reason: import(".prisma/client").$Enums.MovementReason;
+        isPositive: boolean;
+        batchId: string | null;
         referenceType: string | null;
         referenceId: string | null;
+        notes: string | null;
+        performedBy: string;
     }[]>;
     getMovementById(req: any, id: string): Promise<{
         id: string;
@@ -48,13 +48,13 @@ export declare class StockMovementsController {
         organizationId: string;
         productId: string;
         quantity: import("@prisma/client/runtime/library").Decimal;
-        notes: string | null;
-        isPositive: boolean;
-        performedBy: string;
-        batchId: string | null;
         reason: import(".prisma/client").$Enums.MovementReason;
+        isPositive: boolean;
+        batchId: string | null;
         referenceType: string | null;
         referenceId: string | null;
+        notes: string | null;
+        performedBy: string;
     }>;
     registerInitialStock(req: any, dto: {
         productId: string;

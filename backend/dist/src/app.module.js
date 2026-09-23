@@ -31,6 +31,7 @@ const platform_module_1 = require("./platform/platform.module");
 const audit_log_module_1 = require("./audit-log/audit-log.module");
 const warehouses_module_1 = require("./warehouses/warehouses.module");
 const notifications_module_1 = require("./notifications/notifications.module");
+const organization_fiscal_settings_module_1 = require("./organization-fiscal-settings/organization-fiscal-settings.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -60,6 +61,7 @@ exports.AppModule = AppModule = __decorate([
             audit_log_module_1.AuditLogModule,
             warehouses_module_1.WarehousesModule,
             notifications_module_1.NotificationsModule,
+            organization_fiscal_settings_module_1.OrganizationFiscalSettingsModule,
         ],
     })
 ], AppModule);

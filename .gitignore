@@ -1,6 +1,8 @@
 ```
 # Build artifacts
 backend/dist/
+backend/**/*.js
+backend/**/*.js.map
 backend/**/*.d.ts
 backend/tsconfig.tsbuildinfo
 
@@ -10,15 +12,33 @@ node_modules/
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
-# Editors
+# IDE
 .vscode/
 .idea/
 
 # Logs
 *.log
 
-# Prisma
-backend/prisma/migrations/
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (if present)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+coverage/
 ```
