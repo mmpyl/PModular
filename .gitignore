@@ -1,31 +1,28 @@
 ```
-# Build artifacts
-backend/dist/
-backend/**/*.js
-backend/**/*.js.map
-backend/**/*.d.ts
-backend/tsconfig.tsbuildinfo
-
 # Dependencies
 node_modules/
 
-# Environment
-.env
-.env.local
-.env.*
-
-# IDE
-.vscode/
-.idea/
+# Build outputs
+dist/
+build/
+target/
 
 # Logs
 *.log
 
-# OS
-.DS_Store
-Thumbs.db
+# Environment variables
+.env
+.env.local
+*.env.*
 
-# Python (if present)
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Python specific
 __pycache__/
 *.pyc
 *.pyo
@@ -36,9 +33,38 @@ venv/
 .venv/
 pip-log.txt
 pip-delete-this-directory.txt
-.pytest_cache/
-.mypy_cache/
+.tox/
 .coverage
-htmlcov/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+
+# Node.js specific
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+dist/
+build/
 coverage/
+.nyc_output
+coverage/
+.nyc_output/
+.jscpd/
+
+# TypeScript specific
+*.tsbuildinfo
+dist/
+build/
+
+# General
+.DS_Store
+Thumbs.db
 ```
