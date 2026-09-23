@@ -117,13 +117,13 @@ export declare class CashRegistersService {
         createdAt: Date;
         type: import(".prisma/client").$Enums.CashRegisterMovementType;
         organizationId: string;
-        isPositive: boolean;
         notes: string | null;
-        performedBy: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        saleId: string | null;
         cashRegisterId: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        isPositive: boolean;
         paymentMethod: string | null;
+        saleId: string | null;
+        performedBy: string;
     }>;
     getMovements(id: string, organizationId: string): Promise<{
         id: string;
@@ -131,13 +131,13 @@ export declare class CashRegistersService {
         createdAt: Date;
         type: import(".prisma/client").$Enums.CashRegisterMovementType;
         organizationId: string;
-        isPositive: boolean;
         notes: string | null;
-        performedBy: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        saleId: string | null;
         cashRegisterId: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        isPositive: boolean;
         paymentMethod: string | null;
+        saleId: string | null;
+        performedBy: string;
     }[]>;
     remove(id: string, organizationId: string): Promise<{
         id: string;

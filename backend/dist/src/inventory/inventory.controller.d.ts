@@ -10,8 +10,8 @@ export declare class InventoryController {
         productId: string;
         quantity: import("@prisma/client/runtime/library").Decimal;
         reserved: import("@prisma/client/runtime/library").Decimal;
-        averageCost: import("@prisma/client/runtime/library").Decimal;
         lastCountedAt: Date | null;
+        averageCost: import("@prisma/client/runtime/library").Decimal;
     }[]>;
     getInventoryById(req: any, id: string): Promise<{
         id: string;
@@ -19,8 +19,8 @@ export declare class InventoryController {
         productId: string;
         quantity: import("@prisma/client/runtime/library").Decimal;
         reserved: import("@prisma/client/runtime/library").Decimal;
-        averageCost: import("@prisma/client/runtime/library").Decimal;
         lastCountedAt: Date | null;
+        averageCost: import("@prisma/client/runtime/library").Decimal;
     }>;
     updateInventory(req: any, id: string, dto: any): Promise<any>;
     recalculateInventory(req: any, productId: string): Promise<{
@@ -29,8 +29,8 @@ export declare class InventoryController {
         productId: string;
         quantity: import("@prisma/client/runtime/library").Decimal;
         reserved: import("@prisma/client/runtime/library").Decimal;
-        averageCost: import("@prisma/client/runtime/library").Decimal;
         lastCountedAt: Date | null;
+        averageCost: import("@prisma/client/runtime/library").Decimal;
     }>;
     getLowStock(req: any, threshold?: string): Promise<{
         id: string;
@@ -38,8 +38,8 @@ export declare class InventoryController {
         productId: string;
         quantity: import("@prisma/client/runtime/library").Decimal;
         reserved: import("@prisma/client/runtime/library").Decimal;
-        averageCost: import("@prisma/client/runtime/library").Decimal;
         lastCountedAt: Date | null;
+        averageCost: import("@prisma/client/runtime/library").Decimal;
     }[]>;
     getExpiringBatches(req: any, days?: string): Promise<{
         id: string;
@@ -48,13 +48,13 @@ export declare class InventoryController {
         status: import(".prisma/client").$Enums.BatchStatus;
         organizationId: string;
         productId: string;
+        unitCost: import("@prisma/client/runtime/library").Decimal;
         batchNumber: string;
+        expirationDate: Date | null;
         serialNumber: string | null;
         manufacturingDate: Date | null;
-        expirationDate: Date | null;
         initialQuantity: import("@prisma/client/runtime/library").Decimal;
         currentQuantity: import("@prisma/client/runtime/library").Decimal;
-        unitCost: import("@prisma/client/runtime/library").Decimal;
         location: string | null;
     }[]>;
 }

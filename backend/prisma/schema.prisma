@@ -85,6 +85,7 @@ model Organization {
   businessEntities  BusinessEntity[]
   purchaseOrders    PurchaseOrder[]
   sales             Sale[]
+  invoices          Invoice[]
   payments          Payment[]
   cashRegisters     CashRegister[]
   auditLogs         AuditLog[]
@@ -714,6 +715,7 @@ model Sale {
   items          SaleItem[]
   stockMovements StockMovement[]
   payments       Payment[]
+  invoice        Invoice?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -953,4 +955,88 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ==========================================
+// FE1: Modelo de datos - Comprobantes Electrónicos (Invoice/ElectronicVoucher)
+// ==========================================
+
+enum InvoiceType {
+  FACTURA
+  BOLETA
+  NOTA_CREDITO
+  NOTA_DEBITO
+}
+
+enum InvoiceStatus {
+  PENDIENTE
+  ENVIADO
+  ACEPTADO
+  RECHAZADO
+  ANULADO
+}
+
+model Invoice {
+  id             String @id @default(uuid())
+  organizationId String
+  
+  // Tipo de comprobante electrónico
+  type           InvoiceType
+  
+  // Serie y correlativo (ej: F001-00000123)
+  series         String
+  correlation    String
+  
+  // Estado del comprobante electrónico
+  status         InvoiceStatus @default(PENDIENTE)
+  
+  // Fecha de emisión
+  issueDate      DateTime @default(now())
+  
+  // Totales (información duplicada desde Sale para referencia)
+  subtotal       Decimal @db.Decimal(12, 2)
+  taxRate        Decimal @db.Decimal(5, 4)
+  taxAmount      Decimal @db.Decimal(12, 2)
+  discount       Decimal @db.Decimal(12, 2)
+  total          Decimal @db.Decimal(12, 2)
+  
+  currency       String @default("PEN")
+  
+  // Datos del cliente (información fiscal al momento de la emisión)
+  customerName   String?
+  customerTaxId  String? // RUC/DNI
+  customerAddress String?
+  
+  // Respuesta de SUNAT / OSE
+  sunatResponseCode String?
+  sunatResponseMessage String?
+  cdrHash        String? // Hash del Constancia de Recepción
+  cdrXml         String? // XML de la constancia (o ruta de almacenamiento)
+  ubige          String? // Código de ubige
+  
+  // UUID del comprobante (para identificación única)
+  uuid           String?
+  
+  // Notas
+  notes          String?
+  internalNotes  String?
+  
+  // Usuario que generó el comprobante
+  issuedBy       String
+  
+  // Relación con Sale
+  saleId         String? @unique
+  sale           Sale? @relation(fields: [saleId], references: [id])
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([type])
+  @@index([status])
+  @@index([saleId])
+  @@index([series, correlation])
+  @@map("invoices")
 }
