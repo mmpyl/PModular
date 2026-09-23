@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const users_repository_1 = require("./repositories/users.repository");
 let UsersService = class UsersService {
@@ -34,6 +35,26 @@ let UsersService = class UsersService {
     }
     findById(id) {
         return this.usersRepository.findById(id);
+    }
+    async assignPlatformRole(userId, role, currentAdminId) {
+        const user = await this.usersRepository.findById(userId);
+        if (!user) {
+            throw new common_1.NotFoundException(`Usuario con ID ${userId} no encontrado`);
+        }
+        if (user.platformRole === client_1.PlatformRole.PLATFORM_ADMIN &&
+            (role === null || role === client_1.PlatformRole.SUPPORT)) {
+            const adminCount = await this.usersRepository.countPlatformAdmins();
+            if (adminCount <= 1 && user.id === currentAdminId) {
+                throw new common_1.ForbiddenException('No es posible remover el rol PLATFORM_ADMIN del último administrador de plataforma');
+            }
+            if (adminCount <= 1 && user.id !== currentAdminId) {
+                throw new common_1.ForbiddenException('No es posible remover el rol PLATFORM_ADMIN porque quedaría la plataforma sin administradores');
+            }
+        }
+        return this.usersRepository.updatePlatformRole(userId, role);
+    }
+    async getPlatformAdminCount() {
+        return this.usersRepository.countPlatformAdmins();
     }
 };
 exports.UsersService = UsersService;

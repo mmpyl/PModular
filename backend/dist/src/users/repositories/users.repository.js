@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersRepository = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma.service");
 let UsersRepository = class UsersRepository {
     constructor(prisma) {
@@ -24,6 +25,17 @@ let UsersRepository = class UsersRepository {
     }
     findById(id) {
         return this.prisma.user.findUnique({ where: { id } });
+    }
+    updatePlatformRole(userId, role) {
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: { platformRole: role },
+        });
+    }
+    async countPlatformAdmins() {
+        return this.prisma.user.count({
+            where: { platformRole: client_1.PlatformRole.PLATFORM_ADMIN },
+        });
     }
 };
 exports.UsersRepository = UsersRepository;
