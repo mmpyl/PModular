@@ -1031,6 +1031,9 @@ model Invoice {
   saleId         String? @unique
   sale           Sale? @relation(fields: [saleId], references: [id])
   
+  // Relación con VoucherArchive (FE7)
+  archive        VoucherArchive?
+  
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
@@ -1042,6 +1045,47 @@ model Invoice {
   @@index([saleId])
   @@index([series, correlation])
   @@map("invoices")
+}
+
+// ==========================================
+// FE7: Archivo y Auditoría de Comprobantes (Retención 5 años)
+// ==========================================
+
+model VoucherArchive {
+  id             String @id @default(uuid())
+  invoiceId      String @unique
+  organizationId String
+  
+  // Contenido del XML firmado enviado a SUNAT
+  xmlContent     String @db.Text
+  
+  // Contenido del CDR (Constancia de Recepción)
+  cdrContent     String @db.Text
+  
+  // Hash SHA-256 del XML para verificación de integridad
+  xmlHash        String
+  
+  // Ruta de almacenamiento externo (S3, GCS) si aplica
+  storagePath    String?
+  
+  // Fecha hasta la cual se debe retener el documento (5 años desde emisión)
+  retentionUntil DateTime
+  
+  // Usuario que archivó el comprobante
+  archivedBy     String
+  
+  // Notas internas
+  notes          String?
+  
+  invoice        Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([retentionUntil])
+  @@map("voucher_archives")
 }
 
 // ==========================================
