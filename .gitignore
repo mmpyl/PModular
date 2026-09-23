@@ -1,3 +1,4 @@
+```
 # Next.js build outputs
 .next/
 out/
@@ -6,20 +7,9 @@ out/
 node_modules/
 
 # Environment variables
-.env*
-!.env.example
-
-# Logs
-*.log
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Build artifacts
-dist/
-build/
-target/
+.env
+.env.local
+.env.*
 
 # IDE files
 .vscode/
@@ -27,24 +17,29 @@ target/
 *.swp
 *.swo
 
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+
+# Build artifacts
+dist/
+build/
+target/
+
 # Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
 
 # Coverage reports
 coverage/
 htmlcov/
 .coverage
 
-# Temporary files
-*.tmp
-*.temp
-*.bak
-
-# Compressed files
+# Compression files
 *.zip
 *.gz
 *.tar
@@ -67,3 +62,4 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+```
