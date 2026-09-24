@@ -1,17 +1,12 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+/**
+ * Cliente HTTP del navegador (Fase 2 - BFF).
+ *
+ * Todas las llamadas autenticadas pasan por /api/proxy/*, que añade el
+ * `Authorization: Bearer` desde la cookie httpOnly en el servidor.
+ * Ya NO existe un token global en memoria de JS (setAuthToken/getAuthToken fueron eliminados).
+ */
 
-// Almacén global para el token - se actualiza desde AuthContext
-let authToken: string | null = null;
-
-export function setAuthToken(token: string | null) {
-  authToken = token;
-}
-
-export function getAuthToken(): string | null {
-  return authToken;
-}
-
-export type ApiOptions = RequestInit & { token?: string; organizationId?: string };
+export type ApiOptions = RequestInit & { organizationId?: string };
 
 export class ApiError extends Error {
   status: number;
@@ -47,64 +42,70 @@ export type Membership = {
     name: string;
     businessTypeId: string;
     enabledModules?: string[];
-    businessType?: { 
+    businessType?: {
       id: string;
       code: string;
       name: string;
       description?: string | null;
-      defaultModules?: unknown; 
-      productSchema?: Record<string, unknown> 
+      defaultModules?: unknown;
+      productSchema?: Record<string, unknown>
     };
   };
 };
 
-export type AuthResponse = {
-  accessToken: string;
-  user: AuthUser;
-  organizationId?: string;
-  orgRole?: Membership['role'];
+/**
+ * Sesión devuelta por el BFF: NUNCA incluye accessToken ni ningún JWT.
+ * Es lo que devuelve POST /api/auth/login y GET /api/auth/session.
+ */
+export type SessionResponse = {
+  user: AuthUser | null;
+  organizationId?: string | null;
+  orgRole?: Membership['role'] | null;
   platformRole?: string | null;
   memberships?: Membership[];
 };
 
+/** @deprecated Alias histórico: ya no contiene accessToken (tarea 2.5). */
+export type AuthResponse = SessionResponse;
+
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { token, organizationId, headers, ...init } = options;
-  
-  // Usar token del parámetro o fallback al token global (de AuthContext)
-  const effectiveToken = token ?? getAuthToken();
-  
-  const response = await fetch(`${API_URL}${path}`, {
+  const { organizationId, headers, ...init } = options;
+
+  // El navegador llama SIEMPRE al proxy del BFF; el token se añade allí desde la cookie httpOnly
+  const response = await fetch(`/api/proxy${path}`, {
     ...init,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(effectiveToken ? { Authorization: `Bearer ${effectiveToken}` } : {}),
       ...(organizationId ? { 'X-Org-Id': organizationId } : {}),
       ...headers,
     },
   });
 
   if (!response.ok) {
-    // Manejar expiración de sesión (401):
-    // - Solo si la petición llevaba token (un 401 en login/register es credencial inválida, no sesión expirada)
-    // - Excluye explícitamente /auth/login y /auth/register
+    // 401 con sesión previa => sesión expirada/rechazada: avisar para redirigir a login.
+    // (Un 401 en /auth/login o /auth/register es credencial inválida, no sesión expirada.)
     const isAuthAttempt = path.startsWith('/auth/login') || path.startsWith('/auth/register');
-    if (response.status === 401 && typeof window !== 'undefined' && effectiveToken && !isAuthAttempt) {
-      // Los usuarios de plataforma deben ir a /platform/login, no a /login
+    if (response.status === 401 && typeof window !== 'undefined' && !isAuthAttempt) {
+      // Saber si el usuario era de plataforma sin ver el token: se consulta la sesión (sin token en JSON)
       let platformRole: string | null = null;
       try {
-        const payload = JSON.parse(atob(effectiveToken.split('.')[1]));
-        platformRole = payload?.platformRole ?? null;
+        const sessionRes = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' });
+        if (sessionRes.ok) {
+          const session = await sessionRes.json();
+          platformRole = session?.platformRole ?? null;
+        }
       } catch {
-        // token no decodificable: tratar como usuario normal
+        // sin datos: tratar como usuario normal
       }
       window.dispatchEvent(
         new CustomEvent('pymodular:session-expired', { detail: { platformRole } })
       );
     }
-    
+
     let message = `La solicitud falló (${response.status})`;
     let errorData: unknown;
-    
+
     try {
       errorData = await response.json();
       if (errorData && typeof errorData === 'object' && 'message' in errorData) {
@@ -114,7 +115,7 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
     } catch {
       // Algunas respuestas de error no tienen cuerpo JSON o no se pudo parsear
     }
-    
+
     throw new ApiError(message, response.status, errorData);
   }
 

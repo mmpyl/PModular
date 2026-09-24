@@ -1,22 +1,27 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { apiFetch, AuthResponse } from '@/lib/api';
+import { ApiError, type SessionResponse } from '@/lib/api';
 
+/**
+ * Login de plataforma vía BFF (POST /api/auth/platform-login).
+ * El BFF hace el doble paso (login + intercambio a token de plataforma) en servidor;
+ * el cliente solo recibe la sesión segura, sin tokens.
+ */
 export function usePlatformLoginMutation() {
-  return useMutation<AuthResponse, Error, { email: string; password: string }>({
+  return useMutation<SessionResponse, Error, { email: string; password: string }>({
     mutationFn: async (credentials) => {
-      // Primero hacemos login normal para obtener el token
-      const loginResponse = await apiFetch<AuthResponse>('/auth/login', {
+      const res = await fetch('/api/auth/platform-login', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(credentials),
       });
-      
-      // Luego usamos ese token para hacer el platform login
-      return apiFetch<AuthResponse>('/auth/platform/login', {
-        method: 'POST',
-        token: loginResponse.accessToken,
-      });
+      const data = (await res.json().catch(() => ({}))) as SessionResponse & { message?: string };
+      if (!res.ok) {
+        throw new ApiError(data?.message ?? 'Acceso de plataforma denegado', res.status, data);
+      }
+      return data;
     },
   });
 }
