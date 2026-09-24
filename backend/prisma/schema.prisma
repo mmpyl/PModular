@@ -94,6 +94,9 @@ model Organization {
   // FE2: Configuración fiscal por organización
   fiscalSettings OrganizationFiscalSettings?
 
+  // FASE B2: Mermas y vencimientos
+  shrinkageRecords    ShrinkageRecord[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -211,6 +214,9 @@ model Product {
   warehouseInventory WarehouseInventory[]
   transferItems      StockTransferItem[]
 
+  // FASE B2: Mermas y vencimientos
+  shrinkageRecords ShrinkageRecord[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -309,6 +315,9 @@ model StockMovement {
   purchaseOrder   PurchaseOrder? @relation(fields: [referenceId], references: [id], map: "stock_movements_purchase_order_fkey")
   sale            Sale? @relation(fields: [referenceId], references: [id], map: "stock_movements_sale_fkey")
 
+  // FASE B2: Registro de merma vinculado a este movimiento (1:1)
+  shrinkageRecord ShrinkageRecord?
+
   @@index([organizationId])
   @@index([productId])
   @@index([type])
@@ -348,6 +357,9 @@ model Batch {
   movements     StockMovement[]
   saleItems     SaleItem[]
 
+  // FASE B2: Mermas registradas sobre este lote
+  shrinkageRecords ShrinkageRecord[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -364,6 +376,60 @@ enum BatchStatus {
   RETENIDO // En cuarentena, esperando aprobación de calidad
   VENCIDO
   AGOTADO
+}
+
+// ==========================================
+// FASE B2: Control de mermas y vencimientos
+// (productos perecibles: lácteos, pan, embutidos)
+// ==========================================
+
+model ShrinkageRecord {
+  id             String @id @default(uuid())
+  organizationId String
+
+  recordNumber String // Ej: MER-2025-0001 (correlativo por organización)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  // Lote afectado (recomendado para productos con trazabilidad por lote)
+  batchId   String?
+  batch     Batch?  @relation(fields: [batchId], references: [id])
+
+  // Motivo de la pérdida (subclasifica el MovementReason MERMA/ROBO/OBSOLETO)
+  reason ShrinkageReason
+
+  quantity    Decimal         @db.Decimal(15, 4) // Cantidad perdida (> 0)
+  unitCost    Decimal         @db.Decimal(12, 4) // Costo unitario al momento de la merma
+  totalLoss   Decimal         @db.Decimal(12, 2) // Valor económico perdido = quantity * unitCost
+  lossPercent Decimal?        @db.Decimal(5, 2)  // % respecto a la cantidad inicial del lote (si aplica)
+  occurredAt  DateTime        @default(now())    // Fecha en que ocurrió la pérdida
+  notes       String?
+
+  // Movimiento de stock SALIDA generado automáticamente (trazabilidad contable)
+  stockMovementId String?
+
+  recordedBy String // userId que registró la merma
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stockMovement StockMovement? @relation(fields: [stockMovementId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([batchId])
+  @@index([reason])
+  @@index([occurredAt])
+  @@map("shrinkage_records")
+}
+
+enum ShrinkageReason {
+  VENCIMIENTO    // Producto vencido retirado de venta
+  DANIO          // Rotura, aplastamiento, fuga de envase
+  DESCOMPOSICION // Pudrición, corte incorrecto, pérdida de cadena de frío
+  ROBO           // Faltante atribuido a robo/hurto
+  OTROS
 }
 
 // ==========================================
