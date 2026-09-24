@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
-import { Invoice, InvoiceStatus, InvoiceType } from '@prisma/client';
+import { Invoice, InvoiceStatus, InvoiceType, SaleStatus } from '@prisma/client';
 import { PseProviderFactory } from '../pse-provider/pse-provider.factory';
 import {
   PseProviderType,
@@ -57,7 +57,9 @@ export class ElectronicVoucherService {
       throw new NotFoundException('Venta no encontrada');
     }
 
-    if (sale.status !== 'CERRADA') {
+    // Un comprobante solo puede emitirse sobre una venta ya cerrada/completada.
+    const CLOSED_STATUSES: string[] = [SaleStatus.COMPLETADA];
+    if (!CLOSED_STATUSES.includes(sale.status as string)) {
       throw new BadRequestException('La venta debe estar cerrada para generar comprobante');
     }
 
