@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white p-6">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-muted/50 to-white p-6">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">PModular · operación empresarial</p>

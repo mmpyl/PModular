@@ -128,7 +128,7 @@ export default function SalesPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm text-gray-500 mb-1 block">Historial</span>
+              <span className="text-sm text-muted-foreground mb-1 block">Historial</span>
               <h2>Ventas registradas</h2>
             </div>
           </div>
@@ -248,14 +248,14 @@ export default function SalesPage() {
 
         <CardContent>
           {isLoading ? (
-            <p className="text-gray-500 text-sm">Cargando ventas...</p>
+            <p className="text-muted-foreground text-sm">Cargando ventas...</p>
           ) : (
             <div className="space-y-2">
               {sales.map((sale) => (
                 <div key={sale.id} className="flex items-center justify-between p-3 border rounded-md">
                   <span className="flex-1">
                     <strong className="block">{sale.saleNumber}</strong>
-                    <small className="text-gray-500">
+                    <small className="text-muted-foreground">
                       {new Date(sale.saleDate).toLocaleDateString('es-MX')} ·{' '}
                       {sale.customer?.name || 'Cliente general'}
                     </small>
@@ -301,7 +301,7 @@ export default function SalesPage() {
           )}
 
           {!sales.length && !isLoading && (
-            <p className="text-gray-500 text-sm">No hay ventas registradas.</p>
+            <p className="text-muted-foreground text-sm">No hay ventas registradas.</p>
           )}
         </CardContent>
       </Card>

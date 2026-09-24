@@ -34,7 +34,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-gray-50 to-white">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-muted/50 to-white">
       <div className="w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
           <p className="text-sm font-medium text-muted-foreground">PModular</p>

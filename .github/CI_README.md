@@ -18,6 +18,9 @@ Este proyecto utiliza GitHub Actions para ejecutar automáticamente build y lint
 - Se ejecuta en push a `main` que modifique archivos en `frontend/`
 - Ejecuta:
   - `npm ci` - Instalación limpia de dependencias
+  - `npm run lint:tokens` - Guardia del sistema de estilos: falla si aparece
+    `-oklch(` crudo, un token de color no definido en `app/globals.css`
+    (`@theme`) o un `@import` de Google Fonts (debe usarse `next/font`)
   - `npm run lint` - Linting con Next.js ESLint
   - `npm run build` - Build de producción con Next.js
 

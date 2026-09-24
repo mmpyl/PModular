@@ -93,7 +93,7 @@ export default function TeamPage() {
         </Alert>
       )}
       {!canManageTeam && (
-        <p className="text-gray-500 text-sm mb-4">
+        <p className="text-muted-foreground text-sm mb-4">
           Consulta los miembros y sus roles. Solo el propietario puede modificar permisos.
         </p>
       )}
@@ -108,7 +108,7 @@ export default function TeamPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm text-gray-500 mb-1 block">Miembros</span>
+              <span className="text-sm text-muted-foreground mb-1 block">Miembros</span>
               <h2>Usuarios de la organización</h2>
             </div>
           </div>            
@@ -166,14 +166,14 @@ export default function TeamPage() {
 
         <CardContent>
           {isLoading ? (
-            <p className="text-gray-500 text-sm">Cargando miembros...</p>
+            <p className="text-muted-foreground text-sm">Cargando miembros...</p>
           ) : (
             <div className="space-y-2">
               {members.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-3 border rounded-md">
                   <span className="flex-1">
                     <strong className="block">{member.user.name || member.user.email}</strong>
-                    <small className="text-gray-500">{member.user.email}</small>
+                    <small className="text-muted-foreground">{member.user.email}</small>
                   </span>
                   {canManageTeam ? (
                     <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function TeamPage() {
           )}
 
           {!members.length && !isLoading && !error && (
-            <p className="text-gray-500 text-sm">No hay miembros para mostrar.</p>
+            <p className="text-muted-foreground text-sm">No hay miembros para mostrar.</p>
           )}
         </CardContent>
       </Card>

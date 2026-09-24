@@ -82,7 +82,7 @@ export default function InventoryPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm text-gray-500 mb-1 block">Existencias</span>
+              <span className="text-sm text-muted-foreground mb-1 block">Existencias</span>
               <h2>Stock por producto</h2>
             </div>
             <Badge variant="secondary">{items.length} registros</Badge>
@@ -91,14 +91,14 @@ export default function InventoryPage() {
 
         <CardContent>
           {isLoading ? (
-            <p className="text-gray-500 text-sm">Cargando inventario...</p>
+            <p className="text-muted-foreground text-sm">Cargando inventario...</p>
           ) : (
             <div className="space-y-2">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-3 border rounded-md">
                   <span className="flex-1">
                     <strong className="block">{item.product.name}</strong>
-                    <small className="text-gray-500">
+                    <small className="text-muted-foreground">
                       {item.product.sku || 'Sin SKU'} · Reservado: {item.reserved}
                     </small>
                   </span>
@@ -120,7 +120,7 @@ export default function InventoryPage() {
           )}
 
           {!items.length && !isLoading && !error && (
-            <p className="text-gray-500 text-sm">No hay existencias registradas todavía.</p>
+            <p className="text-muted-foreground text-sm">No hay existencias registradas todavía.</p>
           )}
         </CardContent>
       </Card>

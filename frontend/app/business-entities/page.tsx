@@ -179,7 +179,7 @@ export default function BusinessEntitiesPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm text-gray-500 mb-1 block">Directorio</span>
+              <span className="text-sm text-muted-foreground mb-1 block">Directorio</span>
               <h2>Entidades comerciales</h2>
             </div>
             <div className="flex items-center gap-2">
@@ -335,7 +335,7 @@ export default function BusinessEntitiesPage() {
 
         <CardContent>
           {isLoading ? (
-            <p className="text-gray-500 text-sm">Cargando entidades...</p>
+            <p className="text-muted-foreground text-sm">Cargando entidades...</p>
           ) : (
             <div className="space-y-2">
               {entities.map((entity) => (
@@ -347,12 +347,12 @@ export default function BusinessEntitiesPage() {
                         {getTypeLabel(entity.entityType)}
                       </Badge>
                     </div>
-                    <small className="text-gray-500">
+                    <small className="text-muted-foreground">
                       {entity.taxId && <span>{entity.taxId} · </span>}
                       {entity.email && <span>{entity.email}</span>}
                       {entity.phone && <span> · {entity.phone}</span>}
                       {entity.creditLimit && (
-                        <span className="ml-2 text-blue-600">
+                        <span className="ml-2 text-primary">
                           Límite: {formatCurrency(entity.creditLimit)}
                         </span>
                       )}
@@ -396,7 +396,7 @@ export default function BusinessEntitiesPage() {
           )}
 
           {!entities.length && !isLoading && (
-            <p className="text-gray-500 text-sm">No hay entidades registradas.</p>
+            <p className="text-muted-foreground text-sm">No hay entidades registradas.</p>
           )}
         </CardContent>
       </Card>
@@ -601,7 +601,7 @@ export default function BusinessEntitiesPage() {
                                 {po.status}
                               </Badge>
                             </div>
-                            <div className="flex justify-between text-gray-500">
+                            <div className="flex justify-between text-muted-foreground">
                               <span>{new Date(po.createdAt).toLocaleDateString('es-MX')}</span>
                               <span>${Number(po.totalAmount).toFixed(2)}</span>
                             </div>
@@ -609,7 +609,7 @@ export default function BusinessEntitiesPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-sm">No hay compras registradas</p>
+                      <p className="text-muted-foreground text-sm">No hay compras registradas</p>
                     )}
                   </div>
                   <div>
@@ -624,7 +624,7 @@ export default function BusinessEntitiesPage() {
                                 {sale.status}
                               </Badge>
                             </div>
-                            <div className="flex justify-between text-gray-500">
+                            <div className="flex justify-between text-muted-foreground">
                               <span>{new Date(sale.createdAt).toLocaleDateString('es-MX')}</span>
                               <span>${Number(sale.totalAmount).toFixed(2)}</span>
                             </div>
@@ -632,7 +632,7 @@ export default function BusinessEntitiesPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-sm">No hay ventas registradas</p>
+                      <p className="text-muted-foreground text-sm">No hay ventas registradas</p>
                     )}
                   </div>
                 </div>
@@ -640,9 +640,9 @@ export default function BusinessEntitiesPage() {
 
               <TabsContent value="financial" className="space-y-4 mt-4">
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-md bg-blue-50">
+                  <div className="p-4 border rounded-md bg-primary-50 dark:bg-transparent">
                     <Label className="text-sm text-muted-foreground">Total Compras</Label>
-                    <p className="text-2xl font-bold text-blue-700">
+                    <p className="text-2xl font-bold text-primary">
                       {formatCurrency((selectedEntity as BusinessEntityWithHistory).totalPurchases || 0)}
                     </p>
                   </div>

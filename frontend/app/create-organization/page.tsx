@@ -64,13 +64,13 @@ export default function CreateOrganizationPage() {
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Cargando...</p>
+        <p className="text-muted-foreground">Cargando...</p>
       </div>
     );
   }
 
   return (
-        <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-gray-50 to-white">
+        <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-muted/50 to-white">
       {!isAuthenticated ? (
         <p className="text-muted-foreground">Cargando...</p>
       ) : (
