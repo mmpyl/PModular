@@ -97,6 +97,12 @@ model Organization {
   // FASE B2: Mermas y vencimientos
   shrinkageRecords    ShrinkageRecord[]
 
+  // FE7: Archivo de comprobantes electrónicos
+  voucherArchives     VoucherArchive[]
+
+  // FASE B3: Promociones
+  promotions          Promotion[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -185,9 +191,13 @@ model Product {
 
   name        String
   sku         String?
+  barcode     String? // FASE B4: código de barras (EAN/UPC interno) para escaneo en POS
   description String?
   price       Decimal  @db.Decimal(10, 2)
   cost        Decimal? @db.Decimal(10, 2) // Costo promedio o último costo
+
+  // FASE B4: marcar productos de alta rotura para mostrarlos en la grilla de venta rápida
+  isFastSale Boolean @default(false)
 
   categoryId String?
   unitId     String?
@@ -223,10 +233,14 @@ model Product {
   // FASE B3: Promociones que aplican a este producto
   promotions Promotion[]
 
+  // FASE B3: ítems de promociones tipo COMBO que incluyen este producto
+  promotionItems PromotionItem[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([organizationId, sku]) // SKU único por organización
+  @@unique([organizationId, barcode]) // FASE B4: código de barras único por organización (para escaneo POS)
   @@index([organizationId])
   @@index([categoryId])
   @@map("products")
@@ -413,7 +427,7 @@ model ShrinkageRecord {
   notes       String?
 
   // Movimiento de stock SALIDA generado automáticamente (trazabilidad contable)
-  stockMovementId String?
+  stockMovementId String?  @unique
 
   recordedBy String // userId que registró la merma
 
@@ -793,6 +807,9 @@ model Sale {
 
   // FASE B3: detalle de promociones aplicadas por el motor (JSON)
   promotionsApplied Json?
+
+  // FASE B4: origen del ticket (venta rápida POS vs formulario completo)
+  isQuickSale Boolean @default(false)
   
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items          SaleItem[]

@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma.service';
 import { AuditLogService } from '../audit-log/audit-log.service';
 
@@ -31,21 +32,31 @@ export class VoucherArchiveService {
     const retentionUntil = new Date(invoice.issueDate);
     retentionUntil.setFullYear(retentionUntil.getFullYear() + this.RETENTION_YEARS);
 
-    // Calcular hash del XML para integridad
+    // Calcular hash SHA-256 del XML para integridad
     const xmlHash = this.calculateHash(xmlContent);
 
-    // Crear registro de archivo
-    const archive = await this.prisma.voucherArchive.create({
-      data: {
-        invoiceId,
-        organizationId: invoice.organizationId,
-        xmlContent,
-        cdrContent,
-        xmlHash,
-        retentionUntil,
-        archivedBy: invoice.issuedBy,
-      },
+    // Idempotencia: si ya existe archivo para el comprobante, actualizarlo
+    const existing = await this.prisma.voucherArchive.findUnique({
+      where: { invoiceId },
     });
+
+    const archiveData = {
+      organizationId: invoice.organizationId,
+      xmlContent,
+      cdrContent,
+      xmlHash,
+      retentionUntil,
+      archivedBy: invoice.issuedBy,
+    };
+
+    const archive = existing
+      ? await this.prisma.voucherArchive.update({
+          where: { invoiceId },
+          data: archiveData,
+        })
+      : await this.prisma.voucherArchive.create({
+          data: { invoiceId, ...archiveData },
+        });
 
     this.logger.log(`Comprobante archivado hasta: ${retentionUntil.toISOString()}`);
 
@@ -53,10 +64,10 @@ export class VoucherArchiveService {
     await this.auditLogService.create({
       organizationId: invoice.organizationId,
       userId: invoice.issuedBy,
-      action: 'VOUCHER_ARCHIVED',
-      resourceType: 'VoucherArchive',
-      resourceId: archive.id,
-      details: { invoiceId, xmlHash, retentionUntil: retentionUntil.toISOString() },
+      action: 'OTHER',
+      entityType: 'VoucherArchive',
+      entityId: archive.id,
+      metadata: { event: 'VOUCHER_ARCHIVED', invoiceId, xmlHash, retentionUntil: retentionUntil.toISOString() },
     });
 
     return archive;
@@ -85,10 +96,10 @@ export class VoucherArchiveService {
     await this.auditLogService.create({
       organizationId: archive.organizationId,
       userId,
-      action: 'XML_RETRIEVED',
-      resourceType: 'VoucherArchive',
-      resourceId: archive.id,
-      details: { invoiceId },
+      action: 'OTHER',
+      entityType: 'VoucherArchive',
+      entityId: archive.id,
+      metadata: { event: 'XML_RETRIEVED', invoiceId },
     });
 
     return {
@@ -115,10 +126,10 @@ export class VoucherArchiveService {
     await this.auditLogService.create({
       organizationId: archive.organizationId,
       userId,
-      action: 'CDR_DOWNLOADED',
-      resourceType: 'VoucherArchive',
-      resourceId: archive.id,
-      details: { invoiceId },
+      action: 'OTHER',
+      entityType: 'VoucherArchive',
+      entityId: archive.id,
+      metadata: { event: 'CDR_DOWNLOADED', invoiceId },
     });
 
     return archive.cdrContent;
@@ -178,8 +189,6 @@ export class VoucherArchiveService {
    * Calcula hash SHA-256 del contenido
    */
   private calculateHash(content: string): string {
-    // En producción usar crypto.createHash('sha256')
-    // Aquí simulación simple
-    return `sha256:${Buffer.from(content).toString('base64').substring(0, 64)}`;
+    return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
   }
 }

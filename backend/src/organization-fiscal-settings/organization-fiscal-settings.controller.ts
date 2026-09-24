@@ -12,15 +12,20 @@ import { OrganizationFiscalSettingsService } from './organization-fiscal-setting
 import { CreateOrganizationFiscalSettingsDto, UpdateOrganizationFiscalSettingsDto } from './dto/organization-fiscal-settings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 
 @Controller('organizations/:organizationId/fiscal-settings')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class OrganizationFiscalSettingsController {
   constructor(
     private readonly fiscalSettingsService: OrganizationFiscalSettingsService,
   ) {}
 
+  // La configuración fiscal contiene datos sensibles ante SUNAT (RUC, credenciales
+  // del PSE, certificado de firma). Solo OWNER/ADMIN pueden gestionarla.
   @Post()
+  @OrgRoles('OWNER', 'ADMIN')
   async create(
     @Param('organizationId') organizationId: string,
     @Body() dto: CreateOrganizationFiscalSettingsDto,
@@ -29,6 +34,7 @@ export class OrganizationFiscalSettingsController {
   }
 
   @Get()
+  @OrgRoles('OWNER', 'ADMIN')
   async findByOrganization(@Param('organizationId') organizationId: string) {
     const settings = await this.fiscalSettingsService.findByOrganization(organizationId);
     
@@ -40,6 +46,7 @@ export class OrganizationFiscalSettingsController {
   }
 
   @Put()
+  @OrgRoles('OWNER', 'ADMIN')
   async update(
     @Param('organizationId') organizationId: string,
     @Body() dto: UpdateOrganizationFiscalSettingsDto,
@@ -48,6 +55,7 @@ export class OrganizationFiscalSettingsController {
   }
 
   @Post('/upsert')
+  @OrgRoles('OWNER', 'ADMIN')
   async upsert(
     @Param('organizationId') organizationId: string,
     @Body() dto: CreateOrganizationFiscalSettingsDto & Partial<UpdateOrganizationFiscalSettingsDto>,
@@ -56,11 +64,16 @@ export class OrganizationFiscalSettingsController {
   }
 
   @Delete()
+  @OrgRoles('OWNER')
   async delete(@Param('organizationId') organizationId: string) {
     return this.fiscalSettingsService.delete(organizationId);
   }
 
+  // El emisor de comprobantes electrónicos (rol VENDEDOR puede operar caja)
+  // necesita obtener/avanzar el correlativo, pero sin exponer secretos:
+  // este endpoint solo devuelve numeración.
   @Get('/next-correlativo/:tipoComprobante/:serie')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
   async getNextCorrelativo(
     @Param('organizationId') organizationId: string,
     @Param('tipoComprobante') tipoComprobante: string,
