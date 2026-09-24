@@ -614,3 +614,149 @@ export function useBusinessEntityWithHistory(organizationId: string | undefined,
     enabled: !!organizationId && !!id,
   });
 }
+
+// ==================== CUENTA CORRIENTE (Fase B1) ====================
+
+export type AccountEntry = {
+  id: string;
+  entryNumber: string;
+  customerId: string;
+  type: 'CREDITO' | 'DEBITO';
+  status: 'VIGENTE' | 'ANULADO';
+  amount: number;
+  signedAmount?: number;
+  runningBalance?: number;
+  isOverdue?: boolean;
+  referenceType?: string | null;
+  referenceId?: string | null;
+  dueDate?: string | null;
+  description?: string | null;
+  notes?: string | null;
+  createdBy: string;
+  createdAt: string;
+};
+
+export type AccountStatement = {
+  customer: {
+    id: string;
+    name: string;
+    taxId: string | null;
+    phone: string | null;
+    mobile: string | null;
+    creditLimit: number | null;
+    creditDays?: number | null;
+    currentBalance: number;
+  };
+  openingBalance: number;
+  closingBalance: number;
+  totalCharges: number;
+  totalPayments: number;
+  entries: AccountEntry[];
+};
+
+export type OverdueAccountItem = {
+  customerId: string;
+  customerName: string;
+  taxId: string | null;
+  mobile: string | null;
+  balance: number;
+  oldestDueDate: string | null;
+  daysOverdue: number;
+  pendingSalesCount: number;
+};
+
+export type CreditSummary = {
+  customersInCredit: number;
+  totalReceivable: number;
+  overLimitCount: number;
+  overdueCount: number;
+  totalOverdueAmount: number;
+};
+
+export function useAccountStatement(
+  organizationId: string | undefined,
+  customerId: string | undefined,
+  filters?: { from?: string; to?: string; includeVoided?: boolean },
+) {
+  return useQuery<AccountStatement>({
+    queryKey: ['account-statement', organizationId, customerId, filters],
+    queryFn: async () => {
+      if (!organizationId || !customerId) throw new Error('Organization ID and Customer ID required');
+      const params = new URLSearchParams();
+      if (filters?.from) params.set('from', filters.from);
+      if (filters?.to) params.set('to', filters.to);
+      if (filters?.includeVoided) params.set('includeVoided', 'true');
+      const qs = params.toString();
+      return apiFetch<AccountStatement>(`/account/statement/${customerId}${qs ? `?${qs}` : ''}`, { organizationId });
+    },
+    enabled: !!organizationId && !!customerId,
+  });
+}
+
+export function useOverdueAccounts(organizationId: string | undefined) {
+  return useQuery<OverdueAccountItem[]>({
+    queryKey: ['account-overdue', organizationId],
+    queryFn: async () => {
+      if (!organizationId) throw new Error('Organization ID required');
+      return apiFetch<OverdueAccountItem[]>('/account/overdue', { organizationId });
+    },
+    enabled: !!organizationId,
+  });
+}
+
+export function useCreditSummary(organizationId: string | undefined) {
+  return useQuery<CreditSummary>({
+    queryKey: ['account-credit-summary', organizationId],
+    queryFn: async () => {
+      if (!organizationId) throw new Error('Organization ID required');
+      return apiFetch<CreditSummary>('/account/credit-summary', { organizationId });
+    },
+    enabled: !!organizationId,
+  });
+}
+
+export function useCreateAccountEntry(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      customerId: string;
+      type: 'CREDITO' | 'DEBITO';
+      amount: number;
+      dueDate?: string;
+      description?: string;
+      notes?: string;
+    }) => {
+      if (!organizationId) throw new Error('Organization ID required');
+      return apiFetch<AccountEntry>('/account/entries', {
+        method: 'POST',
+        organizationId,
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['account-statement', organizationId, variables.customerId] });
+      queryClient.invalidateQueries({ queryKey: ['account-overdue'] });
+      queryClient.invalidateQueries({ queryKey: ['account-credit-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['business-entities'] });
+    },
+  });
+}
+
+export function useVoidAccountEntry(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ entryId, customerId }: { entryId: string; customerId: string }) => {
+      if (!organizationId) throw new Error('Organization ID required');
+      return apiFetch<AccountEntry>(`/account/entries/${entryId}/void`, {
+        method: 'POST',
+        organizationId,
+      });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['account-statement', organizationId, variables.customerId] });
+      queryClient.invalidateQueries({ queryKey: ['account-overdue'] });
+      queryClient.invalidateQueries({ queryKey: ['account-credit-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['business-entities'] });
+    },
+  });
+}

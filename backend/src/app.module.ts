@@ -23,6 +23,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrganizationFiscalSettingsModule } from './organization-fiscal-settings/organization-fiscal-settings.module';
+import { AccountModule } from './account/account.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { OrganizationFiscalSettingsModule } from './organization-fiscal-settings
     WarehousesModule,
     NotificationsModule,
     OrganizationFiscalSettingsModule,
+    AccountModule,
   ],
 })
 export class AppModule {}
