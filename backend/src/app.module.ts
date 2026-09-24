@@ -24,6 +24,7 @@ import { WarehousesModule } from './warehouses/warehouses.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrganizationFiscalSettingsModule } from './organization-fiscal-settings/organization-fiscal-settings.module';
 import { AccountModule } from './account/account.module';
+import { ShrinkageModule } from './shrinkage/shrinkage.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AccountModule } from './account/account.module';
     NotificationsModule,
     OrganizationFiscalSettingsModule,
     AccountModule,
+    ShrinkageModule,
   ],
 })
 export class AppModule {}
