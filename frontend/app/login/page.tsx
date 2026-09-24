@@ -1,11 +1,11 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ApiError } from '@/lib/api';
-import { useLoginMutation } from '@/features/hooks/use-login-mutation';
 import { loginSchema, type LoginFormData } from '@/features/schemas/login-schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,9 +19,8 @@ import {
 } from '@/components/ui/card';
 
 export default function LoginPage() {
-  const { persistSession } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
-  const loginMutation = useLoginMutation();
 
   const {
     register,
@@ -34,17 +33,18 @@ export default function LoginPage() {
       password: '',
     },
   });
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const session = await loginMutation.mutateAsync(data);
-      persistSession(session);
+      // Un solo flujo: login() del contexto ya espera a persistSession antes de resolver
+      await login(data);
       router.push('/dashboard');
     } catch (caughtError) {
-      // El error ya está manejado por react-query, pero podemos mostrarlo si es necesario
       if (caughtError instanceof ApiError) {
-        // Podríamos agregar un toast o mensaje de error aquí
-        console.error(caughtError.message);
+        setSubmitError(caughtError.message || 'No se pudo iniciar sesión. Verifica tus credenciales.');
+      } else {
+        setSubmitError('No se pudo iniciar sesión. Verifica tus credenciales.');
       }
     }
   };
@@ -93,15 +93,15 @@ export default function LoginPage() {
                 </p>
               )}
             </div>
-            {loginMutation.isError && (
+            {submitError && (
               <p className="text-sm text-destructive" role="alert">
-                No se pudo iniciar sesión. Verifica tus credenciales.
+                {submitError}
               </p>
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isSubmitting || loginMutation.isPending}>
-              {isSubmitting || loginMutation.isPending ? 'Validando...' : 'Entrar'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Validando...' : 'Entrar'}
             </Button>
           </CardFooter>
         </form>

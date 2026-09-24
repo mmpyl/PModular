@@ -19,9 +19,8 @@ export default function SelectOrganizationPage() {
       // No tiene membresías, redirigir a crear organización (onboarding)
       router.replace('/onboarding');
     } else if (memberships.length === 1 && memberships[0].organizationId) {
-      // Solo tiene una membresía, seleccionar automáticamente
-      selectOrganization(memberships[0].organizationId);
-      router.replace('/dashboard');
+      // Solo tiene una membresía, seleccionar automáticamente y navegar cuando la sesión persista
+      void selectOrganization(memberships[0].organizationId).then(() => router.replace('/dashboard'));
     }
   }, [isAuthenticated, memberships, selectOrganization, router]);
 
