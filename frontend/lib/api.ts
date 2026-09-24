@@ -84,9 +84,22 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
   });
 
   if (!response.ok) {
-    // Manejar expiración de sesión (401)
-    if (response.status === 401 && typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('pymodular:session-expired'));
+    // Manejar expiración de sesión (401):
+    // - Solo si la petición llevaba token (un 401 en login/register es credencial inválida, no sesión expirada)
+    // - Excluye explícitamente /auth/login y /auth/register
+    const isAuthAttempt = path.startsWith('/auth/login') || path.startsWith('/auth/register');
+    if (response.status === 401 && typeof window !== 'undefined' && effectiveToken && !isAuthAttempt) {
+      // Los usuarios de plataforma deben ir a /platform/login, no a /login
+      let platformRole: string | null = null;
+      try {
+        const payload = JSON.parse(atob(effectiveToken.split('.')[1]));
+        platformRole = payload?.platformRole ?? null;
+      } catch {
+        // token no decodificable: tratar como usuario normal
+      }
+      window.dispatchEvent(
+        new CustomEvent('pymodular:session-expired', { detail: { platformRole } })
+      );
     }
     
     let message = `La solicitud falló (${response.status})`;
