@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { CreateOrganizationFiscalSettingsDto, UpdateOrganizationFiscalSettingsDto } from './dto/organization-fiscal-settings.dto';
 import { encryptSecret, decryptSecret, isEncrypted, maskSecret } from '../common/crypto';
@@ -151,6 +152,30 @@ export class OrganizationFiscalSettingsService {
       }
     }
 
+    // El contador de correlativos fiscales se gestiona EXCLUSIVAMENTE de forma
+    // atómica (UPDATE ... jsonb_set ... RETURNING en getNextCorrelativo y en
+    // ElectronicVoucherService). Si un cliente envía ultimosCorrelativos por esta
+    // vía, solo se aceptan claves nuevas o mayores que las actuales: así un
+    // formulario obsoleto nunca puede retroceder el contador y provocar números
+    // de comprobante duplicados (rechazo SUNAT / sanciones).
+    if (cleanDto.ultimosCorrelativos && typeof cleanDto.ultimosCorrelativos === 'object') {
+      const actual = (existing.ultimosCorrelativos as Record<string, number>) || {};
+      const entrante = cleanDto.ultimosCorrelativos as Record<string, unknown>;
+      const merged: Record<string, number> = { ...actual };
+      for (const [serie, valor] of Object.entries(entrante)) {
+        const n = Number(valor);
+        if (!Number.isInteger(n) || n < 0) {
+          throw new BadRequestException(`Correlativo inválido para la serie ${serie}`);
+        }
+        if (!(n > (Number(actual[serie]) || 0))) {
+          delete merged[serie]; // se ignora: no se permite retroceder el contador
+        } else {
+          merged[serie] = n;
+        }
+      }
+      cleanDto.ultimosCorrelativos = merged;
+    }
+
     // Combinar datos existentes con nuevos
     const updatedData = { ...existing, ...cleanDto };
 
@@ -181,35 +206,44 @@ export class OrganizationFiscalSettingsService {
   }
 
   /**
-   * Obtiene el siguiente correlativo para un tipo de comprobante y serie
+   * Obtiene el siguiente correlativo para un tipo de comprobante y serie.
+   *
+   * IMPORTANTE (race condition / SUNAT): la reserva se realiza con un único
+   * statement `UPDATE ... jsonb_set(...) ... RETURNING` dentro de una transacción.
+   * Postgres serializa las actualizaciones concurrentes sobre la misma fila, por
+   * lo que dos ventas simultáneas nunca pueden obtener el mismo número de
+   * comprobante (a diferencia del antiguo read-find + update-write con JSON en
+   * memoria, que sí permitía duplicados).
    */
   async getNextCorrelativo(organizationId: string, tipoComprobante: string, serie: string): Promise<string> {
-    const settings = await this.prisma.organizationFiscalSettings.findUnique({
-      where: { organizationId },
+    const nextValue = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const rows = await tx.$queryRaw<Array<{ ultimosCorrelativos: Prisma.JsonValue }>>`
+        UPDATE "organization_fiscal_settings"
+        SET "ultimosCorrelativos" = jsonb_set(
+          COALESCE("ultimosCorrelativos", '{}'::jsonb),
+          ARRAY[${serie}]::text[],
+          to_jsonb(COALESCE(("ultimosCorrelativos" ->> ${serie})::int, 0) + 1),
+          true
+        ),
+        "updatedAt" = CURRENT_TIMESTAMP
+        WHERE "organizationId" = ${organizationId}::uuid
+        RETURNING "ultimosCorrelativos" AS "ultimosCorrelativos"
+      `;
+
+      if (!rows.length) {
+        throw new NotFoundException('Configuración fiscal no encontrada');
+      }
+
+      const current = rows[0].ultimosCorrelativos as Record<string, number>;
+      return Number(current?.[serie]);
     });
 
-    if (!settings) {
-      throw new NotFoundException('Configuración fiscal no encontrada');
+    if (!nextValue || Number.isNaN(nextValue)) {
+      throw new BadRequestException('No se pudo obtener el siguiente correlativo');
     }
 
-    const ultimosCorrelativos = settings.ultimosCorrelativos as Record<string, number> || {};
-    const key = `${serie}`;
-    
-    const currentCorrelativo = ultimosCorrelativos[key] || 0;
-    const nextCorrelativo = currentCorrelativo + 1;
-
-    // Actualizar el último correlativo usado
-    ultimosCorrelativos[key] = nextCorrelativo;
-
-    await this.prisma.organizationFiscalSettings.update({
-      where: { organizationId },
-      data: {
-        ultimosCorrelativos,
-      },
-    });
-
     // Retornar correlativo con ceros a la izquierda (8 dígitos)
-    return nextCorrelativo.toString().padStart(8, '0');
+    return nextValue.toString().padStart(8, '0');
   }
 
   /**
