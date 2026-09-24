@@ -185,9 +185,13 @@ model Product {
 
   name        String
   sku         String?
+  barcode     String? // FASE B4: código de barras (EAN/UPC interno) para escaneo en POS
   description String?
   price       Decimal  @db.Decimal(10, 2)
   cost        Decimal? @db.Decimal(10, 2) // Costo promedio o último costo
+
+  // FASE B4: marcar productos de alta rotura para mostrarlos en la grilla de venta rápida
+  isFastSale Boolean @default(false)
 
   categoryId String?
   unitId     String?
@@ -227,6 +231,7 @@ model Product {
   updatedAt DateTime @updatedAt
 
   @@unique([organizationId, sku]) // SKU único por organización
+  @@unique([organizationId, barcode]) // FASE B4: código de barras único por organización (para escaneo POS)
   @@index([organizationId])
   @@index([categoryId])
   @@map("products")
@@ -793,6 +798,9 @@ model Sale {
 
   // FASE B3: detalle de promociones aplicadas por el motor (JSON)
   promotionsApplied Json?
+
+  // FASE B4: origen del ticket (venta rápida POS vs formulario completo)
+  isQuickSale Boolean @default(false)
   
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items          SaleItem[]
