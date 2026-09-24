@@ -26,6 +26,8 @@ import { OrganizationFiscalSettingsModule } from './organization-fiscal-settings
 import { AccountModule } from './account/account.module';
 import { ShrinkageModule } from './shrinkage/shrinkage.module';
 import { PromotionsModule } from './promotions/promotions.module';
+import { ElectronicVoucherModule } from './electronic-voucher/electronic-voucher.module';
+import { VoucherArchiveModule } from './voucher-archive/voucher-archive.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { PromotionsModule } from './promotions/promotions.module';
     AccountModule,
     ShrinkageModule,
     PromotionsModule,
+    ElectronicVoucherModule,
+    VoucherArchiveModule,
   ],
 })
 export class AppModule {}

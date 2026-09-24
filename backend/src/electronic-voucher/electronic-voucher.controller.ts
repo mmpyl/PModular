@@ -1,81 +1,148 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { Response } from 'express';
 import { ElectronicVoucherService } from './electronic-voucher.service';
-import { CreateInvoiceDto, UpdateInvoiceStatusDto, CancelInvoiceDto } from './dto/create-invoice.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import {
+  CancelInvoiceDto,
+  ListInvoicesQueryDto,
+} from './dto/create-invoice.dto';
+import { OrgRoles } from '../auth/decorators/org-roles.decorator';
+import { CurrentOrg } from '../auth/decorators/current-org.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
+import { TenantGuard } from '../auth/guards/tenant.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+/**
+ * FASE B5: Comprobantes fiscales electrónicos (boleta / factura).
+ *
+ * Flujo: venta cerrada -> emisión (serie/correlativo SUNAT) -> envío al
+ * PSE/OSE -> CDR -> archivo con retención de 5 años.
+ */
 @Controller('electronic-vouchers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class ElectronicVoucherController {
   constructor(private readonly electronicVoucherService: ElectronicVoucherService) {}
 
-  /**
-   * Genera comprobante electrónico desde una venta cerrada
-   */
+  /** Genera comprobante electrónico (boleta/factura) desde una venta cerrada */
   @Post('from-sale/:saleId')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
   async createFromSale(
     @Param('saleId') saleId: string,
-    @Query('userId') userId: string,
+    @CurrentUser() user: any,
   ) {
-    return this.electronicVoucherService.createFromSale(saleId, userId);
+    const issuedBy = user?.sub || user?.id || 'system';
+    return this.electronicVoucherService.createFromSale(saleId, issuedBy);
   }
 
-  /**
-   * Envía comprobante a SUNAT/PSE
-   */
+  /** Emite y envía a SUNAT en un solo paso (flujo POS/mostrador) */
+  @Post('issue/:saleId')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
+  async issueFromSale(
+    @Param('saleId') saleId: string,
+    @CurrentUser() user: any,
+  ) {
+    const issuedBy = user?.sub || user?.id || 'system';
+    return this.electronicVoucherService.issueFromSale(saleId, issuedBy);
+  }
+
+  /** Envía un comprobante pendiente al PSE/SUNAT */
   @Post(':id/send')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
   async sendToPSE(@Param('id') id: string) {
     return this.electronicVoucherService.sendToPSE(id);
   }
 
-  /**
-   * Anula un comprobante electrónico
-   */
+  /** Reintenta el envío de un comprobante rechazado */
+  @Post(':id/retry')
+  @OrgRoles('OWNER', 'ADMIN', 'CAJA')
+  async retrySend(@Param('id') id: string) {
+    return this.electronicVoucherService.retrySend(id);
+  }
+
+  /** Anula un comprobante aceptado (emite nota de crédito de baja) */
   @Post(':id/cancel')
+  @OrgRoles('OWNER', 'ADMIN')
   async cancelInvoice(
     @Param('id') id: string,
     @Body() dto: CancelInvoiceDto,
-    @Query('userId') userId: string,
+    @CurrentUser() user: any,
   ) {
-    return this.electronicVoucherService.cancelInvoice(id, dto.motivoAnulacion, userId);
+    const issuedBy = user?.sub || user?.id || 'system';
+    return this.electronicVoucherService.cancelInvoice(id, dto.motivoAnulacion, issuedBy);
   }
 
-  /**
-   * Obtiene todos los comprobantes de una organización
-   */
+  /** Estadísticas de comprobantes por estado/tipo */
+  @Get('stats')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
+  async getStats(@CurrentOrg() organizationId: string) {
+    return this.electronicVoucherService.getStats(organizationId);
+  }
+
+  /** Lista comprobantes de la organización (filtros + paginación) */
   @Get()
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
   async findAll(
-    @Query('organizationId') organizationId: string,
-    @Query('status') status?: string,
-    @Query('type') type?: string,
+    @CurrentOrg() organizationId: string,
+    @Query() query: ListInvoicesQueryDto,
   ) {
-    // Implementación pendiente - requiere PrismaService inyectado
-    return { message: 'Endpoint en desarrollo' };
+    return this.electronicVoucherService.findAll(organizationId, {
+      ...query,
+      organizationId,
+    });
   }
 
-  /**
-   * Obtiene un comprobante por ID
-   */
+  /** Detalle de un comprobante */
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    // Implementación pendiente
-    return { message: 'Endpoint en desarrollo' };
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
+  async findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    const userId = user?.sub || user?.id;
+    return this.electronicVoucherService.findOne(id, userId);
   }
 
-  /**
-   * Descarga el XML del comprobante
-   */
+  /** Verifica integridad del XML archivado (hash SHA-256) */
+  @Get(':id/integrity')
+  @OrgRoles('OWNER', 'ADMIN')
+  async verifyIntegrity(@Param('id') id: string) {
+    return this.electronicVoucherService.verifyIntegrity(id);
+  }
+
+  /** Descarga el XML del comprobante */
   @Get(':id/xml')
-  async downloadXML(@Param('id') id: string) {
-    // Implementación pendiente
-    return { message: 'Endpoint en desarrollo' };
+  @Header('Content-Type', 'application/xml')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
+  async downloadXML(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Res() res: Response,
+  ) {
+    const userId = user?.sub || user?.id || 'system';
+    const file = await this.electronicVoucherService.downloadXML(id, userId);
+    res.set('Content-Disposition', `attachment; filename="${file.filename}"`);
+    res.send(file.content);
   }
 
-  /**
-   * Descarga el CDR (Constancia de Recepción)
-   */
+  /** Descarga el CDR (Constancia de Recepción SUNAT) */
   @Get(':id/cdr')
-  async downloadCDR(@Param('id') id: string) {
-    // Implementación pendiente
-    return { message: 'Endpoint en desarrollo' };
+  @Header('Content-Type', 'application/xml')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
+  async downloadCDR(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Res() res: Response,
+  ) {
+    const userId = user?.sub || user?.id || 'system';
+    const file = await this.electronicVoucherService.downloadCDR(id, userId);
+    res.set('Content-Disposition', `attachment; filename="${file.filename}"`);
+    res.send(file.content);
   }
 }

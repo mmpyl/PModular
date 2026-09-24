@@ -99,8 +99,49 @@ export class CancelInvoiceDto {
   motivoAnulacion: string;
 
   @IsString()
-  tipoDocumentoSustento: string;
+  @IsOptional()
+  tipoDocumentoSustento?: string;
 
   @IsString()
-  numeroDocumentoSustento: string;
+  @IsOptional()
+  numeroDocumentoSustento?: string;
+}
+
+/**
+ * FASE B5: filtros de listado de comprobantes electrónicos
+ */
+export class ListInvoicesQueryDto {
+  @IsString()
+  @IsOptional()
+  organizationId?: string;
+
+  @IsString()
+  @IsOptional()
+  status?: string; // PENDIENTE | ENVIADO | ACEPTADO | RECHAZADO | ANULADO
+
+  @IsString()
+  @IsOptional()
+  type?: string; // FACTURA | BOLETA | NOTA_CREDITO | NOTA_DEBITO
+
+  @IsString()
+  @IsOptional()
+  search?: string; // serie, correlativo, cliente o RUC/DNI
+
+  @IsString()
+  @IsOptional()
+  from?: string; // fecha emisión ISO (yyyy-mm-dd)
+
+  @IsString()
+  @IsOptional()
+  to?: string;
+
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  page?: number;
+
+  @IsNumber()
+  @Min(1)
+  @IsOptional()
+  pageSize?: number;
 }
