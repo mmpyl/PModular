@@ -41,13 +41,13 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-slate-900 text-white">
-      <div className="p-4 border-b border-slate-700">
+    <div className="flex flex-col h-full bg-card text-foreground border-r border-border">
+      <div className="p-4 border-b border-border">
         <strong className="text-lg font-semibold block">PModular</strong>
-        <span className="text-sm text-slate-300 block mt-1">
+        <span className="text-sm text-muted-foreground block mt-1">
           {activeMembership?.organization?.name || 'Organización'}
         </span>
-        <span className="inline-block mt-2 px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded">
+        <span className="inline-block mt-2 px-2 py-1 text-xs font-medium bg-primary text-primary-foreground rounded">
           {orgRole === 'OWNER' ? 'Propietario' : orgRole}
         </span>
       </div>
@@ -57,8 +57,8 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
             key={link.key}
             className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               active === link.key
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
             href={link.href}
             onClick={() => setSidebarOpen(false)}
@@ -67,10 +67,10 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
           </Link>
         ))}
       </nav>
-      <div className="p-4 border-t border-slate-700">
+      <div className="p-4 border-t border-border">
         <Button
           variant="ghost"
-          className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
+          className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted"
           onClick={logout}
         >
           <LogOut className="mr-2 h-4 w-4" />
@@ -82,22 +82,22 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50 flex">
+      <div className="min-h-screen bg-background flex">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-slate-900">
+        <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-card">
           <SidebarContent />
         </aside>
 
         {/* Mobile Header */}
-        <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 text-white px-4 py-3 flex items-center justify-between">
+        <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card text-foreground border-b border-border px-4 py-3 flex items-center justify-between">
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-slate-800">
+              <Button variant="ghost" size="icon" className="text-foreground hover:bg-muted">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Abrir menú</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0 bg-slate-900 border-slate-700">
+            <SheetContent side="left" className="w-64 p-0 bg-card border-border">
               <SidebarContent />
             </SheetContent>
           </Sheet>
@@ -119,15 +119,15 @@ export function OwnerHeader({ eyebrow, title }: { eyebrow: string; title: string
   const activeMembership = memberships.find((m) => m.organizationId === organizationId) ?? null;
   
   return (
-    <header className="bg-white border-b border-slate-200 px-4 py-4 md:px-6 md:py-5">
+    <header className="bg-card border-b border-border px-4 py-4 md:px-6 md:py-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <span className="text-sm text-slate-500 block">
+          <span className="text-sm text-muted-foreground block">
             {activeMembership?.organization?.businessType?.name || 'Negocio'} · {eyebrow}
           </span>
-          <h1 className="text-2xl font-bold text-slate-900 mt-1">{title}</h1>
+          <h1 className="text-2xl font-bold text-foreground mt-1">{title}</h1>
         </div>
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 self-start sm:self-auto">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-transparent text-primary self-start sm:self-auto">
           <Building2 className="mr-1 h-3 w-3" />
           {orgRole === 'OWNER' ? 'Propietario' : orgRole}
         </span>

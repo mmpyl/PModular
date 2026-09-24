@@ -72,15 +72,15 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const ENTITY_TYPE_COLORS: Record<string, string> = {
-  Organization: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  User: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  Membership: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  Product: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-  Sale: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  PurchaseOrder: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-  Batch: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
-  CashRegister: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
-  InventoryItem: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+  Organization: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
+  User: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
+  Membership: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
+  Product: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
+  Sale: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
+  PurchaseOrder: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
+  Batch: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
+  CashRegister: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
+  InventoryItem: 'bg-primary-100 text-primary dark:bg-transparent dark:text-primary-300',
 };
 
 export default function PlatformAuditLogPage() {
@@ -298,7 +298,7 @@ export default function PlatformAuditLogPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={ENTITY_TYPE_COLORS[log.entityType] ?? 'bg-gray-100 text-gray-800'}>
+                      <Badge className={ENTITY_TYPE_COLORS[log.entityType] ?? 'bg-muted text-foreground'}>
                         {log.entityType}
                       </Badge>
                       <p className="mt-1 text-xs text-muted-foreground font-mono">

@@ -26,7 +26,7 @@ export function ProtectedRoute({ children, requireOrganization = true }: { child
   if (!isHydrated || !isAuthenticated || (requireOrganization && !organizationId)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Redirigiendo a inicio de sesión...</p>
+        <p className="text-muted-foreground">Redirigiendo a inicio de sesión...</p>
       </div>
     );
   }
