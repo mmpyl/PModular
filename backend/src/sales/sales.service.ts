@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { StockMovementService } from '../stock-movements/stock-movements.service';
+import { AccountService } from '../account/account.service';
 import {
   CreateSaleDto,
   UpdateSaleDto,
@@ -17,7 +18,26 @@ export class SalesService {
     private prisma: PrismaService,
     private inventoryService: InventoryService,
     private stockMovementService: StockMovementService,
+    private accountService: AccountService,
   ) {}
+
+  /** Días de crédito a partir del término de pago (Fase B1). */
+  private creditDaysFromTerm(paymentTerm?: string | null): number {
+    switch (paymentTerm) {
+      case 'CREDITO_7_DIAS':
+        return 7;
+      case 'CREDITO_15_DIAS':
+        return 15;
+      case 'CREDITO_30_DIAS':
+        return 30;
+      case 'CREDITO_60_DIAS':
+        return 60;
+      case 'CREDITO_90_DIAS':
+        return 90;
+      default:
+        return 0; // CONTADO / PERSONALIZADO (usa paymentDueDate explícito)
+    }
+  }
 
   async create(organizationId: string, userId: string, dto: CreateSaleDto) {
     // Usar transacción para evitar condición de carrera en generateSaleNumber
@@ -186,6 +206,29 @@ export class SalesService {
       throw new BadRequestException('Sale must be confirmed before completing');
     }
 
+    // Fase B1 — cuenta corriente: validar límite de crédito antes de completar un fiado
+    const isCreditSale =
+      !!sale.customerId &&
+      sale.paymentTerm !== 'CONTADO' &&
+      Number(sale.amountPending) > 0;
+
+    if (isCreditSale) {
+      const customer = await this.prisma.businessEntity.findFirst({
+        where: { id: sale.customerId!, organizationId },
+        select: { name: true, creditLimit: true, currentBalance: true },
+      });
+      if (customer?.creditLimit != null) {
+        const projected = Number(customer.currentBalance) + Number(sale.amountPending);
+        if (projected > Number(customer.creditLimit)) {
+          throw new BadRequestException(
+            `No se puede completar la venta: ${customer.name} excedería su límite de crédito ` +
+              `(proyectado ${projected.toFixed(2)} > límite ${Number(customer.creditLimit).toFixed(2)}). ` +
+              `Registra un abono o ajusta el límite.`,
+          );
+        }
+      }
+    }
+
     // Usar transacción para asegurar consistencia en todas las operaciones de stock
     return this.prisma.$transaction(async (tx) => {
       // Procesar cada ítem de la venta
@@ -217,6 +260,32 @@ export class SalesService {
             data: { batchId: result.batch.id },
           });
         }
+      }
+
+      // Fase B1 — cuenta corriente: generar asiento CREDITO por el saldo pendiente
+      // de una venta fiada (cliente + término distinto de CONTADO), con vencimiento
+      // para alertas de mora. Mantiene currentBalance sincronizado.
+      if (isCreditSale) {
+        let dueDate: Date | null = sale.paymentDueDate ?? null;
+        if (!dueDate) {
+          const days = this.creditDaysFromTerm(sale.paymentTerm);
+          if (days > 0) {
+            dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + days);
+          }
+        }
+
+        await this.accountService.createSaleLinkedEntry(tx, {
+          organizationId,
+          customerId: sale.customerId!,
+          type: 'CREDITO',
+          amount: Number(sale.amountPending),
+          referenceType: 'SALE',
+          referenceId: id,
+          dueDate,
+          description: `Venta fiada ${sale.saleNumber}`,
+          createdBy: userId,
+        });
       }
 
       // Actualizar estado de la venta
@@ -252,42 +321,62 @@ export class SalesService {
 
     const paymentAmount = Math.min(dto.amount, Number(sale.amountPending));
 
-    // Crear pago
-    const payment = await this.prisma.payment.create({
-      data: {
-        organizationId,
-        referenceType: 'SALE',
-        referenceId: saleId,
-        amount: paymentAmount,
-        method: dto.method as PaymentMethod,
-        status: PaymentStatus.PAGADO,
-        transactionId: dto.transactionId,
-        bankName: dto.bankName,
-        cardLastFour: dto.cardLastFour,
-        notes: dto.notes,
-        processedBy: userId,
-      },
-    });
-
-    // Actualizar montos de la venta
-    const newAmountPaid = Number(sale.amountPaid) + paymentAmount;
-    const newAmountPending = Number(sale.amountPending) - paymentAmount;
-
-    const updatedSale = await this.prisma.sale.update({
-      where: { id: saleId },
-      data: {
-        amountPaid: newAmountPaid,
-        amountPending: newAmountPending,
-      },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
-          },
+    // Fase B1 — el pago debe ser transaccional: asiento DEBITO (abono) + saldo
+    // actualizados de forma atómica junto con el registro del pago.
+    const { payment, sale: updatedSale } = await this.prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.create({
+        data: {
+          organizationId,
+          referenceType: 'SALE',
+          referenceId: saleId,
+          amount: paymentAmount,
+          method: dto.method as PaymentMethod,
+          status: PaymentStatus.PAGADO,
+          transactionId: dto.transactionId,
+          bankName: dto.bankName,
+          cardLastFour: dto.cardLastFour,
+          notes: dto.notes,
+          processedBy: userId,
         },
-        payments: true,
-      },
+      });
+
+      // Actualizar montos de la venta
+      const newAmountPaid = Number(sale.amountPaid) + paymentAmount;
+      const newAmountPending = Number(sale.amountPending) - paymentAmount;
+
+      const updatedSale = await tx.sale.update({
+        where: { id: saleId },
+        data: {
+          amountPaid: newAmountPaid,
+          amountPending: newAmountPending,
+        },
+        include: {
+          customer: true,
+          items: {
+            include: {
+              product: true,
+            },
+          },
+          payments: true,
+        },
+      });
+
+      // Abono en cuenta corriente si la venta estaba fiada a un cliente
+      if (sale.customerId) {
+        await this.accountService.createSaleLinkedEntry(tx, {
+          organizationId,
+          customerId: sale.customerId,
+          type: 'DEBITO',
+          amount: paymentAmount,
+          referenceType: 'PAYMENT',
+          referenceId: payment.id,
+          dueDate: null,
+          description: `Abono a venta ${sale.saleNumber}`,
+          createdBy: userId,
+        });
+      }
+
+      return { payment, sale: updatedSale };
     });
 
     return { payment, sale: updatedSale };
