@@ -156,6 +156,9 @@ model Category {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   products     Product[]
 
+  // FASE B3: promociones con alcance por categoría
+  promotions   Promotion[]
+
   @@unique([organizationId, name]) // Nombres únicos dentro de la misma organización
   @@index([organizationId])
   @@map("categories")
@@ -216,6 +219,9 @@ model Product {
 
   // FASE B2: Mermas y vencimientos
   shrinkageRecords ShrinkageRecord[]
+
+  // FASE B3: Promociones que aplican a este producto
+  promotions Promotion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -784,6 +790,9 @@ model Sale {
   
   // Usuario que realizó la venta
   soldBy         String
+
+  // FASE B3: detalle de promociones aplicadas por el motor (JSON)
+  promotionsApplied Json?
   
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items          SaleItem[]
@@ -1285,4 +1294,89 @@ model OrganizationFiscalSettings {
   @@index([organizationId])
   @@index([ruc])
   @@map("organization_fiscal_settings")
+}
+
+// ==========================================
+// FASE B3: Promociones y precios por volumen
+// ==========================================
+
+enum PromotionType {
+  DESCUENTO_VOLUMEN   // % o monto fijo al alcanzar N unidades de un producto
+  PRECIO_POR_VOLUMEN  // precio escalonado: desde N unidades, el unitario cambia
+  DOS_POR_UNO         // "lleva X, paga Y" sobre un mismo producto
+  COMBO               // grupo de productos con precio cerrado o descuento de conjunto
+}
+
+enum PromotionScope {
+  PRODUCTO   // aplica a un producto específico (promotionItems vacío)
+  CATEGORIA  // aplica a todos los productos de la categoría indicada
+  COMBO      // aplica según los ítems definidos en promotionItems
+}
+
+model Promotion {
+  id             String        @id @default(uuid())
+  organizationId String
+
+  code           String        // código corto único por organización (ej. "2X1-LECHE")
+  name           String        // ej. "2x1 en leche Gloria 900ml"
+  type           PromotionType
+  scope          PromotionScope @default(PRODUCTO)
+
+  // Producto objetivo (para DESCUENTO_VOLUMEN, PRECIO_POR_VOLUMEN, DOS_POR_UNO)
+  productId      String?
+  product        Product?      @relation(fields: [productId], references: [id])
+  categoryId     String?
+  category       Category?     @relation(fields: [categoryId], references: [id])
+
+  // Parámetros de activación
+  minQuantity    Int           @default(1)   // cantidad mínima para activar (escalón)
+  payQuantity    Int?                        // DOS_POR_UNO: unidades pagadas por bloque (ej. 2x1 -> 1; 3x2 -> 2)
+
+  // Beneficio
+  discountPercent Decimal?      @db.Decimal(5, 2) // 0..100
+  discountAmount  Decimal?      @db.Decimal(12, 2) // descuento fijo por aplicación
+  fixedPrice      Decimal?      @db.Decimal(12, 2) // PRECIO_POR_VOLUMEN/COMBO: nuevo unitario / precio total del combo
+
+  // Prioridad cuando varias promociones aplican (mayor gana)
+  priority       Int           @default(0)
+  stackable      Boolean       @default(false) // si puede combinarse con otras
+
+  // Vigencia
+  startDate      DateTime      @default(now())
+  endDate        DateTime?
+  active         Boolean       @default(true)
+
+  // Límites de uso
+  maxUsesTotal   Int?          // tope global de aplicaciones
+  usedCount      Int           @default(0)
+
+  notes          String?
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items          PromotionItem[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId, active])
+  @@index([productId])
+  @@map("promotions")
+}
+
+model PromotionItem {
+  id          String    @id @default(uuid())
+  promotionId String
+
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+
+  // Cantidad requerida de este producto para armar 1 bloque de la promoción
+  quantity    Int       @default(1)
+
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId])
+  @@index([productId])
+  @@map("promotion_items")
 }
