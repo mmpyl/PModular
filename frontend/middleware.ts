@@ -1,12 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtDecode } from 'jwt-decode';
+import { jwtVerify } from 'jose';
 
 /**
- * Middleware para proteger rutas a nivel de servidor
- * Se ejecuta antes de renderizar cualquier página
+ * Middleware de rutas (Fase 2 - tarea 2.4)
+ *
+ * AHORA VERIFICA LA FIRMA del JWT (con `jose`, HS256 y el secreto compartido
+ * con el backend) en lugar de solo decodificarlo como hacía con jwtDecode.
+ * Un token forjado (firma inválida, algoritmo distinto o expirado) se rechaza:
+ * se limpia la cookie y se redirige a login.
+ *
+ * Nota de arquitectura: mientras el backend firme con HS256, frontend y backend
+ * deben compartir JWT_SECRET. El paso natural siguiente es migrar a RS256 + JWKS
+ * para que el frontend solo necesite la clave pública.
  */
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
+const AUTH_COOKIE = 'auth_token';
+
+type SessionPayload = {
+  sub?: string;
+  email?: string;
+  organizationId?: string;
+  orgRole?: string;
+  platformRole?: string | null;
+  exp?: number;
+};
+
+async function verifySession(token: string | undefined): Promise<SessionPayload | null> {
+  if (!token) return null;
+  const secret = process.env.JWT_SECRET;
+  // Sin secreto no se puede verificar la firma: fail-closed (rechazar).
+  if (!secret) return null;
+  try {
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
+      algorithms: ['HS256'],
+    });
+    return payload as SessionPayload;
+  } catch {
+    // Firma inválida, algoritmo sospechoso o token expirado -> rechazado
+    return null;
+  }
+}
+
+export async function middleware(request: NextRequest) {
+  const rawToken = request.cookies.get(AUTH_COOKIE)?.value;
   const { pathname } = request.nextUrl;
 
   // Defensa en profundidad: el API proxy/route handlers nunca se protegen aquí
@@ -15,6 +50,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Verificación de firma: un JWT forjado equivale a "sin sesión"
+  const decoded = await verifySession(rawToken);
+  const hasValidSession = decoded !== null;
+
+  const clearSession = (response: NextResponse) => {
+    response.cookies.delete(AUTH_COOKIE);
+    return response;
+  };
+
   // Landing pública: la raíz siempre es accesible sin sesión
   if (pathname === '/') {
     return NextResponse.next();
@@ -22,94 +66,58 @@ export function middleware(request: NextRequest) {
 
   // Rutas públicas que no requieren autenticación
   const publicRoutes = ['/login', '/register', '/platform/login'];
-  
+
   // Rutas que requieren autenticación pero NO organización seleccionada
   const authWithoutOrgRoutes = ['/select-organization', '/create-organization', '/onboarding'];
 
-  // Si la ruta es pública y hay token, redirigir al dashboard apropiado
+  // Si la ruta es pública y hay sesión válida, redirigir al dashboard apropiado
   if (publicRoutes.includes(pathname)) {
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        const platformRole = decoded.platformRole;
-        
-        // Si tiene rol de plataforma, ir al dashboard de plataforma
-        if (platformRole && ['PLATFORM_ADMIN', 'SUPPORT'].includes(platformRole)) {
-          return NextResponse.redirect(new URL('/platform/dashboard', request.url));
-        }
-        // Si no, ir al dashboard normal o select-organization
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      } catch {
-        // Token inválido, permitir acceso a login
-        return NextResponse.next();
+    if (hasValidSession && decoded) {
+      const platformRole = decoded.platformRole;
+      if (platformRole && ['PLATFORM_ADMIN', 'SUPPORT'].includes(platformRole)) {
+        return NextResponse.redirect(new URL('/platform/dashboard', request.url));
       }
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    return NextResponse.next();
+    // Sin sesión o token forjado: permitir acceso a login (y limpiar cookie sucia)
+    return clearSession(NextResponse.next());
   }
 
   // Proteger todas las rutas de plataforma
   if (pathname.startsWith('/platform')) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/platform/login', request.url));
+    if (!hasValidSession || !decoded) {
+      return clearSession(NextResponse.redirect(new URL('/platform/login', request.url)));
     }
-    
-    try {
-      const decoded: any = jwtDecode(token);
-      const platformRole = decoded.platformRole;
-      
-      // Verificar que tenga rol de plataforma válido
-      if (!platformRole || !['PLATFORM_ADMIN', 'SUPPORT'].includes(platformRole)) {
-        // No tiene permisos de plataforma, redirigir a dashboard normal
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-    } catch {
-      // Token inválido, redirigir a login de plataforma
-      return NextResponse.redirect(new URL('/platform/login', request.url));
+
+    const platformRole = decoded.platformRole;
+    if (!platformRole || !['PLATFORM_ADMIN', 'SUPPORT'].includes(platformRole)) {
+      // Autenticado pero sin rol de plataforma: fuera del área de plataforma
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    
+
     return NextResponse.next();
   }
 
   // Proteger rutas que requieren autenticación general
   if (!authWithoutOrgRoutes.includes(pathname)) {
-    if (!token) {
+    if (!rawToken) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    
-    try {
-      // Validar que el token no esté expirado
-      const decoded: any = jwtDecode(token);
-      const now = Date.now() / 1000;
-      
-      if (decoded.exp && decoded.exp < now) {
-        // Token expirado, limpiar cookie y redirigir a login
-        const response = NextResponse.redirect(new URL('/login', request.url));
-        response.cookies.delete('auth_token');
-        return response;
-      }
-    } catch {
-      // Token inválido, redirigir a login
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('auth_token');
-      return response;
+    if (!hasValidSession || !decoded) {
+      // Token presente pero FORJADO o expirado: se rechaza y limpia
+      return clearSession(NextResponse.redirect(new URL('/login', request.url)));
     }
   }
 
   // Verificar selección de organización para rutas que la requieren
-  if (!authWithoutOrgRoutes.includes(pathname) && !pathname.startsWith('/platform')) {
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        const organizationId = decoded.organizationId;
-        
-        // Si no tiene organización seleccionada y la ruta no es de las excepciones
-        if (!organizationId && !authWithoutOrgRoutes.includes(pathname)) {
-          return NextResponse.redirect(new URL('/select-organization', request.url));
-        }
-      } catch {
-        // Error decodificando, dejar que el cliente lo maneje
-      }
-    }
+  if (
+    !authWithoutOrgRoutes.includes(pathname) &&
+    !pathname.startsWith('/platform') &&
+    hasValidSession &&
+    decoded &&
+    !decoded.organizationId
+  ) {
+    return NextResponse.redirect(new URL('/select-organization', request.url));
   }
 
   return NextResponse.next();
@@ -120,7 +128,7 @@ export const config = {
   matcher: [
     /*
      * Match all routes except:
-     * - api (route handlers: /api/auth/cookie, etc. deben ser públicos)
+     * - api (route handlers BFF: /api/auth/*, /api/proxy/* deben ser públicos)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
