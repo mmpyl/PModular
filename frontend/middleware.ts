@@ -9,6 +9,17 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
   const { pathname } = request.nextUrl;
 
+  // Defensa en profundidad: el API proxy/route handlers nunca se protegen aquí
+  // (el matcher ya excluye /api, pero esto evita sorpresas si cambia el config)
+  if (pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+
+  // Landing pública: la raíz siempre es accesible sin sesión
+  if (pathname === '/') {
+    return NextResponse.next();
+  }
+
   // Rutas públicas que no requieren autenticación
   const publicRoutes = ['/login', '/register', '/platform/login'];
   
@@ -109,11 +120,12 @@ export const config = {
   matcher: [
     /*
      * Match all routes except:
+     * - api (route handlers: /api/auth/cookie, etc. deben ser públicos)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files (robots.txt, sitemap.xml, etc.)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

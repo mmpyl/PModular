@@ -17,7 +17,7 @@ type BusinessType = {
 };
 
 export default function CreateOrganizationPage() {
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, createOrganization } = useAuth();
   const router = useRouter();
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const [name, setName] = useState('');
@@ -46,18 +46,9 @@ export default function CreateOrganizationPage() {
     setError(null);
 
     try {
-      // 1. Crear la organización
-      const organization = await apiFetch<{ id: string }>('/organizations', {
-        method: 'POST',
-        token: token!,
-        body: JSON.stringify({ name, businessTypeId }),
-      });
-
-      // 2. Auto-asignarse como OWNER (esto debería hacerse en el backend)
-      // El endpoint de organizaciones debería crear la membresía automáticamente
-      // Por ahora, asumimos que el backend ya lo hace
-
-      // Redirigir al dashboard
+      // Flujo unificado del contexto: crea la organización, selecciona la org
+      // y espera a persistSession (cookie httpOnly) antes de resolver
+      await createOrganization({ name, businessTypeId });
       router.push('/dashboard');
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'message' in err) {
@@ -73,13 +64,13 @@ export default function CreateOrganizationPage() {
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Cargando...</p>
+        <p className="text-muted-foreground">Cargando...</p>
       </div>
     );
   }
 
   return (
-        <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-gray-50 to-white">
+        <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-muted/50 to-white">
       {!isAuthenticated ? (
         <p className="text-muted-foreground">Cargando...</p>
       ) : (

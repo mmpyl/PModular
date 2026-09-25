@@ -1,11 +1,11 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ApiError } from '@/lib/api';
-import { usePlatformLoginMutation } from '@/features/hooks/use-platform-login-mutation';
 import { loginSchema, type LoginFormData } from '@/features/schemas/login-schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,9 +19,8 @@ import {
 } from '@/components/ui/card';
 
 export default function PlatformLoginPage() {
-  const { persistSession } = useAuth();
+  const { platformLogin } = useAuth();
   const router = useRouter();
-  const platformLoginMutation = usePlatformLoginMutation();
 
   const {
     register,
@@ -34,15 +33,18 @@ export default function PlatformLoginPage() {
       password: '',
     },
   });
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const session = await platformLoginMutation.mutateAsync(data);
-      persistSession(session);
+      // Un solo flujo: platformLogin() del contexto ya espera a persistSession antes de resolver
+      await platformLogin(data);
       router.push('/platform/dashboard');
     } catch (caughtError) {
       if (caughtError instanceof ApiError) {
-        console.error(caughtError.message);
+        setSubmitError(caughtError.message || 'No se pudo iniciar sesión. Verifica tus credenciales y permisos de plataforma.');
+      } else {
+        setSubmitError('No se pudo iniciar sesión. Verifica tus credenciales y permisos de plataforma.');
       }
     }
   };
@@ -91,15 +93,15 @@ export default function PlatformLoginPage() {
                 </p>
               )}
             </div>
-            {platformLoginMutation.isError && (
+            {submitError && (
               <p className="text-sm text-destructive" role="alert">
-                No se pudo iniciar sesión. Verifica tus credenciales y permisos de plataforma.
+                {submitError}
               </p>
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isSubmitting || platformLoginMutation.isPending}>
-              {isSubmitting || platformLoginMutation.isPending ? 'Validando...' : 'Entrar'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Validando...' : 'Entrar'}
             </Button>
           </CardFooter>
         </form>

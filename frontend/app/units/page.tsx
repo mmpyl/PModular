@@ -159,7 +159,7 @@ export default function UnitsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500 mb-1">Catálogo</div>
+              <div className="text-sm text-muted-foreground mb-1">Catálogo</div>
               <CardTitle>Unidades disponibles</CardTitle>
             </div>
             <Badge variant="secondary">{units.length} unidades</Badge>
@@ -167,14 +167,14 @@ export default function UnitsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-gray-500">Cargando...</p>
+            <p className="text-sm text-muted-foreground">Cargando...</p>
           ) : (
             <>
               {units.map((unit) => (
                 <div className="flex items-center justify-between py-3 border-b last:border-0" key={unit.id}>
                   <div>
                     <div className="font-medium">{unit.name}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                       {unit.symbol || 'Sin símbolo'}
                       {unit.isFractionable ? ' · Fraccionable' : ''}
                     </div>
@@ -200,7 +200,7 @@ export default function UnitsPage() {
                 </div>
               ))}
               {!units.length && (
-                <p className="text-sm text-gray-500">No hay unidades registradas.</p>
+                <p className="text-sm text-muted-foreground">No hay unidades registradas.</p>
               )}
             </>
           )}

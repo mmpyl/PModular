@@ -74,7 +74,7 @@ export default function OnboardingPage() {
           </div>
         </main>
       ) : (
-        <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-gray-50 to-white">
+        <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-muted/50 to-white">
           <div className="max-w-2xl w-full space-y-6">
             <div className="space-y-2 text-center">
               <p className="text-sm font-medium text-muted-foreground">Primer paso</p>
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
                     return (
                       <label
                         key={type.id}
-                        className={`block p-4 border rounded-lg cursor-pointer transition-all ${type.id === typeId ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:border-gray-300'}`}
+                        className={`block p-4 border rounded-lg cursor-pointer transition-all ${type.id === typeId ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:border-input'}`}
                       >
                         <input
                           type="radio"
@@ -113,7 +113,7 @@ export default function OnboardingPage() {
                           {type.description && <p className="text-sm text-muted-foreground">{type.description}</p>}
                           <div className="flex flex-wrap gap-1">
                             {modules.map((module) => (
-                              <span key={module} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                              <span key={module} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-foreground">
                                 {MODULE_LABELS[module] ?? module}
                               </span>
                             ))}

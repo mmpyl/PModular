@@ -162,7 +162,7 @@ export default function CategoriesPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500 mb-1">Estructura</div>
+              <div className="text-sm text-muted-foreground mb-1">Estructura</div>
               <CardTitle>Categorías activas</CardTitle>
             </div>
             <Badge variant="secondary">{categories.length} categorías</Badge>
@@ -170,7 +170,7 @@ export default function CategoriesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-gray-500">Cargando...</p>
+            <p className="text-sm text-muted-foreground">Cargando...</p>
           ) : (
             <>
               {roots.map((category) => (
@@ -178,7 +178,7 @@ export default function CategoriesPage() {
                   <div className="flex items-center justify-between py-3 border-b last:border-0">
                     <div>
                       <div className="font-medium">{category.name}</div>
-                      <div className="text-sm text-gray-500">{category._count?.products ?? 0} productos</div>
+                      <div className="text-sm text-muted-foreground">{category._count?.products ?? 0} productos</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <RequireRole roles={WRITE_ROLES}>
@@ -201,14 +201,14 @@ export default function CategoriesPage() {
                   </div>
                   {childrenOf(category.id).map((child) => (
                     <div 
-                      className="flex items-center justify-between py-3 border-b last:border-0 pl-6 bg-gray-50" 
+                      className="flex items-center justify-between py-3 border-b last:border-0 pl-6 bg-muted/50" 
                       key={child.id}
                     >
                       <div>
                         <div className="font-medium flex items-center gap-1">
-                          <span className="text-gray-400">↳</span> {child.name}
+                          <span className="text-muted-foreground">↳</span> {child.name}
                         </div>
-                        <div className="text-sm text-gray-500">{child._count?.products ?? 0} productos</div>
+                        <div className="text-sm text-muted-foreground">{child._count?.products ?? 0} productos</div>
                       </div>
                       <div className="flex items-center gap-2">
                         <RequireRole roles={WRITE_ROLES}>
@@ -233,7 +233,7 @@ export default function CategoriesPage() {
                 </div>
               ))}
               {!roots.length && !createMutation.isError && (
-                <p className="text-sm text-gray-500">No hay categorías para mostrar.</p>
+                <p className="text-sm text-muted-foreground">No hay categorías para mostrar.</p>
               )}
             </>
           )}

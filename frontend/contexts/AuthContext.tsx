@@ -20,9 +20,11 @@ type AuthContextValue = {
   selectOrganization: (organizationId: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   createOrganization: (payload: { name: string; businessTypeId: string }) => Promise<void>;
+  platformLogin: (credentials: Credentials) => Promise<void>;
   logout: () => void;
   hasOrgRole: (roles: string[]) => boolean;
-  persistSession: (session: AuthResponse) => void;
+  persistSession: (session: AuthResponse) => Promise<void>;
+  refreshMemberships: () => Promise<void>;
 };
 
 type AuthUser = {
@@ -157,15 +159,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  // Escuchar evento de sesión expirada
+  // Escuchar evento de sesión expirada (los usuarios de plataforma van a /platform/login)
   useEffect(() => {
-    const handleExpired = () => {
+    const handleExpired = (event: Event) => {
+      const detail = (event as CustomEvent<{ platformRole?: string | null }>).detail;
+      const isPlatformUser = Boolean(detail?.platformRole);
       clearSession();
-      router.replace('/login');
+      router.replace(isPlatformUser ? '/platform/login' : '/login');
     };
     window.addEventListener('pymodular:session-expired', handleExpired);
     return () => window.removeEventListener('pymodular:session-expired', handleExpired);
   }, [clearSession, router]);
+
+  // Hidratar memberships al recargar: la cookie solo trae el JWT (sin membresías),
+  // así que las pedimos al backend (GET /memberships/user/:id permite al propio usuario)
+  const refreshMemberships = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const fresh = await apiFetch<Membership[]>(`/memberships/user/${user.id}`);
+      if (Array.isArray(fresh)) setMemberships(fresh);
+    } catch {
+      // Si falla, mantener las memberships actuales (posible fallo de red transitorio)
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (token && user?.id) {
+      void refreshMemberships();
+    }
+  }, [token, user?.id, refreshMemberships]);
 
   const value = useMemo<AuthContextValue>(() => ({
     token,
@@ -181,7 +203,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
-      persistSession(session);
+      // Esperar a que la sesión quede persistida (cookie httpOnly) antes de navegar
+      await persistSession(session);
       
       // Si el login devuelve múltiples membresías sin organización seleccionada, redirigir a selector
       if (session.memberships && session.memberships.length > 1 && !session.organizationId) {
@@ -195,14 +218,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         body: JSON.stringify({ organizationId: orgId }),
       });
-      persistSession(session);
+      await persistSession(session);
+    },
+    platformLogin: async (credentials) => {
+      // Primero login normal para obtener el token, luego intercambio a token de plataforma
+      const loginResponse = await apiFetch<AuthResponse>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
+      const session = await apiFetch<AuthResponse>('/auth/platform/login', {
+        method: 'POST',
+        token: loginResponse.accessToken,
+      });
+      await persistSession(session);
     },
     register: async (payload) => {
       const session = await apiFetch<AuthResponse>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
-      persistSession(session);
+      await persistSession(session);
     },
     createOrganization: async (payload) => {
       if (!token) throw new ApiError('La sesión ha expirado', 401);
@@ -216,7 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         body: JSON.stringify({ organizationId: organization.id }),
       });
-      persistSession(session);
+      await persistSession(session);
     },
     logout: clearSession,
     hasOrgRole: (roles: string[]) => {
@@ -224,7 +259,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return roles.includes(orgRole);
     },
     persistSession,
-  }), [token, user, organizationId, orgRole, platformRole, memberships, isHydrated, persistSession, clearSession, router]);
+    refreshMemberships,
+  }), [token, user, organizationId, orgRole, platformRole, memberships, isHydrated, persistSession, clearSession, refreshMemberships, router]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

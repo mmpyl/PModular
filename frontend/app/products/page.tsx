@@ -136,7 +136,7 @@ export default function ProductsPage() {
       <RequireRole roles={WRITE_ROLES}>
         <Card className="mb-6">
           <CardHeader className="pb-3">
-            <span className="text-sm text-gray-500 mb-1">{editingId ? 'Edición' : 'Alta'}</span>
+            <span className="text-sm text-muted-foreground mb-1">{editingId ? 'Edición' : 'Alta'}</span>
             <h2 className="text-lg font-semibold">{editingId ? 'Editar producto' : 'Nuevo producto'}</h2>
           </CardHeader>
           <CardContent>
@@ -332,7 +332,7 @@ export default function ProductsPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm text-gray-500 mb-1 block">Catálogo</span>
+              <span className="text-sm text-muted-foreground mb-1 block">Catálogo</span>
               <h2 className="text-lg font-semibold">Catálogo actual</h2>
             </div>
             <Badge variant="secondary">{filteredProducts.length} productos</Badge>
@@ -362,16 +362,16 @@ export default function ProductsPage() {
             </Select>
           </div>
           {loadingProducts ? (
-            <p className="text-gray-500 text-sm">Cargando...</p>
+            <p className="text-muted-foreground text-sm">Cargando...</p>
           ) : (
             <>
               <div className="space-y-2">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+                  <div key={product.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-muted">
                     <div>
                       <strong className="block">{product.name}</strong>
-                      <small className="text-gray-500">{product.sku || 'Sin SKU'} · {product.category?.name || 'Sin categoría'} · {product.unit?.name || 'Sin unidad'}</small>
-                      <div className="text-xs text-gray-400 mt-1">Umbral stock bajo: {product.lowStockThreshold ?? 10}</div>
+                      <small className="text-muted-foreground">{product.sku || 'Sin SKU'} · {product.category?.name || 'Sin categoría'} · {product.unit?.name || 'Sin unidad'}</small>
+                      <div className="text-xs text-muted-foreground mt-1">Umbral stock bajo: {product.lowStockThreshold ?? 10}</div>
                     </div>
                     <div className="flex items-center gap-4">
                       <strong>{Number(product.price).toFixed(2)}</strong>
@@ -396,7 +396,7 @@ export default function ProductsPage() {
                 ))}
               </div>
               {!filteredProducts.length && (
-                <p className="text-gray-500 text-sm">No hay productos para mostrar.</p>
+                <p className="text-muted-foreground text-sm">No hay productos para mostrar.</p>
               )}
             </>
           )}
