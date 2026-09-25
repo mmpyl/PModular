@@ -212,25 +212,40 @@ export class SalesService {
       sale.paymentTerm !== 'CONTADO' &&
       Number(sale.amountPending) > 0;
 
-    if (isCreditSale) {
-      const customer = await this.prisma.businessEntity.findFirst({
-        where: { id: sale.customerId!, organizationId },
-        select: { name: true, creditLimit: true, currentBalance: true },
-      });
-      if (customer?.creditLimit != null) {
-        const projected = Number(customer.currentBalance) + Number(sale.amountPending);
-        if (projected > Number(customer.creditLimit)) {
-          throw new BadRequestException(
-            `No se puede completar la venta: ${customer.name} excedería su límite de crédito ` +
-              `(proyectado ${projected.toFixed(2)} > límite ${Number(customer.creditLimit).toFixed(2)}). ` +
-              `Registra un abono o ajusta el límite.`,
-          );
-        }
-      }
-    }
-
     // Usar transacción para asegurar consistencia en todas las operaciones de stock
     return this.prisma.$transaction(async (tx) => {
+      // Validación de límite de crédito DENTRO de la transacción y con bloqueo
+      // exclusivo de la fila del cliente (SELECT ... FOR UPDATE). Sin esto, dos
+      // ventas a crédito concurrentes podían leer el mismo currentBalance, pasar
+      // ambas la validación y exceder el límite (race condition conocida).
+      if (isCreditSale) {
+        const customer = await tx.businessEntity.findFirst({
+          where: { id: sale.customerId!, organizationId },
+          select: { name: true, creditLimit: true, currentBalance: true },
+        });
+        if (customer?.creditLimit != null) {
+          // Bloquea la fila hasta el commit: cualquier transacción concurrente
+          // que intente completar otra venta fiada al mismo cliente quedará
+          // esperando y verá el saldo ya actualizado.
+          await tx.$executeRaw`SELECT id FROM business_entities WHERE id = ${sale.customerId!}::uuid FOR UPDATE`;
+
+          // Releer el saldo DESPUÉS del lock: puede haber cambiado mientras
+          // esperábamos por otra transacción.
+          const locked = await tx.businessEntity.findUnique({
+            where: { id: sale.customerId! },
+            select: { name: true, creditLimit: true, currentBalance: true },
+          });
+
+          const projected = Number(locked?.currentBalance ?? customer.currentBalance) + Number(sale.amountPending);
+          if (projected > Number(locked?.creditLimit ?? customer.creditLimit)) {
+            throw new BadRequestException(
+              `No se puede completar la venta: ${locked?.name ?? customer.name} excedería su límite de crédito ` +
+                `(proyectado ${projected.toFixed(2)} > límite ${Number(locked?.creditLimit ?? customer.creditLimit).toFixed(2)}). ` +
+                `Registra un abono o ajusta el límite.`,
+            );
+          }
+        }
+      }
       // Procesar cada ítem de la venta
       for (const saleItem of sale.items) {
         const quantity = saleItem.quantity;

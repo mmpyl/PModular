@@ -1,5 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateOrganizationFiscalSettingsDto, UpdateOrganizationFiscalSettingsDto } from './dto/organization-fiscal-settings.dto';
 import { encryptSecret, decryptSecret, isEncrypted, maskSecret } from '../common/crypto';
@@ -87,7 +86,8 @@ export class OrganizationFiscalSettingsService {
     });
 
     if (existing) {
-      throw new Error('La organización ya tiene configuración fiscal registrada');
+      // 409 (no 500): conflicto de unicidad esperado, no un error interno.
+      throw new ConflictException('La organización ya tiene configuración fiscal registrada');
     }
 
     // Validar que la organización exista
