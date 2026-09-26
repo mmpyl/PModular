@@ -1,33 +1,34 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
-import { PrismaModule } from './prisma.module';
-import { UsersModule } from './users/users.module';
-import { BusinessTypesModule } from './business-types/business-types.module';
-import { OrganizationsModule } from './organizations/organizations.module';
-import { MembershipsModule } from './memberships/memberships.module';
-import { ProductsModule } from './products/products.module';
-import { CategoriesModule } from './categories/categories.module';
-import { UnitsOfMeasureModule } from './units-of-measure/units-of-measure.module';
-import { InventoryModule } from './inventory/inventory.module';
-import { StockMovementsModule } from './stock-movements/stock-movements.module';
-import { BatchesModule } from './batches/batches.module';
-import { BusinessEntitiesModule } from './business-entities/business-entities.module';
-import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
-import { SalesModule } from './sales/sales.module';
-import { CashRegistersModule } from './cash-registers/cash-registers.module';
-import { ReportsModule } from './reports/reports.module';
-import { AuthSharedModule } from './auth/auth-shared.module';
-import { PlatformModule } from './platform/platform.module';
-import { AuditLogModule } from './audit-log/audit-log.module';
-import { WarehousesModule } from './warehouses/warehouses.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { OrganizationFiscalSettingsModule } from './organization-fiscal-settings/organization-fiscal-settings.module';
-import { AccountModule } from './account/account.module';
-import { ShrinkageModule } from './shrinkage/shrinkage.module';
-import { PromotionsModule } from './promotions/promotions.module';
-import { ElectronicVoucherModule } from './electronic-voucher/electronic-voucher.module';
-import { VoucherArchiveModule } from './voucher-archive/voucher-archive.module';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { AuthModule } from "./auth/auth.module";
+import { PrismaModule } from "./prisma.module";
+import { UsersModule } from "./users/users.module";
+import { BusinessTypesModule } from "./business-types/business-types.module";
+import { OrganizationsModule } from "./organizations/organizations.module";
+import { MembershipsModule } from "./memberships/memberships.module";
+import { ProductsModule } from "./products/products.module";
+import { CategoriesModule } from "./categories/categories.module";
+import { UnitsOfMeasureModule } from "./units-of-measure/units-of-measure.module";
+import { InventoryModule } from "./inventory/inventory.module";
+import { StockMovementsModule } from "./stock-movements/stock-movements.module";
+import { BatchesModule } from "./batches/batches.module";
+import { BusinessEntitiesModule } from "./business-entities/business-entities.module";
+import { PurchaseOrdersModule } from "./purchase-orders/purchase-orders.module";
+import { SalesModule } from "./sales/sales.module";
+import { CashRegistersModule } from "./cash-registers/cash-registers.module";
+import { ReportsModule } from "./reports/reports.module";
+import { AuthSharedModule } from "./auth/auth-shared.module";
+import { PlatformModule } from "./platform/platform.module";
+import { AuditLogModule } from "./audit-log/audit-log.module";
+import { WarehousesModule } from "./warehouses/warehouses.module";
+import { NotificationsModule } from "./notifications/notifications.module";
+import { OrganizationFiscalSettingsModule } from "./organization-fiscal-settings/organization-fiscal-settings.module";
+import { AccountModule } from "./account/account.module";
+import { ShrinkageModule } from "./shrinkage/shrinkage.module";
+import { PromotionsModule } from "./promotions/promotions.module";
+import { ElectronicVoucherModule } from "./electronic-voucher/electronic-voucher.module";
+import { VoucherArchiveModule } from "./voucher-archive/voucher-archive.module";
+import { ModuleCatalogModule } from "./module-catalog/module-catalog.module";
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { VoucherArchiveModule } from './voucher-archive/voucher-archive.module';
     PromotionsModule,
     ElectronicVoucherModule,
     VoucherArchiveModule,
+    ModuleCatalogModule,
   ],
 })
 export class AppModule {}
