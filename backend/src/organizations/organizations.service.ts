@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma.service";
+import { ModuleCatalogService } from "../module-catalog/module-catalog.service";
 
 export interface CreateOrganizationDto {
   name: string;
@@ -16,7 +21,10 @@ export interface BusinessSettingsDto {
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly moduleCatalogService: ModuleCatalogService,
+  ) {}
 
   async create(data: CreateOrganizationDto, creatorUserId: string) {
     // Obtener los defaultModules del BusinessType si no se proporcionan enabledModules
@@ -25,10 +33,14 @@ export class OrganizationsService {
     });
 
     if (!businessType) {
-      throw new NotFoundException(`BusinessType con ID ${data.businessTypeId} no encontrado`);
+      throw new NotFoundException(
+        `BusinessType con ID ${data.businessTypeId} no encontrado`,
+      );
     }
 
-    const enabledModules = data.enabledModules || (businessType.defaultModules as string[]) || [];
+    const enabledModules =
+      data.enabledModules || (businessType.defaultModules as string[]) || [];
+    this.assertValidModules(enabledModules);
 
     return this.prisma.$transaction(async (tx) => {
       const organization = await tx.organization.create({
@@ -42,7 +54,11 @@ export class OrganizationsService {
       });
 
       await tx.membership.create({
-        data: { userId: creatorUserId, organizationId: organization.id, role: 'OWNER' },
+        data: {
+          userId: creatorUserId,
+          organizationId: organization.id,
+          role: "OWNER",
+        },
       });
 
       return organization;
@@ -56,7 +72,7 @@ export class OrganizationsService {
       include: {
         businessType: true,
       },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
   }
 
@@ -80,23 +96,31 @@ export class OrganizationsService {
     });
 
     if (!organization) {
-      throw new NotFoundException(`Organización con ID ${organizationId} no encontrada`);
+      throw new NotFoundException(
+        `Organización con ID ${organizationId} no encontrada`,
+      );
     }
 
     const settings = (organization.settings as Record<string, any>) || {};
-    
+
     // Retornar configuración con valores por defecto
     return {
-      currency: settings.currency || 'PEN',
-      timezone: settings.timezone || 'America/Lima',
+      currency: settings.currency || "PEN",
+      timezone: settings.timezone || "America/Lima",
       defaultTaxRate: settings.defaultTaxRate ?? 0.18,
     };
   }
 
   async update(id: string, data: Partial<CreateOrganizationDto>) {
-    const existing = await this.prisma.organization.findUnique({ where: { id } });
+    const existing = await this.prisma.organization.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Organización con ID ${id} no encontrada`);
+    }
+
+    if (data.enabledModules) {
+      this.assertValidModules(data.enabledModules);
     }
 
     return this.prisma.organization.update({
@@ -105,8 +129,18 @@ export class OrganizationsService {
     });
   }
 
+  private assertValidModules(enabledModules: string[]) {
+    if (!this.moduleCatalogService.isValidKeys(enabledModules)) {
+      throw new BadRequestException(
+        "Uno o más módulos no existen en el catálogo",
+      );
+    }
+  }
+
   async remove(id: string) {
-    const existing = await this.prisma.organization.findUnique({ where: { id } });
+    const existing = await this.prisma.organization.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Organización con ID ${id} no encontrada`);
     }
@@ -125,14 +159,16 @@ export class OrganizationsService {
    * La suspensión surte efecto inmediato porque TenantGuard verifica el status en cada request
    */
   async suspendOrganization(id: string) {
-    const existing = await this.prisma.organization.findUnique({ where: { id } });
+    const existing = await this.prisma.organization.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Organización con ID ${id} no encontrada`);
     }
 
     return this.prisma.organization.update({
       where: { id },
-      data: { status: 'SUSPENDED' },
+      data: { status: "SUSPENDED" },
       include: { businessType: true },
     });
   }
@@ -141,14 +177,16 @@ export class OrganizationsService {
    * Reactivar una organización suspendida - Solo PLATFORM_ADMIN
    */
   async reactivateOrganization(id: string) {
-    const existing = await this.prisma.organization.findUnique({ where: { id } });
+    const existing = await this.prisma.organization.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Organización con ID ${id} no encontrada`);
     }
 
     return this.prisma.organization.update({
       where: { id },
-      data: { status: 'ACTIVE' },
+      data: { status: "ACTIVE" },
       include: { businessType: true },
     });
   }
