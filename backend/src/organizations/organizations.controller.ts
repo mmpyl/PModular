@@ -1,17 +1,65 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, ForbiddenException, Get, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import { PlatformRole } from '@prisma/client';
+import { IsArray, IsEmail, IsObject, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 import { OrganizationsService } from './organizations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
-import { OrgRoles } from '../auth/decorators/org-roles.decorator';
+import { OrgRoles, PlatformRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
 
 export interface CreateOrganizationDto {
   name: string;
   businessTypeId: string;
   enabledModules?: string[];
   settings?: Record<string, any>;
+}
+
+export class CreatePlatformOrganizationDto {
+  @IsString()
+  @MinLength(1)
+  name!: string;
+
+  @IsUUID()
+  businessTypeId!: string;
+
+  @IsEmail()
+  ownerEmail!: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  enabledModules?: string[];
+
+  @IsOptional()
+  @IsObject()
+  settings?: Record<string, unknown>;
+}
+
+export class UpdatePlatformOrganizationDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  name?: string;
+
+  @IsOptional()
+  @IsUUID()
+  businessTypeId?: string;
+
+  @IsOptional()
+  @IsEmail()
+  ownerEmail?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  enabledModules?: string[];
+
+  @IsOptional()
+  @IsObject()
+  settings?: Record<string, unknown>;
 }
 
 @Controller('organizations')
@@ -21,8 +69,35 @@ export class OrganizationsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() createOrgDto: CreateOrganizationDto, @CurrentUser() user: { sub: string }) {
+  create(
+    @Body() createOrgDto: CreateOrganizationDto,
+    @CurrentUser() user: { sub: string; platformRole?: PlatformRole },
+  ) {
+    if (user.platformRole) {
+      throw new ForbiddenException('Platform accounts cannot own business organizations');
+    }
     return this.organizationsService.create(createOrgDto, user.sub);
+  }
+
+  @Get('platform/all')
+  @UseGuards(PlatformRolesGuard)
+  @PlatformRoles(PlatformRole.PLATFORM_ADMIN)
+  findAllForPlatform() {
+    return this.organizationsService.findAllForPlatform();
+  }
+
+  @Post('platform')
+  @UseGuards(PlatformRolesGuard)
+  @PlatformRoles(PlatformRole.PLATFORM_ADMIN)
+  createForPlatform(@Body() dto: CreatePlatformOrganizationDto) {
+    return this.organizationsService.createForPlatform(dto);
+  }
+
+  @Patch('platform/:id')
+  @UseGuards(PlatformRolesGuard)
+  @PlatformRoles(PlatformRole.PLATFORM_ADMIN)
+  updateForPlatform(@Param('id') id: string, @Body() dto: UpdatePlatformOrganizationDto) {
+    return this.organizationsService.updateForPlatform(id, dto);
   }
 
   @Get()

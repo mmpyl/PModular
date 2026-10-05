@@ -32,6 +32,15 @@ npm run start:frontend
 
 La API queda disponible en `http://localhost:3001` y la aplicación web en `http://localhost:3000`. Para desarrollo con recarga automática usa `npm run dev:backend` y `npm run dev:frontend`. `CORS_ORIGIN` admite varios orígenes separados por coma.
 
+### Accesos de negocio y plataforma
+
+- Usuarios de negocio inician sesión en `http://localhost:3000/login` y acceden a las organizaciones donde tienen membresía.
+- Administradores globales inician sesión en `http://localhost:3000/platform/login` y administran organizaciones desde `/platform`.
+- Son cuentas separadas: una cuenta `PLATFORM_ADMIN` no puede tener membresías de negocio ni usar el acceso de negocio.
+- Para crear una cuenta global separada desde la raíz del proyecto: `npm run create:platform-admin -w backend -- platform.owner@pmodular.local "Owner de plataforma"`. El comando genera una contraseña temporal aleatoria y la muestra una sola vez.
+- Para promover una cuenta existente sin membresías: `npm run grant:platform-admin -w backend -- admin@ejemplo.com`. El script rechaza cuentas que ya pertenezcan a negocios.
+- Para crear una organización desde la consola global, el correo del owner debe pertenecer a una cuenta de negocio ya registrada.
+
 Para actualizar el esquema durante desarrollo, crea una migración con `npm run prisma:migrate -w backend`; para aplicar migraciones existentes usa `npm run prisma:migrate:deploy`.
 
 ## Estructura de carpetas

@@ -29,6 +29,11 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Post('platform/login')
+  platformLogin(@Body() dto: LoginDto) {
+    return this.authService.platformLogin(dto);
+  }
+
   @Post('select-organization')
   @UseGuards(JwtAuthGuard)
   selectOrganization(@Body() dto: SelectOrganizationDto, @Req() req: Request) {

@@ -39,7 +39,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(dto.email);
     const isPasswordValid = user ? await bcrypt.compare(dto.password, user.password) : false;
 
-    if (!user || !isPasswordValid) {
+    if (!user || !isPasswordValid || user.platformRole) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -69,6 +69,25 @@ export class AuthService {
     return {
       ...response,
       memberships,
+    };
+  }
+
+  async platformLogin(dto: LoginDto): Promise<LoginResponse> {
+    const user = await this.usersService.findByEmail(dto.email);
+    const isPasswordValid = user ? await bcrypt.compare(dto.password, user.password) : false;
+
+    if (!user || !isPasswordValid || user.platformRole !== PlatformRole.PLATFORM_ADMIN) {
+      throw new UnauthorizedException('Invalid credentials for platform access');
+    }
+
+    const memberships = await this.membershipsService.findByUser(user.id);
+    if (memberships.length > 0) {
+      throw new UnauthorizedException('Platform accounts cannot belong to a business');
+    }
+
+    return {
+      ...(await this.buildAuthResponse(user)),
+      memberships: [],
     };
   }
 

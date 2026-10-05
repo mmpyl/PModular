@@ -16,7 +16,8 @@ type AuthContextValue = {
   memberships: Membership[];
   isHydrated: boolean;
   isAuthenticated: boolean;
-  login: (credentials: Credentials) => Promise<void>;
+  login: (credentials: Credentials) => Promise<AuthResponse>;
+  platformLogin: (credentials: Credentials) => Promise<AuthResponse>;
   selectOrganization: (organizationId: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   createOrganization: (payload: { name: string; businessTypeId: string }) => Promise<void>;
@@ -88,11 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleExpired = () => {
       clearSession();
-      router.replace('/login');
+      router.replace(platformRole === 'PLATFORM_ADMIN' ? '/platform/login' : '/login');
     };
     window.addEventListener('pymodular:session-expired', handleExpired);
     return () => window.removeEventListener('pymodular:session-expired', handleExpired);
-  }, [clearSession, router]);
+  }, [clearSession, platformRole, router]);
 
   const value = useMemo<AuthContextValue>(() => ({
     token,
@@ -109,11 +110,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(credentials),
       });
       persistSession(session);
-      
-      // Si el login devuelve múltiples membresías sin organización seleccionada, redirigir a selector
-      if (session.memberships && session.memberships.length > 1 && !session.organizationId) {
-        router.push('/select-organization');
-      }
+      return session;
+    },
+    platformLogin: async (credentials) => {
+      const session = await apiFetch<AuthResponse>('/auth/platform/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
+      persistSession(session);
+      return session;
     },
     selectOrganization: async (orgId: string) => {
       if (!token) throw new ApiError('La sesión ha expirado', 401);

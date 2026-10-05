@@ -8,6 +8,7 @@ export default function HomePage() {
       <p>Administra catálogo, inventario y ventas desde un único espacio de trabajo.</p>
       <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
         <Link className="primary-link" href="/login" style={{ textAlign: 'center' }}>Entrar al sistema</Link>
+        <Link href="/platform/login" style={{ textAlign: 'center', fontSize: '0.875rem' }}>Acceso de propietario global</Link>
         <Link href="/register" style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--muted)' }}>Crear cuenta nueva</Link>
       </div>
     </main>
