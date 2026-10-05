@@ -1,4 +1,4 @@
-import { UnauthorizedException, Injectable, ForbiddenException } from '@nestjs/common';
+import { UnauthorizedException, Injectable, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User, Membership, OrgRole, PlatformRole } from '@prisma/client';
@@ -72,7 +72,11 @@ export class AuthService {
     };
   }
 
-  async selectOrganization(userId: string, organizationId: string): Promise<LoginResponse> {
+  async selectOrganization(userId: string, organizationId?: string): Promise<LoginResponse> {
+    if (!organizationId) {
+      throw new BadRequestException('OrganizationId is required');
+    }
+
     const membership = await this.membershipsService.findOne(userId, organizationId);
     
     if (!membership) {

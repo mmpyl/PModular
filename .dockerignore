@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# Node dependencies and generated outputs
+node_modules
+**/node_modules
+npm-debug.log*
+
+# Build artifacts
+backend/dist
+frontend/.next
+frontend/out
+backend/coverage
+frontend/coverage
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Local env files
+.env
+.env.*
+**/.env
+**/.env.*
+
+# OS/editor noise
+.vscode
+.idea
+.DS_Store
+Thumbs.db

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { OrgRoles } from './decorators/org-roles.decorator';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -32,8 +32,14 @@ export class AuthController {
   @Post('select-organization')
   @UseGuards(JwtAuthGuard)
   selectOrganization(@Body() dto: SelectOrganizationDto, @Req() req: Request) {
-    const user = req.user as { sub: string };
-    return this.authService.selectOrganization(user.sub, dto.organizationId);
+    const user = req.user as { sub: string; organizationId?: string };
+    const organizationId = dto?.organizationId ?? user.organizationId;
+
+    if (!organizationId) {
+      throw new BadRequestException('OrganizationId is required');
+    }
+
+    return this.authService.selectOrganization(user.sub, organizationId);
   }
 
   @Get('memberships')
