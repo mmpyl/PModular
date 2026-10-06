@@ -19,6 +19,7 @@ export default function UnitsPage() {
   const [symbol, setSymbol] = useState('');
   const [isFractionable, setIsFractionable] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -40,14 +41,15 @@ export default function UnitsPage() {
     if (!token || !organizationId) return;
     const body = JSON.stringify({ name, symbol: symbol || undefined, isFractionable });
     try {
+      let successMessage: string;
       if (editingId) {
         await apiFetch(`/units-of-measure/${editingId}`, { method: 'PATCH', token, organizationId, body });
-        setMessage('Unidad actualizada correctamente');
+        successMessage = 'Unidad actualizada correctamente';
       } else {
         await apiFetch('/units-of-measure', { method: 'POST', token, organizationId, body });
-        setMessage('Unidad creada correctamente');
+        successMessage = 'Unidad creada correctamente';
       }
-      setError(''); resetForm(); await load();
+      setError(''); resetForm(); setMessage(successMessage); await load();
     } catch (e: unknown) {
       setError(e instanceof ApiError ? e.message : 'No se pudo guardar la unidad');
     }
@@ -66,6 +68,7 @@ export default function UnitsPage() {
   }
 
   useEffect(() => { void load(); }, [token, organizationId]);
+  const filteredUnits = units.filter((unit) => `${unit.name} ${unit.symbol ?? ''}`.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
 
   return (
 <OwnerShell active="units">
@@ -73,6 +76,7 @@ export default function UnitsPage() {
       {error && <p className="error-message" role="alert">{error}</p>}
       {message && <p className="success-message">{message}</p>}
 
+      <div className="catalog-layout">
       <RequireRole roles={WRITE_ROLES}>
         <section className="panel">
           <span className="eyebrow">{editingId ? 'Edición' : 'Alta'}</span>
@@ -95,7 +99,8 @@ export default function UnitsPage() {
           <div><span className="eyebrow">Catálogo</span><h2>Unidades disponibles</h2></div>
           <span className="role-badge">{units.length} unidades</span>
         </div>
-        {units.map((unit) => (
+        <div className="catalog-search-row"><input aria-label="Buscar unidades" placeholder="Buscar unidad o símbolo..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
+        {filteredUnits.map((unit) => (
           <div className="list-row" key={unit.id}>
             <span>
               <strong>{unit.name}</strong>
@@ -113,8 +118,9 @@ export default function UnitsPage() {
             </RequireRole>
           </div>
         ))}
-        {!units.length && <p className="muted">No hay unidades registradas.</p>}
+        {!filteredUnits.length && <p className="muted">{units.length ? 'No hay unidades que coincidan con la búsqueda.' : 'No hay unidades registradas.'}</p>}
       </section>
+      </div>
     </OwnerShell>
   );
 }

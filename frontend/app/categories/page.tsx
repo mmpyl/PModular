@@ -24,6 +24,7 @@ export default function CategoriesPage() {
   const [name, setName] = useState('');
   const [parentId, setParentId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -52,14 +53,15 @@ export default function CategoriesPage() {
     if (!token || !organizationId) return;
     const body = JSON.stringify({ name, parentId: parentId || null });
     try {
+      let successMessage: string;
       if (editingId) {
         await apiFetch(`/categories/${editingId}`, { method: 'PATCH', token, organizationId, body });
-        setMessage('Categoría actualizada correctamente');
+        successMessage = 'Categoría actualizada correctamente';
       } else {
         await apiFetch('/categories', { method: 'POST', token, organizationId, body });
-        setMessage('Categoría creada correctamente');
+        successMessage = 'Categoría creada correctamente';
       }
-      setError(''); resetForm(); await loadCategories();
+      setError(''); resetForm(); setMessage(successMessage); await loadCategories();
     } catch (caughtError) {
       setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudo guardar la categoría');
     }
@@ -79,6 +81,10 @@ export default function CategoriesPage() {
 
   const roots = categories.filter((c) => !c.parentId);
   const childrenOf = (id: string) => categories.filter((c) => c.parentId === id);
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()) ||
+    category.parent?.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
+  );
 
   return (
     <OwnerShell active="categories">
@@ -86,8 +92,9 @@ export default function CategoriesPage() {
       {error && <p className="error-message" role="alert">{error}</p>}
       {message && <p className="success-message">{message}</p>}
 
+      <div className="catalog-layout">
       <RequireRole roles={WRITE_ROLES}>
-        <section className="panel">
+        <section className="panel catalog-editor">
           <span className="eyebrow">{editingId ? 'Edición' : 'Alta'}</span>
           <h2>{editingId ? 'Editar categoría' : 'Nueva categoría'}</h2>
           <form className="compact-form" onSubmit={saveCategory}>
@@ -110,7 +117,16 @@ export default function CategoriesPage() {
           <div><span className="eyebrow">Estructura</span><h2>Categorías activas</h2></div>
           <span className="role-badge">{categories.length} categorías</span>
         </div>
-        {roots.map((category) => (
+        <div className="catalog-search-row">
+          <input aria-label="Buscar categorías" placeholder="Buscar categoría..." value={search} onChange={(event) => setSearch(event.target.value)} />
+        </div>
+        {search ? filteredCategories.map((category) => (
+          <div className="list-row" key={category.id}>
+            <span><strong>{category.name}</strong><small>{category.parent ? `Subcategoría de ${category.parent.name}` : 'Nivel superior'} · {category._count?.products ?? 0} productos</small></span>
+            <RequireRole roles={WRITE_ROLES}><button type="button" className="quiet-link" onClick={() => startEdit(category)}>Editar</button></RequireRole>
+            <RequireRole roles={DELETE_ROLES}><button type="button" className="danger" onClick={() => void deleteCategory(category)}>Eliminar</button></RequireRole>
+          </div>
+        )) : roots.map((category) => (
           <div key={category.id}>
             <div className="list-row">
               <span><strong>{category.name}</strong><small>{category._count?.products ?? 0} productos</small></span>
@@ -142,8 +158,10 @@ export default function CategoriesPage() {
             ))}
           </div>
         ))}
-        {!roots.length && !error && <p className="muted">No hay categorías para mostrar.</p>}
+        {search && !filteredCategories.length && <p className="muted">No hay categorías que coincidan con la búsqueda.</p>}
+        {!search && !roots.length && !error && <p className="muted">No hay categorías para mostrar.</p>}
       </section>
+      </div>
     </OwnerShell>
   );
 }

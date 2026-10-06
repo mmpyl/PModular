@@ -20,47 +20,16 @@ export class SalesService {
   ) {}
 
   async create(organizationId: string, userId: string, dto: CreateSaleDto) {
+    if (!dto.items.length) {
+      throw new BadRequestException('A sale must contain at least one item');
+    }
+    if (dto.customerId) await this.validateCustomer(organizationId, dto.customerId);
+    await this.validateProducts(organizationId, dto.items.map((item) => item.productId));
+
     // Usar transacción para evitar condición de carrera en generateSaleNumber
     return this.prisma.$transaction(async (tx) => {
       const saleNumber = await this.generateSaleNumberInTransaction(tx, organizationId);
-
-      // Calcular totales
-      let subtotal = 0;
-      let taxAmount = 0;
-      let total = 0;
-
-      const items = await Promise.all(
-        dto.items.map(async (item) => {
-          const lineSubtotal = item.quantity * item.unitPrice;
-          const lineDiscount = item.discount || 0;
-          const lineTaxRate = item.taxRate ?? 0.18;
-          const lineTaxAmount = (lineSubtotal - lineDiscount) * lineTaxRate;
-          const lineTotal = lineSubtotal - lineDiscount + lineTaxAmount;
-
-          subtotal += lineSubtotal;
-          taxAmount += lineTaxAmount;
-          total += lineTotal;
-
-          // Verificar stock si hay batchId específico
-          let batchId = item.batchId || null;
-          
-          return {
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            discount: item.discount || 0,
-            taxRate: item.taxRate ?? 0.18,
-            subtotal: lineSubtotal,
-            taxAmount: lineTaxAmount,
-            total: lineTotal,
-            batchId,
-            notes: item.notes,
-          };
-        }),
-      );
-
-      const globalDiscount = dto.discount || 0;
-      total -= globalDiscount;
+      const totals = this.calculateTotals(dto.items, dto.discount ?? 0);
 
       return tx.sale.create({
         data: {
@@ -68,23 +37,23 @@ export class SalesService {
           saleNumber,
           customerId: dto.customerId,
           type: dto.type || SaleType.VENTA_MOSTRADOR,
-          status: dto.status || SaleStatus.CONFIRMADA,
+          status: PrismaSaleStatus.BORRADOR,
           deliveryDate: dto.deliveryDate ? new Date(dto.deliveryDate) : null,
           paymentTerm: dto.paymentTerm || 'CONTADO',
           paymentDueDate: dto.paymentDueDate ? new Date(dto.paymentDueDate) : null,
-          subtotal,
+          subtotal: totals.subtotal,
           taxRate: dto.taxRate ?? 0.18,
-          taxAmount,
-          discount: globalDiscount,
-          total,
+          taxAmount: totals.taxAmount,
+          discount: totals.discount,
+          total: totals.total,
           amountPaid: 0,
-          amountPending: total,
+          amountPending: totals.total,
           currency: dto.currency || 'PEN',
           notes: dto.notes,
           internalNotes: dto.internalNotes,
           soldBy: userId,
           items: {
-            create: items,
+            create: totals.items,
           },
         },
         include: {
@@ -142,6 +111,7 @@ export class SalesService {
         },
         stockMovements: true,
         payments: true,
+        electronicDocuments: { orderBy: { createdAt: 'desc' } },
       },
     });
 
@@ -153,7 +123,7 @@ export class SalesService {
   }
 
   async update(organizationId: string, id: string, dto: UpdateSaleDto) {
-    await this.findOne(organizationId, id);
+    const sale = await this.findOne(organizationId, id);
 
     const existing = await this.prisma.sale.findUnique({
       where: { id },
@@ -173,6 +143,13 @@ export class SalesService {
       );
     }
 
+    if (dto.customerId) await this.validateCustomer(organizationId, dto.customerId);
+    if (dto.status && dto.status !== sale.status) {
+      if (sale.status !== PrismaSaleStatus.BORRADOR || dto.status !== PrismaSaleStatus.CONFIRMADA) {
+        throw new BadRequestException('Only draft sales can be confirmed');
+      }
+    }
+
     return this.prisma.sale.update({
       where: { id },
       data: dto,
@@ -182,7 +159,7 @@ export class SalesService {
   async complete(organizationId: string, userId: string, id: string) {
     const sale = await this.findOne(organizationId, id);
 
-    if (sale.status !== SaleStatus.CONFIRMADA) {
+    if (sale.status !== PrismaSaleStatus.CONFIRMADA) {
       throw new BadRequestException('Sale must be confirmed before completing');
     }
 
@@ -220,11 +197,16 @@ export class SalesService {
       }
 
       // Actualizar estado de la venta
-      return tx.sale.update({
-        where: { id },
-        data: {
-          status: SaleStatus.COMPLETADA,
-        },
+      const completed = await tx.sale.updateMany({
+        where: { id, organizationId, status: PrismaSaleStatus.CONFIRMADA },
+        data: { status: PrismaSaleStatus.COMPLETADA },
+      });
+      if (completed.count !== 1) {
+        throw new BadRequestException('Sale state changed while completing; reload and try again');
+      }
+
+      return tx.sale.findFirstOrThrow({
+        where: { id, organizationId },
         include: {
           customer: true,
           items: {
@@ -246,51 +228,48 @@ export class SalesService {
   ) {
     const sale = await this.findOne(organizationId, saleId);
 
+    const payableStatuses: PrismaSaleStatus[] = [PrismaSaleStatus.CONFIRMADA, PrismaSaleStatus.COMPLETADA];
+    if (!payableStatuses.includes(sale.status as PrismaSaleStatus)) {
+      throw new BadRequestException('Only confirmed or completed sales can receive payments');
+    }
     if (Number(sale.amountPending) <= 0) {
       throw new BadRequestException('Sale is already fully paid');
     }
+    if (dto.amount > Number(sale.amountPending)) {
+      throw new BadRequestException('Payment cannot exceed the outstanding balance');
+    }
 
-    const paymentAmount = Math.min(dto.amount, Number(sale.amountPending));
-
-    // Crear pago
-    const payment = await this.prisma.payment.create({
-      data: {
-        organizationId,
-        referenceType: 'SALE',
-        referenceId: saleId,
-        amount: paymentAmount,
-        method: dto.method as PaymentMethod,
-        status: PaymentStatus.PAGADO,
-        transactionId: dto.transactionId,
-        bankName: dto.bankName,
-        cardLastFour: dto.cardLastFour,
-        notes: dto.notes,
-        processedBy: userId,
-      },
-    });
-
-    // Actualizar montos de la venta
-    const newAmountPaid = Number(sale.amountPaid) + paymentAmount;
-    const newAmountPending = Number(sale.amountPending) - paymentAmount;
-
-    const updatedSale = await this.prisma.sale.update({
-      where: { id: saleId },
-      data: {
-        amountPaid: newAmountPaid,
-        amountPending: newAmountPending,
-      },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            product: true,
-          },
+    return this.prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.create({
+        data: {
+          organizationId,
+          referenceType: 'SALE',
+          referenceId: saleId,
+          amount: dto.amount,
+          method: dto.method as PaymentMethod,
+          status: PaymentStatus.PAGADO,
+          transactionId: dto.transactionId,
+          bankName: dto.bankName,
+          cardLastFour: dto.cardLastFour,
+          notes: dto.notes,
+          processedBy: userId,
         },
-        payments: true,
-      },
-    });
+      });
 
-    return { payment, sale: updatedSale };
+      const updated = await tx.sale.updateMany({
+        where: { id: saleId, organizationId, amountPending: { gte: dto.amount } },
+        data: { amountPaid: { increment: dto.amount }, amountPending: { decrement: dto.amount } },
+      });
+      if (updated.count !== 1) {
+        throw new BadRequestException('The outstanding balance changed; reload and try again');
+      }
+
+      const updatedSale = await tx.sale.findFirstOrThrow({
+        where: { id: saleId, organizationId },
+        include: { customer: true, items: { include: { product: true } }, payments: true },
+      });
+      return { payment, sale: updatedSale };
+    });
   }
 
   async cancel(organizationId: string, id: string) {
@@ -305,10 +284,16 @@ export class SalesService {
       throw new BadRequestException('Sale is already cancelled or fully returned');
     }
 
-    return this.prisma.sale.update({
-      where: { id },
+    if (sale.status === PrismaSaleStatus.COMPLETADA || Number(sale.amountPaid) > 0) {
+      throw new BadRequestException('A completed or paid sale cannot be cancelled without a refund');
+    }
+
+    const updated = await this.prisma.sale.updateMany({
+      where: { id, organizationId, status: { in: [PrismaSaleStatus.BORRADOR, PrismaSaleStatus.CONFIRMADA] }, amountPaid: 0 },
       data: { status: PrismaSaleStatus.CANCELADA },
     });
+    if (!updated.count) throw new BadRequestException('Sale state changed; reload and try again');
+    return this.findOne(organizationId, id);
   }
 
   async remove(organizationId: string, id: string) {
@@ -372,5 +357,71 @@ export class SalesService {
     }
 
     return `${prefix}-${year}${month}-${String(sequence).padStart(4, '0')}`;
+  }
+
+  private calculateTotals(items: CreateSaleDto['items'], globalDiscount: number) {
+    let subtotal = 0;
+    let taxAmount = 0;
+    let itemDiscount = 0;
+    const calculatedItems = items.map((item) => {
+      if (item.quantity <= 0) throw new BadRequestException('Sale quantity must be greater than zero');
+      const lineSubtotal = this.roundAmount(item.quantity * item.unitPrice);
+      const lineDiscount = this.roundAmount(item.discount ?? 0);
+      if (lineDiscount > lineSubtotal) throw new BadRequestException('Item discount cannot exceed its subtotal');
+      const rate = item.taxRate ?? 0.18;
+      if (rate < 0 || rate > 1) throw new BadRequestException('Tax rate must be between 0 and 1');
+      const lineTax = this.roundAmount((lineSubtotal - lineDiscount) * rate);
+      const lineTotal = this.roundAmount(lineSubtotal - lineDiscount + lineTax);
+      subtotal += lineSubtotal;
+      taxAmount += lineTax;
+      itemDiscount += lineDiscount;
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: lineDiscount,
+        taxRate: rate,
+        subtotal: lineSubtotal,
+        taxAmount: lineTax,
+        total: lineTotal,
+        batchId: item.batchId || null,
+        notes: item.notes,
+      };
+    });
+    subtotal = this.roundAmount(subtotal);
+    taxAmount = this.roundAmount(taxAmount);
+    globalDiscount = this.roundAmount(globalDiscount);
+    const discount = this.roundAmount(itemDiscount + globalDiscount);
+    const total = this.roundAmount(subtotal + taxAmount - discount);
+    if (globalDiscount > subtotal - itemDiscount + taxAmount) {
+      throw new BadRequestException('Global discount exceeds the sale amount');
+    }
+    return { items: calculatedItems, subtotal, taxAmount, discount, total };
+  }
+
+  private roundAmount(value: number) {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  }
+
+  private async validateProducts(organizationId: string, productIds: string[]) {
+    const uniqueIds = [...new Set(productIds)];
+    if (uniqueIds.length !== productIds.length) {
+      throw new BadRequestException('A product can only appear once in a sale; combine its quantity');
+    }
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: uniqueIds }, organizationId, isActive: true },
+      select: { id: true },
+    });
+    if (products.length !== uniqueIds.length) {
+      throw new BadRequestException('One or more products are inactive or outside the current organization');
+    }
+  }
+
+  private async validateCustomer(organizationId: string, customerId: string) {
+    const customer = await this.prisma.businessEntity.findFirst({
+      where: { id: customerId, organizationId, isActive: true, entityType: { in: ['CLIENTE', 'AMBOS'] } },
+      select: { id: true },
+    });
+    if (!customer) throw new BadRequestException('Customer not found, inactive, or outside the current organization');
   }
 }

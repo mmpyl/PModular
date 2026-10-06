@@ -18,69 +18,41 @@ export class PurchaseOrdersService {
   ) {}
 
   async create(organizationId: string, userId: string, dto: CreatePurchaseOrderDto) {
+    if (dto.items.length === 0) {
+      throw new BadRequestException('A purchase order must contain at least one item');
+    }
+    await this.validateSupplier(organizationId, dto.supplierId);
+    await this.validateProducts(organizationId, dto.items.map((item) => item.productId));
+
     // Usar transacción para evitar condición de carrera en generateOrderNumber
     return this.prisma.$transaction(async (tx) => {
       const orderNumber = await this.generateOrderNumberInTransaction(tx, organizationId);
 
       // Calcular totales
-      let subtotal = 0;
-      let taxAmount = 0;
-      let total = 0;
-
-      const items = dto.items.map((item) => {
-        const lineSubtotal = item.quantityOrdered * item.unitCost;
-        const lineDiscount = item.discount || 0;
-        const lineTaxRate = item.taxRate ?? 0.18;
-        const lineTaxAmount = (lineSubtotal - lineDiscount) * lineTaxRate;
-        const lineTotal = lineSubtotal - lineDiscount + lineTaxAmount;
-
-        subtotal += lineSubtotal;
-        taxAmount += lineTaxAmount;
-        total += lineTotal - lineDiscount;
-
-        return {
-          productId: item.productId,
-          quantityOrdered: item.quantityOrdered,
-          quantityReceived: 0,
-          unitCost: item.unitCost,
-          discount: item.discount || 0,
-          taxRate: item.taxRate ?? 0.18,
-          subtotal: lineSubtotal,
-          taxAmount: lineTaxAmount,
-          total: lineTotal,
-          batchNumber: item.batchNumber,
-          expirationDate: item.expirationDate ? new Date(item.expirationDate) : null,
-          notes: item.notes,
-        };
-      });
-
-      const globalDiscount = dto.discount || 0;
-      total -= globalDiscount;
+      const totals = this.calculateTotals(dto.items, dto.discount ?? 0);
 
       return tx.purchaseOrder.create({
         data: {
           organizationId,
           orderNumber,
           supplierId: dto.supplierId,
-          status: dto.status || PurchaseOrderStatus.BORRADOR,
+          status: PurchaseOrderStatus.BORRADOR,
           expectedDeliveryDate: dto.expectedDeliveryDate
             ? new Date(dto.expectedDeliveryDate)
             : null,
           paymentTerm: dto.paymentTerm || 'CONTADO',
           paymentDueDate: dto.paymentDueDate ? new Date(dto.paymentDueDate) : null,
-          subtotal,
+          subtotal: totals.subtotal,
           taxRate: dto.taxRate ?? 0.18,
-          taxAmount,
-          discount: globalDiscount,
-          total,
+          taxAmount: totals.taxAmount,
+          discount: dto.discount ?? 0,
+          total: totals.total,
           currency: dto.currency || 'PEN',
           notes: dto.notes,
           internalNotes: dto.internalNotes,
           externalReference: dto.externalReference,
           createdBy: userId,
-          items: {
-            create: items,
-          },
+          items: { create: totals.items },
         },
         include: {
           supplier: true,
@@ -167,9 +139,54 @@ export class PurchaseOrdersService {
       );
     }
 
-    return this.prisma.purchaseOrder.update({
-      where: { id },
-      data: dto as any,
+    if (dto.supplierId) {
+      await this.validateSupplier(organizationId, dto.supplierId);
+    }
+    if (dto.items) {
+      if (dto.items.length === 0) {
+        throw new BadRequestException('A purchase order must contain at least one item');
+      }
+      await this.validateProducts(organizationId, dto.items.map((item) => item.productId));
+    }
+
+    if (dto.items && existing?.status !== PurchaseOrderStatus.BORRADOR) {
+      throw new BadRequestException('Only draft purchase orders can have their items edited');
+    }
+
+    if (dto.status && dto.status !== existing?.status) {
+      const validTransitions: Record<string, string[]> = {
+        [PurchaseOrderStatus.BORRADOR]: [PurchaseOrderStatus.ENVIADA],
+        [PurchaseOrderStatus.ENVIADA]: [PurchaseOrderStatus.CONFIRMADA],
+      };
+      if (!validTransitions[existing?.status ?? '']?.includes(dto.status)) {
+        throw new BadRequestException('Invalid purchase order status transition');
+      }
+    }
+
+    const { items, status, ...orderData } = dto;
+    return this.prisma.$transaction(async (tx) => {
+      if (items) {
+        const totals = this.calculateTotals(items, dto.discount ?? 0);
+        await tx.purchaseOrderItem.deleteMany({ where: { purchaseOrderId: id } });
+        return tx.purchaseOrder.update({
+          where: { id },
+          data: {
+            ...orderData,
+            ...(status ? { status } : {}),
+            subtotal: totals.subtotal,
+            taxAmount: totals.taxAmount,
+            total: totals.total,
+            items: { create: totals.items },
+          },
+          include: { supplier: true, items: { include: { product: true } } },
+        });
+      }
+
+      return tx.purchaseOrder.update({
+        where: { id },
+        data: { ...orderData, ...(status ? { status } : {}) } as any,
+        include: { supplier: true, items: { include: { product: true } } },
+      });
     });
   }
 
@@ -181,8 +198,19 @@ export class PurchaseOrdersService {
   ) {
     const order = await this.findOne(organizationId, orderId);
 
-    if (order.status === PurchaseOrderStatus.CANCELADA) {
-      throw new BadRequestException('Cannot receive a cancelled order');
+    const receivableStatuses: PurchaseOrderStatus[] = [
+      PurchaseOrderStatus.ENVIADA,
+      PurchaseOrderStatus.CONFIRMADA,
+      PurchaseOrderStatus.PARCIALMENTE_RECIBIDA,
+    ];
+    if (!receivableStatuses.includes(order.status)) {
+      throw new BadRequestException('Only sent or confirmed orders can be received');
+    }
+    if (dto.items.length === 0) {
+      throw new BadRequestException('At least one order item is required for receiving');
+    }
+    if (new Set(dto.items.map((item) => item.itemId)).size !== dto.items.length) {
+      throw new BadRequestException('An order item cannot be received more than once per request');
     }
 
     // Usar transacción para asegurar consistencia en todas las operaciones de stock
@@ -200,10 +228,17 @@ export class PurchaseOrdersService {
         }
 
         const quantityReceived = receiveItem.quantityReceived;
+        const pending = Number(orderItem.quantityOrdered) - Number(orderItem.quantityReceived);
+        if (quantityReceived <= 0 || quantityReceived > pending) {
+          throw new BadRequestException(`Received quantity must be greater than zero and no more than the pending ${pending}`);
+        }
 
         // Actualizar cantidad recibida en el ítem
-        await tx.purchaseOrderItem.update({
-          where: { id: receiveItem.itemId },
+        const itemUpdate = await tx.purchaseOrderItem.updateMany({
+          where: {
+            id: receiveItem.itemId,
+            quantityReceived: { lte: Number(orderItem.quantityOrdered) - quantityReceived },
+          },
           data: {
             quantityReceived: {
               increment: quantityReceived,
@@ -214,6 +249,9 @@ export class PurchaseOrdersService {
               : orderItem.expirationDate ?? undefined,
           },
         });
+        if (itemUpdate.count !== 1) {
+          throw new BadRequestException('The pending quantity changed; reload the order and try again');
+        }
 
         // Delegar al StockMovementService que maneja consistentemente lotes e inventario
         // Usamos la versión que acepta transaction client para evitar transacciones anidadas
@@ -334,6 +372,84 @@ export class PurchaseOrdersService {
     }
 
     return `${prefix}-${year}-${String(sequence).padStart(4, '0')}`;
+  }
+
+  private calculateTotals(items: CreatePurchaseOrderDto['items'], globalDiscount: number) {
+    let subtotal = 0;
+    let taxAmount = 0;
+
+    const calculatedItems = items.map((item) => {
+      if (item.quantityOrdered <= 0) {
+        throw new BadRequestException('Ordered quantity must be greater than zero');
+      }
+      const lineSubtotal = this.roundAmount(item.quantityOrdered * item.unitCost);
+      const lineDiscount = item.discount ?? 0;
+      if (lineDiscount > lineSubtotal) {
+        throw new BadRequestException('An item discount cannot exceed its subtotal');
+      }
+      const lineTaxRate = item.taxRate ?? 0.18;
+      const discountedSubtotal = this.roundAmount(lineSubtotal - lineDiscount);
+      const lineTaxAmount = this.roundAmount(discountedSubtotal * lineTaxRate);
+      const lineTotal = this.roundAmount(discountedSubtotal + lineTaxAmount);
+      subtotal += lineSubtotal;
+      taxAmount += lineTaxAmount;
+
+      return {
+        productId: item.productId,
+        quantityOrdered: item.quantityOrdered,
+        quantityReceived: 0,
+        unitCost: item.unitCost,
+        discount: lineDiscount,
+        taxRate: lineTaxRate,
+        subtotal: lineSubtotal,
+        taxAmount: lineTaxAmount,
+        total: lineTotal,
+        batchNumber: item.batchNumber,
+        expirationDate: item.expirationDate ? new Date(item.expirationDate) : null,
+        notes: item.notes,
+      };
+    });
+
+    subtotal = this.roundAmount(subtotal);
+    taxAmount = this.roundAmount(taxAmount);
+    globalDiscount = this.roundAmount(globalDiscount);
+    const total = this.roundAmount(subtotal + taxAmount - globalDiscount);
+    if (globalDiscount > subtotal + taxAmount) {
+      throw new BadRequestException('Order discount cannot exceed the order amount');
+    }
+
+    return { items: calculatedItems, subtotal, taxAmount, total };
+  }
+
+  private roundAmount(value: number) {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  }
+
+  private async validateSupplier(organizationId: string, supplierId: string) {
+    const supplier = await this.prisma.businessEntity.findFirst({
+      where: {
+        id: supplierId,
+        organizationId,
+        isActive: true,
+        entityType: { in: ['PROVEEDOR', 'AMBOS'] },
+      },
+      select: { id: true },
+    });
+    if (!supplier) {
+      throw new BadRequestException('Supplier not found, inactive, or outside the current organization');
+    }
+  }
+
+  private async validateProducts(organizationId: string, productIds: string[]) {
+    const uniqueIds = [...new Set(productIds)];
+    if (!uniqueIds.length) return;
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: uniqueIds }, organizationId, isActive: true },
+      select: { id: true },
+    });
+    if (products.length !== uniqueIds.length) {
+      throw new BadRequestException('One or more products are inactive or outside the current organization');
+    }
   }
 
   private async generateOrderNumber(organizationId: string): Promise<string> {

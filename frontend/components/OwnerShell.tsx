@@ -41,7 +41,7 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
             <span>{activeMembership?.organization?.name || 'Organización'}</span>
             <span className="role-badge">{orgRole === 'OWNER' ? 'Propietario' : orgRole}</span>
           </div>
-          <nav>
+          <nav aria-label="Navegación principal">
             {links.filter((link) => link.visible).map((link) => (
               <Link key={link.key} className={active === link.key ? 'active' : ''} href={link.href}>
                 {link.label}

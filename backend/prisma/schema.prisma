@@ -73,6 +73,8 @@ model Organization {
   sales             Sale[]
   payments          Payment[]
   cashRegisters     CashRegister[]
+  electronicDocuments ElectronicDocument[]
+  integrations     OrganizationIntegration[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -561,6 +563,7 @@ model Sale {
   items          SaleItem[]
   stockMovements StockMovement[]
   payments       Payment[]
+  electronicDocuments ElectronicDocument[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -571,6 +574,64 @@ model Sale {
   @@index([status])
   @@index([saleDate])
   @@map("sales")
+}
+
+enum ElectronicDocumentType {
+  TICKET
+  BOLETA
+  FACTURA
+}
+
+enum ElectronicDocumentStatus {
+  LOCAL
+  PENDIENTE
+  ACEPTADO
+  RECHAZADO
+  ERROR
+}
+
+model ElectronicDocument {
+  id             String @id @default(uuid())
+  organizationId String
+  saleId         String
+  type           ElectronicDocumentType
+  series         String
+  number         Int
+  status         ElectronicDocumentStatus
+  provider       String @default("INTERNAL")
+  providerCode   String?
+  message        String?
+  pdfUrl         String?
+  xmlUrl         String?
+  cdrUrl         String?
+  qrData         String?
+  issuedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sale         Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, type, series, number])
+  @@unique([saleId, type])
+  @@index([organizationId, createdAt])
+  @@index([status])
+  @@map("electronic_documents")
+}
+
+model OrganizationIntegration {
+  id               String @id @default(uuid())
+  organizationId   String
+  provider         String
+  endpointUrl      String
+  encryptedToken   String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider])
+  @@map("organization_integrations")
 }
 
 model SaleItem {

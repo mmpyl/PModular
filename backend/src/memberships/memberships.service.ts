@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { OrgRole } from '@prisma/client';
+import { UsersService } from '../users/users.service';
 
 export interface CreateMembershipDto {
   userId: string;
@@ -10,7 +11,26 @@ export interface CreateMembershipDto {
 
 @Injectable()
 export class MembershipsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly usersService: UsersService) {}
+
+  async addOrganizationMember(data: { email: string; name?: string; password?: string; organizationId: string; role?: OrgRole }) {
+    let user = await this.usersService.findByEmail(data.email);
+    if (!user) {
+      if (!data.password) throw new BadRequestException('La contraseña es obligatoria para crear una cuenta nueva');
+      user = await this.usersService.create({ email: data.email, name: data.name, password: data.password });
+    }
+    if (user.platformRole) throw new ForbiddenException('Una cuenta de plataforma no puede agregarse al equipo de negocio');
+
+    const existing = await this.prisma.membership.findUnique({
+      where: { userId_organizationId: { userId: user.id, organizationId: data.organizationId } },
+    });
+    if (existing) throw new ConflictException('Este usuario ya pertenece al equipo');
+
+    return this.prisma.membership.create({
+      data: { userId: user.id, organizationId: data.organizationId, role: data.role ?? OrgRole.VENDEDOR },
+      include: { user: { select: { id: true, email: true, name: true } } },
+    });
+  }
 
   async create(data: CreateMembershipDto) {
     // Verificar que el usuario existe
@@ -87,6 +107,11 @@ export class MembershipsService {
       throw new NotFoundException('Membresía no encontrada');
     }
 
+    if (existing.role === OrgRole.OWNER && role !== OrgRole.OWNER) {
+      const owners = await this.prisma.membership.count({ where: { organizationId, role: OrgRole.OWNER } });
+      if (owners <= 1) throw new ForbiddenException('No se puede quitar el último owner del negocio');
+    }
+
     return this.prisma.membership.update({
       where: {
         userId_organizationId: {
@@ -123,7 +148,7 @@ export class MembershipsService {
       });
 
       if (ownerCount <= 1) {
-        throw new Error('No se puede eliminar al último OWNER de la organización. Debe haber al menos un OWNER.');
+        throw new ForbiddenException('No se puede eliminar al último OWNER de la organización');
       }
     }
 

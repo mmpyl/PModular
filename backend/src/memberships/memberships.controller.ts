@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Patch, ForbiddenException } from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -6,11 +6,35 @@ import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { OrgRole } from '@prisma/client';
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 
 export interface CreateMembershipDto {
   userId: string;
   organizationId: string;
   role?: OrgRole;
+}
+
+export class AddTeamMemberDto {
+  @IsEmail()
+  email!: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(8)
+  password?: string;
+
+  @IsOptional()
+  @IsEnum(OrgRole)
+  role?: OrgRole;
+}
+
+export class UpdateTeamMemberRoleDto {
+  @IsEnum(OrgRole)
+  role!: OrgRole;
 }
 
 @Controller('memberships')
@@ -26,6 +50,24 @@ export class MembershipsController {
       throw new Error('No puedes crear membresías para otra organización');
     }
     return this.membershipsService.create(createMembershipDto);
+  }
+
+  @Post('team')
+  @OrgRoles('OWNER')
+  addTeamMember(@Body() dto: AddTeamMemberDto, @CurrentOrg() organizationId: string) {
+    return this.membershipsService.addOrganizationMember({ ...dto, organizationId });
+  }
+
+  @Patch(':userId/:organizationId/role')
+  @OrgRoles('OWNER')
+  updateRole(
+    @Param('userId') userId: string,
+    @Param('organizationId') organizationId: string,
+    @Body() dto: UpdateTeamMemberRoleDto,
+    @CurrentOrg() currentOrgId: string,
+  ) {
+    if (organizationId !== currentOrgId) throw new ForbiddenException('No puedes cambiar roles de otro negocio');
+    return this.membershipsService.updateRole(userId, organizationId, dto.role);
   }
 
   @Get('user/:userId')

@@ -18,6 +18,7 @@ import { SalesModule } from './sales/sales.module';
 import { CashRegistersModule } from './cash-registers/cash-registers.module';
 import { ReportsModule } from './reports/reports.module';
 import { AuthSharedModule } from './auth/auth-shared.module';
+import { InvoicingModule } from './invoicing/invoicing.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { AuthSharedModule } from './auth/auth-shared.module';
     SalesModule,
     CashRegistersModule,
     ReportsModule,
+    InvoicingModule,
   ],
 })
 export class AppModule {}

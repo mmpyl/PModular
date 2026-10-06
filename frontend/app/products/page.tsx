@@ -112,14 +112,15 @@ export default function ProductsPage() {
       categoryId: categoryId || null, unitId: unitId || null, attributes,
     };
     try {
+      let successMessage: string;
       if (editingId) {
         await apiFetch(`/products/${editingId}`, { method: 'PATCH', token, organizationId, body: JSON.stringify(payload) });
-        setMessage('Producto actualizado correctamente');
+        successMessage = 'Producto actualizado correctamente';
       } else {
         await apiFetch('/products', { method: 'POST', token, organizationId, body: JSON.stringify(payload) });
-        setMessage('Producto creado correctamente');
+        successMessage = 'Producto creado correctamente';
       }
-      setError(''); resetForm(); await loadProducts();
+      setError(''); resetForm(); setMessage(successMessage); await loadProducts();
     } catch (caughtError) {
       setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudo guardar el producto');
     }

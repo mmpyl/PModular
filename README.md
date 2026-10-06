@@ -35,11 +35,16 @@ La API queda disponible en `http://localhost:3001` y la aplicación web en `http
 ### Accesos de negocio y plataforma
 
 - Usuarios de negocio inician sesión en `http://localhost:3000/login` y acceden a las organizaciones donde tienen membresía.
-- Administradores globales inician sesión en `http://localhost:3000/platform/login` y administran organizaciones desde `/platform`.
+- Administradores globales inician sesión en `http://localhost:3000/platform/login` y administran organizaciones y usuarios tenant desde `/platform`.
 - Son cuentas separadas: una cuenta `PLATFORM_ADMIN` no puede tener membresías de negocio ni usar el acceso de negocio.
 - Para crear una cuenta global separada desde la raíz del proyecto: `npm run create:platform-admin -w backend -- platform.owner@pmodular.local "Owner de plataforma"`. El comando genera una contraseña temporal aleatoria y la muestra una sola vez.
 - Para promover una cuenta existente sin membresías: `npm run grant:platform-admin -w backend -- admin@ejemplo.com`. El script rechaza cuentas que ya pertenezcan a negocios.
 - Para crear una organización desde la consola global, el correo del owner debe pertenecer a una cuenta de negocio ya registrada.
+- El CRUD de usuarios global permite crear, consultar, editar, asignar roles por organización y eliminar cuentas tenant; no lista ni modifica cuentas de plataforma y protege al último `OWNER` de cada organización.
+- La emisión Nubefact guarda su token cifrado con `NUBEFACT_ENCRYPTION_KEY`; genera 32 bytes aleatorios en cada ambiente (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) y mantén esa clave fuera del repositorio. Si se pierde, será necesario volver a guardar el token desde Configuración.
+- En Configuración del negocio puedes guardar cuentas Yape/Plin (número, titular, código y URL del QR), datos fiscales y series/correlativos de ticket, boleta y factura. El formulario de pago muestra la cuenta/QR y registra cuál recibió el abono.
+- Los tickets son comprobantes internos imprimibles. Las boletas y facturas se envían a Nubefact/SUNAT; configura la ruta API y el token por organización en Configuración. La clave local `NUBEFACT_ENCRYPTION_KEY` debe estar en `backend/.env` antes de guardar ese token. Facturas requieren RUC del receptor y la configuración fiscal del emisor; las boletas de S/ 700 o más requieren DNI/RUC.
+- Los documentos guardan su serie/correlativo y estado. PDF/XML/CDR aparecen cuando Nubefact los devuelve; un error de red queda en estado incierto y bloquea el reenvío automático para no duplicar la emisión.
 
 Para actualizar el esquema durante desarrollo, crea una migración con `npm run prisma:migrate -w backend`; para aplicar migraciones existentes usa `npm run prisma:migrate:deploy`.
 

@@ -27,6 +27,9 @@ export class ReportsService {
    */
   private getDateRange(dto: DateRangeDto): { startDate: Date; endDate: Date } {
     const endDate = dto.endDate ? new Date(dto.endDate) : new Date();
+    if (dto.endDate && /^\d{4}-\d{2}-\d{2}$/.test(dto.endDate)) {
+      endDate.setUTCHours(23, 59, 59, 999);
+    }
     const startDate = dto.startDate
       ? new Date(dto.startDate)
       : new Date(new Date().setMonth(endDate.getMonth() - 1));
