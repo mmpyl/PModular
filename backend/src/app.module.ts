@@ -1,3 +1,26 @@
+<<<<<<< HEAD
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
+import { PrismaModule } from './prisma.module';
+import { UsersModule } from './users/users.module';
+import { BusinessTypesModule } from './business-types/business-types.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { MembershipsModule } from './memberships/memberships.module';
+import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
+import { UnitsOfMeasureModule } from './units-of-measure/units-of-measure.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { StockMovementsModule } from './stock-movements/stock-movements.module';
+import { BatchesModule } from './batches/batches.module';
+import { BusinessEntitiesModule } from './business-entities/business-entities.module';
+import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { SalesModule } from './sales/sales.module';
+import { CashRegistersModule } from './cash-registers/cash-registers.module';
+import { ReportsModule } from './reports/reports.module';
+import { AuthSharedModule } from './auth/auth-shared.module';
+import { InvoicingModule } from './invoicing/invoicing.module';
+=======
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
@@ -29,6 +52,7 @@ import { PromotionsModule } from "./promotions/promotions.module";
 import { ElectronicVoucherModule } from "./electronic-voucher/electronic-voucher.module";
 import { VoucherArchiveModule } from "./voucher-archive/voucher-archive.module";
 import { ModuleCatalogModule } from "./module-catalog/module-catalog.module";
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
 @Module({
   imports: [
@@ -51,6 +75,9 @@ import { ModuleCatalogModule } from "./module-catalog/module-catalog.module";
     SalesModule,
     CashRegistersModule,
     ReportsModule,
+<<<<<<< HEAD
+    InvoicingModule,
+=======
     PlatformModule,
     AuditLogModule,
     WarehousesModule,
@@ -62,6 +89,7 @@ import { ModuleCatalogModule } from "./module-catalog/module-catalog.module";
     ElectronicVoucherModule,
     VoucherArchiveModule,
     ModuleCatalogModule,
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   ],
 })
 export class AppModule {}

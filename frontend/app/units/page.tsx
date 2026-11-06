@@ -21,11 +21,23 @@ const WRITE_ROLES = ['OWNER', 'ADMIN', 'INVENTARIO'];
 const DELETE_ROLES = ['OWNER', 'ADMIN'];
 
 export default function UnitsPage() {
+<<<<<<< HEAD
+  const { token, organizationId } = useAuth();
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [name, setName] = useState('');
+  const [symbol, setSymbol] = useState('');
+  const [isFractionable, setIsFractionable] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+=======
   const { token, organizationId, orgRole } = useAuth();
   const { data: units = [], isLoading } = useUnits(organizationId ?? undefined);
   const createMutation = useCreateUnit(organizationId ?? undefined);
   const updateMutation = useUpdateUnit(organizationId ?? undefined);
   const deleteMutation = useDeleteUnit(organizationId ?? undefined);
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   const form = useForm<UnitFormData & { id?: string }>({
     resolver: zodResolver(unitSchema) as any,
@@ -49,6 +61,19 @@ export default function UnitsPage() {
     if (!token || !organizationId) return;
     const { id, ...submitData } = data;
     try {
+<<<<<<< HEAD
+      let successMessage: string;
+      if (editingId) {
+        await apiFetch(`/units-of-measure/${editingId}`, { method: 'PATCH', token, organizationId, body });
+        successMessage = 'Unidad actualizada correctamente';
+      } else {
+        await apiFetch('/units-of-measure', { method: 'POST', token, organizationId, body });
+        successMessage = 'Unidad creada correctamente';
+      }
+      setError(''); resetForm(); setMessage(successMessage); await load();
+    } catch (e: unknown) {
+      setError(e instanceof ApiError ? e.message : 'No se pudo guardar la unidad');
+=======
       if (id) {
         await updateMutation.mutateAsync({ id, data: submitData });
       } else {
@@ -57,6 +82,7 @@ export default function UnitsPage() {
       resetForm();
     } catch {
       // Error manejado por el hook
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     }
   }
 
@@ -66,6 +92,12 @@ export default function UnitsPage() {
     await deleteMutation.mutateAsync(unit.id);
   }
 
+<<<<<<< HEAD
+  useEffect(() => { void load(); }, [token, organizationId]);
+  const filteredUnits = units.filter((unit) => `${unit.name} ${unit.symbol ?? ''}`.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
+
+=======
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   return (
     <OwnerShell active="units">
       <OwnerHeader eyebrow="Catálogo" title="Unidades de medida" />
@@ -90,6 +122,7 @@ export default function UnitsPage() {
         </Alert>
       )}
 
+      <div className="catalog-layout">
       <RequireRole roles={WRITE_ROLES}>
         <Card className="mb-6">
           <CardHeader>
@@ -155,6 +188,35 @@ export default function UnitsPage() {
         </Card>
       </RequireRole>
 
+<<<<<<< HEAD
+      <section className="panel">
+        <div className="panel-heading">
+          <div><span className="eyebrow">Catálogo</span><h2>Unidades disponibles</h2></div>
+          <span className="role-badge">{units.length} unidades</span>
+        </div>
+        <div className="catalog-search-row"><input aria-label="Buscar unidades" placeholder="Buscar unidad o símbolo..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
+        {filteredUnits.map((unit) => (
+          <div className="list-row" key={unit.id}>
+            <span>
+              <strong>{unit.name}</strong>
+              <small>{unit.symbol || 'Sin símbolo'}{unit.isFractionable ? ' · Fraccionable' : ''}</small>
+            </span>
+            <RequireRole roles={WRITE_ROLES}>
+              <div className="row-actions">
+                <button type="button" className="quiet-link" onClick={() => startEdit(unit)}>Editar</button>
+              </div>
+            </RequireRole>
+            <RequireRole roles={DELETE_ROLES}>
+              <div className="row-actions">
+                <button type="button" className="danger" onClick={() => void remove(unit)}>Eliminar</button>
+              </div>
+            </RequireRole>
+          </div>
+        ))}
+        {!filteredUnits.length && <p className="muted">{units.length ? 'No hay unidades que coincidan con la búsqueda.' : 'No hay unidades registradas.'}</p>}
+      </section>
+      </div>
+=======
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -206,6 +268,7 @@ export default function UnitsPage() {
           )}
         </CardContent>
       </Card>
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     </OwnerShell>
   );
 }
