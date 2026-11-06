@@ -9,6 +9,7 @@ type BusinessType = {
   id: string;
   name: string;
   defaultModules: unknown;
+  availableModules: unknown;
 };
 
 type PlatformOrganization = {
@@ -77,6 +78,8 @@ export default function PlatformPage() {
   const [newName, setNewName] = useState('');
   const [newOwnerEmail, setNewOwnerEmail] = useState('');
   const [newBusinessTypeId, setNewBusinessTypeId] = useState('');
+  const [organizationSearch, setOrganizationSearch] = useState('');
+  const [organizationTypeFilter, setOrganizationTypeFilter] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
@@ -118,12 +121,12 @@ export default function PlatformPage() {
   }
 
   function beginEdit(organization: PlatformOrganization) {
-    const modules = moduleNames(organization.enabledModules);
+    const availableModules = moduleNames(organization.businessType.availableModules);
     setDraft({
       id: organization.id,
       name: organization.name,
       businessTypeId: organization.businessTypeId,
-      enabledModules: modules.length ? modules : moduleNames(organization.businessType.defaultModules),
+      enabledModules: moduleNames(organization.enabledModules).filter((module) => availableModules.includes(module)),
       ownerEmail: '',
     });
     setError('');
@@ -272,9 +275,16 @@ export default function PlatformPage() {
   }
 
   const draftBusinessType = businessTypes.find((type) => type.id === draft?.businessTypeId);
-  const editableModules = draft
-    ? [...new Set([...moduleNames(draftBusinessType?.defaultModules), ...draft.enabledModules])]
-    : [];
+  const editableModules = draft ? moduleNames(draftBusinessType?.availableModules) : [];
+  const filteredOrganizations = organizations.filter((organization) => {
+    const search = organizationSearch.trim().toLocaleLowerCase();
+    const matchesSearch = !search || [
+      organization.name,
+      organization.id,
+      ...organization.memberships.flatMap(({ user: owner }) => [owner.name ?? '', owner.email]),
+    ].some((value) => value.toLocaleLowerCase().includes(search));
+    return matchesSearch && (!organizationTypeFilter || organization.businessTypeId === organizationTypeFilter);
+  });
 
   return (
     <PlatformRoute>
@@ -307,19 +317,28 @@ export default function PlatformPage() {
             {loading ? <p className="loading-message">Cargando organizaciones...</p> : organizations.length === 0 ? (
               <p className="muted">Todavía no hay negocios registrados.</p>
             ) : (
+              <>
+                <div className="platform-directory-tools">
+                  <label>Buscar negocio<input type="search" value={organizationSearch} onChange={(event) => setOrganizationSearch(event.target.value)} placeholder="Nombre, owner o ID" /></label>
+                  <label>Tipo de negocio<select value={organizationTypeFilter} onChange={(event) => setOrganizationTypeFilter(event.target.value)}>
+                    <option value="">Todos los tipos</option>
+                    {businessTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
+                  </select></label>
+                  <span className="role-badge">{filteredOrganizations.length} / {organizations.length}</span>
+                </div>
+                {filteredOrganizations.length === 0 ? <p className="muted">No hay negocios que coincidan con estos filtros.</p> : (
               <div className="platform-table-wrap">
                 <table className="platform-table">
                   <thead><tr><th>Negocio</th><th>Tipo</th><th>Owner</th><th>Módulos</th><th /></tr></thead>
                   <tbody>
-                    {organizations.map((organization) => {
+                    {filteredOrganizations.map((organization) => {
                       const owners = organization.memberships.map((membership) => membership.user);
-                      const modules = moduleNames(organization.enabledModules);
                       return (
                         <tr key={organization.id}>
                           <td><strong>{organization.name}</strong><small>{organization.id}</small></td>
                           <td>{organization.businessType.name}</td>
                           <td>{owners.length ? owners.map((owner) => owner.email).join(', ') : 'Sin owner'}</td>
-                          <td>{(modules.length ? modules : moduleNames(organization.businessType.defaultModules)).map(moduleLabel).join(', ')}</td>
+                          <td>{moduleNames(organization.enabledModules).map(moduleLabel).join(', ') || 'Sin módulos activos'}</td>
                           <td><button type="button" className="btn-quiet" onClick={() => beginEdit(organization)}>Editar</button></td>
                         </tr>
                       );
@@ -327,6 +346,8 @@ export default function PlatformPage() {
                   </tbody>
                 </table>
               </div>
+                )}
+              </>
             )}
           </section>
 
@@ -360,7 +381,12 @@ export default function PlatformPage() {
                   <label>Tipo de negocio
                     <select value={draft.businessTypeId} onChange={(event) => {
                       const type = businessTypes.find((item) => item.id === event.target.value);
-                      setDraft({ ...draft, businessTypeId: event.target.value, enabledModules: moduleNames(type?.defaultModules) });
+                      const availableModules = moduleNames(type?.availableModules);
+                      setDraft({
+                        ...draft,
+                        businessTypeId: event.target.value,
+                        enabledModules: moduleNames(type?.defaultModules).filter((module) => availableModules.includes(module)),
+                      });
                     }}>
                       {businessTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
                     </select>

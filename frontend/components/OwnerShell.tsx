@@ -13,24 +13,36 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
   const enabledModules = (() => {
     const configured = activeMembership?.organization?.enabledModules;
     const defaults = activeMembership?.organization?.businessType?.defaultModules;
-    const modules = Array.isArray(configured) && configured.length ? configured : defaults;
+    const modules = Array.isArray(configured) ? configured : defaults;
     return Array.isArray(modules) ? modules.filter((m): m is string => typeof m === 'string') : [];
   })();
   
   const canManage = orgRole === 'OWNER' || orgRole === 'ADMIN';
   const links = [
     { key: 'dashboard', label: 'Resumen', href: '/dashboard', visible: true },
-    { key: 'products', label: 'Productos', href: '/products', visible: enabledModules.includes('inventario') },
-    { key: 'categories', label: 'Categorías', href: '/categories', visible: enabledModules.includes('inventario') },
-    { key: 'units', label: 'Unidades', href: '/units', visible: enabledModules.includes('inventario') },
-    { key: 'inventory', label: 'Inventario', href: '/inventory', visible: enabledModules.includes('inventario') },
-    { key: 'sales', label: 'Ventas', href: '/sales', visible: enabledModules.includes('ventas') },
-    { key: 'purchases', label: 'Compras', href: '/purchase-orders', visible: enabledModules.includes('compras') },
-    { key: 'cash', label: 'Caja', href: '/cash-registers', visible: enabledModules.includes('caja') },
+    { key: 'products', label: 'Productos', href: '/products', module: 'inventario', visible: enabledModules.includes('inventario') },
+    { key: 'categories', label: 'Categorías', href: '/categories', module: 'inventario', visible: enabledModules.includes('inventario') },
+    { key: 'units', label: 'Unidades', href: '/units', module: 'inventario', visible: enabledModules.includes('inventario') },
+    { key: 'inventory', label: 'Inventario', href: '/inventory', module: 'inventario', visible: enabledModules.includes('inventario') },
+    { key: 'sales', label: 'Ventas', href: '/sales', module: 'ventas', visible: enabledModules.includes('ventas') },
+    { key: 'purchases', label: 'Compras', href: '/purchase-orders', module: 'compras', visible: enabledModules.includes('compras') },
+    { key: 'cash', label: 'Caja', href: '/cash-registers', module: 'caja', visible: enabledModules.includes('caja') },
     { key: 'team', label: 'Equipo', href: '/team', visible: canManage },
     { key: 'reports', label: 'Reportes', href: '/reports', visible: canManage },
-    { key: 'settings', label: 'Configuración', href: '/business-settings', visible: orgRole === 'OWNER' },
+    { key: 'settings', label: 'Configuración', href: '/business-settings', visible: canManage },
   ];
+  const activeModule = links.find((link) => link.key === active)?.module;
+
+  if (activeModule && !enabledModules.includes(activeModule)) {
+    return (
+      <ProtectedRoute>
+        <div className="app-shell"><main className="workspace">
+          <p className="error-message" role="alert">Este módulo está desactivado para el negocio.</p>
+          <Link href="/dashboard">Volver al resumen</Link>
+        </main></div>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>

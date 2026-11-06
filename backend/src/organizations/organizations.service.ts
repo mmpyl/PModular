@@ -4,15 +4,15 @@ import { PrismaService } from '../prisma.service';
 export interface CreateOrganizationDto {
   name: string;
   businessTypeId: string;
-  enabledModules?: string[];
   settings?: Record<string, any>;
 }
 
 export interface CreatePlatformOrganizationData extends CreateOrganizationDto {
   ownerEmail: string;
+  enabledModules?: string[];
 }
 
-export interface UpdatePlatformOrganizationData extends Partial<CreateOrganizationDto> {
+export interface UpdatePlatformOrganizationData extends Partial<CreatePlatformOrganizationData> {
   ownerEmail?: string;
 }
 
@@ -30,7 +30,7 @@ export class OrganizationsService {
       throw new NotFoundException(`BusinessType con ID ${data.businessTypeId} no encontrado`);
     }
 
-    const enabledModules = data.enabledModules || (businessType.defaultModules as string[]) || [];
+    const enabledModules = (businessType.defaultModules as string[]) || [];
 
     return this.prisma.$transaction(async (tx) => {
       const organization = await tx.organization.create({
@@ -95,6 +95,7 @@ export class OrganizationsService {
     }
 
     const enabledModules = data.enabledModules ?? (businessType.defaultModules as string[]) ?? [];
+    this.validateEnabledModules(enabledModules, businessType);
 
     return this.prisma.$transaction(async (tx) => {
       const organization = await tx.organization.create({
@@ -133,6 +134,7 @@ export class OrganizationsService {
     return this.prisma.organization.update({
       where: { id },
       data,
+      include: { businessType: true },
     });
   }
 
@@ -142,16 +144,18 @@ export class OrganizationsService {
       throw new NotFoundException(`Organización con ID ${id} no encontrada`);
     }
 
-    if (data.businessTypeId) {
-      const businessType = await this.prisma.businessType.findUnique({
-        where: { id: data.businessTypeId },
-      });
-      if (!businessType) {
-        throw new BadRequestException('El tipo de negocio seleccionado no existe');
-      }
+    const targetBusinessTypeId = data.businessTypeId ?? existing.businessTypeId;
+    const businessType = await this.prisma.businessType.findUnique({ where: { id: targetBusinessTypeId } });
+    if (!businessType) {
+      throw new BadRequestException('El tipo de negocio seleccionado no existe');
     }
 
+    const changingBusinessType = targetBusinessTypeId !== existing.businessTypeId;
+    const modulesToSave = data.enabledModules ?? (changingBusinessType ? businessType.defaultModules as string[] : undefined);
+    if (modulesToSave !== undefined) this.validateEnabledModules(modulesToSave, businessType);
+
     const { ownerEmail, ...organizationData } = data;
+    if (modulesToSave !== undefined) organizationData.enabledModules = modulesToSave;
     const owner = ownerEmail
       ? await this.prisma.user.findUnique({ where: { email: ownerEmail } })
       : null;
@@ -191,5 +195,15 @@ export class OrganizationsService {
     return this.prisma.organization.delete({
       where: { id },
     });
+  }
+
+  private validateEnabledModules(enabledModules: string[], businessType: { name: string; availableModules: unknown }) {
+    const availableModules = Array.isArray(businessType.availableModules)
+      ? businessType.availableModules.filter((module): module is string => typeof module === 'string')
+      : [];
+    const invalidModules = enabledModules.filter((module) => !availableModules.includes(module));
+    if (invalidModules.length) {
+      throw new BadRequestException(`Estos módulos no están disponibles para ${businessType.name}: ${invalidModules.join(', ')}`);
+    }
   }
 }

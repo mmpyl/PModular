@@ -5,6 +5,7 @@ import { OwnerHeader, OwnerShell } from '@/components/OwnerShell';
 import { RequireRole } from '@/components/RequireRole';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch, ApiError } from '@/lib/api';
+import { formatMoney } from '@/lib/format';
 
 type Product = {
   id: string;
@@ -20,6 +21,7 @@ type Product = {
 
 type Category = { id: string; name: string };
 type Unit = { id: string; name: string; symbol?: string | null; isFractionable: boolean };
+type OrganizationSettings = { settings?: { currency?: string | null } };
 
 type SchemaField = { type?: string; default?: unknown; options?: unknown[]; label?: string };
 
@@ -38,6 +40,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
+  const [currency, setCurrency] = useState('PEN');
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
   const [price, setPrice] = useState('');
@@ -75,12 +78,14 @@ export default function ProductsPage() {
   const loadReferences = useCallback(async () => {
     if (!token || !organizationId) return;
     try {
-      const [catRows, unitRows] = await Promise.all([
+      const [catRows, unitRows, organization] = await Promise.all([
         apiFetch<Category[]>('/categories', { token, organizationId }),
         apiFetch<Unit[]>('/units-of-measure', { token, organizationId }),
+        apiFetch<OrganizationSettings>(`/organizations/${organizationId}`, { token, organizationId }),
       ]);
       setCategories(catRows);
       setUnits(unitRows);
+      setCurrency(organization.settings?.currency || 'PEN');
     } catch (caughtError) {
       setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudieron cargar categorías y unidades');
     }
@@ -186,28 +191,25 @@ export default function ProductsPage() {
             {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
           </select>
         </div>
-        <div>
-          {products.map((product) => (
-            <div className="list-row" key={product.id}>
-              <span>
-                <strong>{product.name}</strong>
-                <small>{product.sku || 'Sin SKU'} · {product.category?.name || 'Sin categoría'} · {product.unit?.name || 'Sin unidad'}</small>
-              </span>
-              <span className="list-right">
-                <strong>{Number(product.price).toFixed(2)}</strong>
+        {products.length ? <div className="platform-table-wrap">
+          <table className="platform-table products-table">
+            <thead><tr><th>Producto</th><th>SKU</th><th>Categoría</th><th>Unidad</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>{products.map((product) => <tr key={product.id}>
+              <td><strong>{product.name}</strong></td>
+              <td>{product.sku || '-'}</td>
+              <td>{product.category?.name || '-'}</td>
+              <td>{product.unit?.name || '-'}</td>
+              <td><strong>{formatMoney(product.price, currency)}</strong></td>
+              <td><span className="role-badge">{product.isActive ? 'Activo' : 'Inactivo'}</span></td>
+              <td><div className="platform-actions">
                 <RequireRole roles={WRITE_ROLES}>
-                  <div className="row-actions">
-                    <button type="button" className="quiet-link" onClick={() => startEdit(product)}>Editar</button>
-                  </div>
+                  <button type="button" className="quiet-link" onClick={() => startEdit(product)}>Editar</button>
                 </RequireRole>
-                {canDelete && (
-                  <button type="button" className="danger" onClick={() => void deleteProduct(product)}>Eliminar</button>
-                )}
-              </span>
-            </div>
-          ))}
-          {!products.length && <p className="muted">No hay productos para mostrar.</p>}
-        </div>
+                {canDelete && <button type="button" className="danger" onClick={() => void deleteProduct(product)}>Eliminar</button>}
+              </div></td>
+            </tr>)}</tbody>
+          </table>
+        </div> : <p className="muted">No hay productos para mostrar.</p>}
       </section>
     </OwnerShell>
   );

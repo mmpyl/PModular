@@ -25,6 +25,7 @@ describe('InvoicingService', () => {
   });
 
   it('rechaza series ausentes o inválidas y correlativos no positivos', () => {
+    expect((service as any).getSeries({}, ElectronicDocumentType.TICKET)).toBe('T001');
     expect((service as any).getSeries({ billing: { series: { ticket: 'T001' } } }, ElectronicDocumentType.TICKET)).toBe('T001');
     expect(() => (service as any).getSeries({ billing: { series: { factura: 'serie-muy-larga' } } }, ElectronicDocumentType.FACTURA))
       .toThrow(BadRequestException);
@@ -37,6 +38,13 @@ describe('InvoicingService', () => {
     const serviceWithoutKey = new InvoicingService({} as any, { get: () => undefined } as any);
     expect(() => (serviceWithoutKey as any).encryptToken('test-token')).toThrow(ServiceUnavailableException);
     expect((serviceWithoutKey as any).getEncryptionKey(false)).toBeNull();
+  });
+
+  it('conserva el detalle de validación devuelto por Nubefact', () => {
+    expect((service as any).providerErrorMessage({ errors: ['La serie no está autorizada'] }))
+      .toBe('La serie no está autorizada');
+    expect((service as any).providerErrorMessage({ message: '  Error de validación\nRevisa la boleta  ' }))
+      .toBe('  Error de validación Revisa la boleta  ');
   });
 
   it('mapea una factura gravada al formato JSON de Nubefact', () => {

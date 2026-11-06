@@ -1,4 +1,5 @@
-import { BadRequestException, Controller, ForbiddenException, Get, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, ForbiddenException, Get, Post, Body, Param, Delete, Patch, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PlatformRole } from '@prisma/client';
 import { IsArray, IsEmail, IsObject, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 import { OrganizationsService } from './organizations.service';
@@ -9,12 +10,23 @@ import { OrgRoles, PlatformRoles } from '../auth/decorators/org-roles.decorator'
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
+import { YapeQrService } from './yape-qr.service';
 
 export interface CreateOrganizationDto {
   name: string;
   businessTypeId: string;
-  enabledModules?: string[];
   settings?: Record<string, any>;
+}
+
+export class UpdateOrganizationDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  name?: string;
+
+  @IsOptional()
+  @IsObject()
+  settings?: Record<string, unknown>;
 }
 
 export class CreatePlatformOrganizationDto {
@@ -65,7 +77,10 @@ export class UpdatePlatformOrganizationDto {
 @Controller('organizations')
 @UseGuards(JwtAuthGuard)
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) {}
+  constructor(
+    private readonly organizationsService: OrganizationsService,
+    private readonly yapeQrService: YapeQrService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -116,12 +131,31 @@ export class OrganizationsController {
     return this.organizationsService.findOne(id);
   }
 
+  @Post(':id/yape-qr')
+  @UseGuards(TenantGuard, OrgRolesGuard)
+  @OrgRoles('OWNER', 'ADMIN')
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 2 * 1024 * 1024 },
+    fileFilter: (_request, file, callback) => {
+      callback(null, ['image/png', 'image/jpeg'].includes(file.mimetype));
+    },
+  }))
+  uploadYapeQr(
+    @Param('id') id: string,
+    @CurrentOrg() organizationId: string,
+    @UploadedFile() file: { buffer: Buffer } | undefined,
+  ) {
+    if (id !== organizationId) throw new ForbiddenException('No puedes cambiar la configuración de otra organización');
+    if (!file) throw new BadRequestException('Selecciona una imagen PNG o JPG de hasta 2 MB');
+    return this.yapeQrService.save(organizationId, file.buffer);
+  }
+
   @Patch(':id')
   @UseGuards(TenantGuard, OrgRolesGuard)
-  @OrgRoles('OWNER')
+  @OrgRoles('OWNER', 'ADMIN')
   update(
     @Param('id') id: string,
-    @Body() updateOrgDto: Partial<CreateOrganizationDto>,
+    @Body() updateOrgDto: UpdateOrganizationDto,
     @CurrentOrg() organizationId: string,
   ) {
     if (id !== organizationId) {

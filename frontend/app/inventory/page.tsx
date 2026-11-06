@@ -74,7 +74,7 @@ export default function InventoryPage() {
     const term = search.toLocaleLowerCase();
     const matches = !term || item.product.name.toLocaleLowerCase().includes(term) || item.product.sku?.toLocaleLowerCase().includes(term);
     const quantity = Number(item.quantity);
-    return matches && (!lowOnly || quantity <= 10);
+    return matches && (!lowOnly || (quantity > 0 && quantity <= 10));
   }), [items, search, lowOnly]);
 
   const summary = useMemo(() => ({

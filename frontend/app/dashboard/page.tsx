@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch, ApiError, Membership } from '@/lib/api';
+import { formatMoney } from '@/lib/format';
 
 type DashboardMetrics = {
   sales: { today: number; thisMonth: number };
@@ -15,12 +16,13 @@ type DashboardMetrics = {
 };
 
 type InventorySummary = { totalProducts: number; totalValue: number; lowStockItems: number; expiringSoonItems: number };
-const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'USD' });
+type OrganizationSettings = { settings?: { currency?: string | null } };
 
 export default function DashboardPage() {
   const { token, organizationId, orgRole, user, logout, memberships } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [inventory, setInventory] = useState<InventorySummary | null>(null);
+  const [currency, setCurrency] = useState('PEN');
   const [error, setError] = useState('');
 
   // Obtener membresía activa y módulos habilitados
@@ -28,15 +30,27 @@ export default function DashboardPage() {
   const enabledModules = (() => {
     const configured = activeMembership?.organization?.enabledModules;
     const defaults = activeMembership?.organization?.businessType?.defaultModules;
-    const modules = Array.isArray(configured) && configured.length ? configured : defaults;
+    const modules = Array.isArray(configured) ? configured : defaults;
     return Array.isArray(modules) ? modules.filter((m): m is string => typeof m === 'string') : [];
   })();
+  const canManageBusiness = orgRole === 'OWNER' || orgRole === 'ADMIN';
+  const hasDashboardModule = orgRole === 'INVENTARIO'
+    ? enabledModules.includes('inventario')
+    : enabledModules.length > 0;
 
   useEffect(() => {
     if (!token || !organizationId) return;
+    if (!hasDashboardModule) {
+      setMetrics(null);
+      setInventory(null);
+      setError('');
+      return;
+    }
     const load = async () => {
       try {
         setError('');
+        const organization = await apiFetch<OrganizationSettings>(`/organizations/${organizationId}`, { token, organizationId });
+        setCurrency(organization.settings?.currency || 'PEN');
         if (orgRole === 'INVENTARIO') {
           setInventory(await apiFetch<InventorySummary>('/reports/inventory/summary', { token, organizationId }));
         } else {
@@ -47,7 +61,7 @@ export default function DashboardPage() {
       }
     };
     void load();
-  }, [organizationId, orgRole, token]);
+  }, [organizationId, orgRole, token, hasDashboardModule]);
 
   return (
     <ProtectedRoute>
@@ -75,7 +89,7 @@ export default function DashboardPage() {
                 <Link href="/reports">Reportes</Link>
               </>
             )}
-            {orgRole === 'OWNER' && (
+            {canManageBusiness && (
               <Link href="/business-settings">Configuración</Link>
             )}
           </nav>
@@ -91,23 +105,24 @@ export default function DashboardPage() {
             <span className="role-badge">{orgRole === 'OWNER' ? 'Propietario' : orgRole}</span>
           </header>
           {error && <p className="error-message" role="alert">{error}</p>}
-          {!metrics && !inventory && !error && <p className="loading-message">Cargando actividad...</p>}
+          {!hasDashboardModule && <p className="muted">No hay módulos activos para este negocio o perfil. Solicita a Plataforma que los habilite.</p>}
+          {hasDashboardModule && !metrics && !inventory && !error && <p className="loading-message">Cargando actividad...</p>}
           {metrics && (
             <>
               <section className="metric-grid">
                 <article className="metric-card">
                   <span>Ventas de hoy</span>
                   <strong>{metrics.sales.today}</strong>
-                  <small>{money.format(metrics.revenue.today)}</small>
+                  <small>{formatMoney(metrics.revenue.today, currency)}</small>
                 </article>
                 <article className="metric-card">
                   <span>Ventas del mes</span>
                   <strong>{metrics.sales.thisMonth}</strong>
-                  <small>{money.format(metrics.revenue.thisMonth)}</small>
+                  <small>{formatMoney(metrics.revenue.thisMonth, currency)}</small>
                 </article>
                 <article className="metric-card">
                   <span>Valor del inventario</span>
-                  <strong>{money.format(metrics.inventory.totalValue)}</strong>
+                  <strong>{formatMoney(metrics.inventory.totalValue, currency)}</strong>
                   <small>{metrics.inventory.lowStockAlerts} alertas de stock</small>
                 </article>
                 <article className="metric-card">
@@ -129,7 +144,7 @@ export default function DashboardPage() {
                     metrics.topProducts.map((product) => (
                       <div className="list-row" key={product.productName}>
                         <span>{product.productName}</span>
-                        <strong>{product.totalQuantity} uds. · {money.format(product.totalRevenue)}</strong>
+                        <strong>{product.totalQuantity} uds. · {formatMoney(product.totalRevenue, currency)}</strong>
                       </div>
                     ))
                   ) : (
@@ -148,7 +163,7 @@ export default function DashboardPage() {
           {inventory && (
             <section className="metric-grid">
               <article className="metric-card"><span>Productos</span><strong>{inventory.totalProducts}</strong></article>
-              <article className="metric-card"><span>Valor total</span><strong>{money.format(inventory.totalValue)}</strong></article>
+              <article className="metric-card"><span>Valor total</span><strong>{formatMoney(inventory.totalValue, currency)}</strong></article>
               <article className="metric-card"><span>Stock bajo</span><strong>{inventory.lowStockItems}</strong></article>
               <article className="metric-card"><span>Próximos a vencer</span><strong>{inventory.expiringSoonItems}</strong></article>
             </section>
@@ -162,9 +177,9 @@ export default function DashboardPage() {
               ))}
             </div>
             <p className="muted">
-              {orgRole === 'OWNER'
-                ? 'El propietario administra permisos y módulos según el tipo de negocio.'
-                : 'El administrador opera los módulos habilitados para este negocio.'}
+              {canManageBusiness
+                ? 'Los módulos se administran desde Plataforma; aquí puedes consultar los que están activos.'
+                : 'Aquí puedes consultar los módulos activos para este negocio.'}
             </p>
           </section>
         </main>

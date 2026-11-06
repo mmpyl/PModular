@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { OwnerHeader, OwnerShell } from '@/components/OwnerShell';
 import { useAuth } from '@/contexts/AuthContext';
-import { ApiError, apiFetch } from '@/lib/api';
+import { ApiError, apiAssetUrl, apiFetch } from '@/lib/api';
 
 type Product = { id: string; name: string; sku?: string | null; price: number | string; isActive: boolean; unit?: { name: string; symbol?: string | null } | null };
 type Customer = { id: string; name: string; entityType: string; taxId?: string | null; isActive: boolean };
@@ -91,20 +91,18 @@ export default function SalesPage() {
       if (statusFilter) params.set('status', statusFilter);
       if (customerFilter) params.set('customerId', customerFilter);
       const query = params.toString();
-      const [saleRows, productRows, customerRows, organization] = await Promise.all([
+      const [saleRows, productRows, customerRows, organization, selectedDetail] = await Promise.all([
         apiFetch<Sale[]>(`/sales${query ? `?${query}` : ''}`, { token, organizationId }),
         apiFetch<Product[]>('/products', { token, organizationId }),
         apiFetch<Customer[]>('/business-entities', { token, organizationId }),
         apiFetch<BusinessSettings>(`/organizations/${organizationId}`, { token, organizationId }),
+        selected ? apiFetch<Sale>(`/sales/${selected.id}`, { token, organizationId }) : Promise.resolve(null),
       ]);
       setSales(saleRows);
       setProducts(productRows.filter((product) => product.isActive));
       setCustomers(customerRows.filter((customer) => customer.isActive && ['CLIENTE', 'AMBOS'].includes(customer.entityType)));
       setBilling(organization.settings?.billing ?? {});
-      if (selected) {
-        const refreshed = saleRows.find((sale) => sale.id === selected.id);
-        if (refreshed) setSelected(refreshed);
-      }
+      if (selectedDetail) setSelected(selectedDetail);
     } catch (caughtError) {
       setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudieron cargar las ventas');
     } finally {
@@ -467,7 +465,7 @@ export default function SalesPage() {
                 {document.pdfUrl && <a className="quiet-link" href={document.pdfUrl} target="_blank" rel="noreferrer">PDF</a>}
                 {document.xmlUrl && <a className="quiet-link" href={document.xmlUrl} target="_blank" rel="noreferrer">XML</a>}
                 {document.cdrUrl && <a className="quiet-link" href={document.cdrUrl} target="_blank" rel="noreferrer">CDR</a>}
-                {document.type === 'TICKET' && <button type="button" className="btn-quiet" onClick={() => window.print()}>Imprimir ticket</button>}
+                {document.type === 'TICKET' && <button type="button" className="btn-quiet" onClick={() => window.print()}>Reimprimir ticket</button>}
               </span>
             </div>)}
             {!selected.electronicDocuments?.length && <p className="muted">Aún no se emitió comprobante para esta venta.</p>}
@@ -499,7 +497,7 @@ export default function SalesPage() {
               {paymentMethod === 'YAPE_PLIN' && <div className="yape-payment-options">
                 {billing.yapeAccounts?.filter((account) => account.enabled !== false).length ? <>
                   <label>Cuenta receptora<select required value={yapeAccountId} onChange={(event) => setYapeAccountId(event.target.value)}><option value="">Selecciona la cuenta...</option>{billing.yapeAccounts.filter((account) => account.enabled !== false).map((account) => <option key={account.id} value={account.id}>{account.provider} · {account.label} · {account.phone}</option>)}</select></label>
-                  {billing.yapeAccounts.filter((account) => account.id === yapeAccountId).map((account) => <div className="yape-payment-card" key={account.id}><div><strong>{account.provider} · {account.label}</strong><span>{account.phone}{account.holder ? ` · ${account.holder}` : ''}</span>{account.code && <span>Código: {account.code}</span>}</div>{account.qrImageUrl && <img src={account.qrImageUrl} alt={`QR de ${account.label}`} />}</div>)}
+                  {billing.yapeAccounts.filter((account) => account.id === yapeAccountId).map((account) => <div className="yape-payment-card" key={account.id}><div><strong>{account.provider} · {account.label}</strong><span>{account.phone}{account.holder ? ` · ${account.holder}` : ''}</span>{account.code && <span>Código: {account.code}</span>}</div>{account.qrImageUrl && <img src={apiAssetUrl(account.qrImageUrl)} alt={`QR de ${account.label}`} />}</div>)}
                 </> : <p className="muted">No hay cuentas Yape/Plin configuradas. Agrégalas en Configuración.</p>}
               </div>}
               <div className="platform-actions"><button type="submit" disabled={busy}>{busy ? 'Registrando...' : 'Guardar pago'}</button><button type="button" className="btn-quiet" onClick={() => setPaymentAmount('')}>Cancelar</button></div>

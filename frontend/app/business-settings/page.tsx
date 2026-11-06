@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { OwnerHeader, OwnerShell } from '@/components/OwnerShell';
 import { useAuth } from '@/contexts/AuthContext';
-import { ApiError, apiFetch } from '@/lib/api';
+import { ApiError, apiAssetUrl, apiFetch } from '@/lib/api';
 
 type YapeAccount = {
   id: string;
@@ -20,11 +20,10 @@ type Organization = {
   name: string;
   enabledModules: unknown;
   settings: Record<string, unknown>;
-  businessType: { id: string; name: string; code: string; defaultModules: unknown };
+  businessType?: { id: string; name: string; code: string; defaultModules: unknown } | null;
 };
 type NubefactStatus = { configured: boolean; endpointUrl: string | null; endpointHost: string | null; tokenConfigured: boolean; encryptionKeyConfigured: boolean; updatedAt: string | null };
 
-const availableModules = ['inventario', 'ventas', 'compras', 'caja'];
 const defaultSeries = { ticket: 'T001', ticketNextNumber: 1, boleta: 'B001', boletaNextNumber: 1, factura: 'F001', facturaNextNumber: 1 };
 const createYapeAccount = (): YapeAccount => ({
   id: crypto.randomUUID(), provider: 'YAPE', label: '', phone: '', holder: '', code: '', qrImageUrl: '', enabled: true,
@@ -34,7 +33,6 @@ export default function BusinessSettingsPage() {
   const { token, organizationId } = useAuth();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [name, setName] = useState('');
-  const [modules, setModules] = useState<string[]>([]);
   const [currency, setCurrency] = useState('PEN');
   const [timezone, setTimezone] = useState('America/Lima');
   const [fiscalRuc, setFiscalRuc] = useState('');
@@ -48,6 +46,7 @@ export default function BusinessSettingsPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploadingQrId, setUploadingQrId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !organizationId) return;
@@ -58,9 +57,6 @@ export default function BusinessSettingsPage() {
       setOrganization(result);
       setName(result.name);
       const settings = result.settings ?? {};
-      const enabled = Array.isArray(result.enabledModules) && result.enabledModules.length
-        ? result.enabledModules : result.businessType.defaultModules;
-      setModules(Array.isArray(enabled) ? enabled.filter((item): item is string => typeof item === 'string') : []);
       setCurrency(typeof settings.currency === 'string' ? settings.currency : 'PEN');
       setTimezone(typeof settings.timezone === 'string' ? settings.timezone : 'America/Lima');
       const billing = settings.billing && typeof settings.billing === 'object' ? settings.billing as Record<string, unknown> : {};
@@ -85,12 +81,25 @@ export default function BusinessSettingsPage() {
     });
   }, [organizationId, token]);
 
-  function toggleModule(module: string) {
-    setModules((current) => current.includes(module) ? current.filter((item) => item !== module) : [...current, module]);
-  }
-
   function updateYapeAccount(id: string, changes: Partial<YapeAccount>) {
     setYapeAccounts((current) => current.map((account) => account.id === id ? { ...account, ...changes } : account));
+  }
+
+  async function uploadYapeQr(id: string, file: File) {
+    if (!token || !organizationId) return;
+    setUploadingQrId(id);
+    setError(''); setMessage('');
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const result = await apiFetch<{ url: string }>(`/organizations/${organizationId}/yape-qr`, {
+        method: 'POST', token, organizationId, body,
+      });
+      updateYapeAccount(id, { qrImageUrl: result.url });
+      setMessage('QR subido. Guarda la configuración del negocio para usarlo al cobrar.');
+    } catch (caughtError) {
+      setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudo subir el QR');
+    } finally { setUploadingQrId(null); }
   }
 
   async function saveBusinessSettings(event: FormEvent<HTMLFormElement>) {
@@ -102,7 +111,6 @@ export default function BusinessSettingsPage() {
         method: 'PATCH', token, organizationId,
         body: JSON.stringify({
           name,
-          enabledModules: modules,
           settings: {
             ...organization.settings,
             currency,
@@ -139,6 +147,12 @@ export default function BusinessSettingsPage() {
     } finally { setSaving(false); }
   }
 
+  const activeModules = Array.isArray(organization?.enabledModules)
+    ? organization.enabledModules.filter((item): item is string => typeof item === 'string')
+    : Array.isArray(organization?.businessType?.defaultModules)
+      ? organization.businessType.defaultModules.filter((item): item is string => typeof item === 'string')
+      : [];
+
   return (
     <OwnerShell active="settings">
       <OwnerHeader eyebrow="Administración" title="Configuración del negocio" />
@@ -146,14 +160,16 @@ export default function BusinessSettingsPage() {
       {message && <p className="success-message" role="status">{message}</p>}
       {organization && <div className="billing-settings-layout">
         <form className="panel compact-form business-settings-form" onSubmit={saveBusinessSettings}>
-          <div><span className="eyebrow">Identidad del negocio</span><h2>{organization.businessType.name}</h2></div>
+          <div><span className="eyebrow">Identidad del negocio</span><h2>{organization.businessType?.name ?? 'Tipo de negocio'}</h2></div>
           <label>Nombre comercial<input required value={name} onChange={(event) => setName(event.target.value)} /></label>
           <div className="settings-grid">
             <label>Moneda<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option value="PEN">PEN · Sol peruano</option><option value="MXN">MXN · Peso mexicano</option><option value="USD">USD · Dólar estadounidense</option><option value="COP">COP · Peso colombiano</option><option value="CLP">CLP · Peso chileno</option></select></label>
             <label>Zona horaria<select value={timezone} onChange={(event) => setTimezone(event.target.value)}><option value="America/Lima">America/Lima</option><option value="America/Mexico_City">America/Mexico_City</option><option value="America/Bogota">America/Bogota</option><option value="America/Santiago">America/Santiago</option><option value="America/Argentina/Buenos_Aires">America/Argentina/Buenos_Aires</option><option value="UTC">UTC</option></select></label>
           </div>
 
-          <fieldset className="settings-modules"><legend>Módulos habilitados</legend><div className="module-list">{availableModules.map((module) => <label className="module-option" key={module}><input type="checkbox" checked={modules.includes(module)} onChange={() => toggleModule(module)} />{module.charAt(0).toUpperCase() + module.slice(1)}</label>)}</div></fieldset>
+          <fieldset className="settings-modules"><legend>Módulos activos</legend><div className="module-list">{activeModules.length
+            ? activeModules.map((module) => <span className="role-badge" key={module}>{module.charAt(0).toUpperCase() + module.slice(1)}</span>)
+            : <span className="muted">Sin módulos activos</span>}</div><p className="muted">La activación y desactivación de módulos se administra desde Plataforma.</p></fieldset>
 
           <section className="billing-settings-section">
             <div className="panel-heading"><div><span className="eyebrow">Comprobantes electrónicos</span><h2>Datos fiscales y series</h2></div></div>
@@ -183,10 +199,16 @@ export default function BusinessSettingsPage() {
                 <label>Número de celular<input required inputMode="tel" value={account.phone} onChange={(event) => updateYapeAccount(account.id, { phone: event.target.value })} placeholder="999 999 999" /></label>
                 <label>Titular<input value={account.holder} onChange={(event) => updateYapeAccount(account.id, { holder: event.target.value })} /></label>
                 <label>Código o referencia<input value={account.code} onChange={(event) => updateYapeAccount(account.id, { code: event.target.value })} /></label>
-                <label>URL de imagen QR<input type="url" value={account.qrImageUrl} onChange={(event) => updateYapeAccount(account.id, { qrImageUrl: event.target.value })} placeholder="https://..." /></label>
+                <label>URL de imagen QR<input type="text" inputMode="url" value={account.qrImageUrl} onChange={(event) => updateYapeAccount(account.id, { qrImageUrl: event.target.value })} placeholder="https://... o QR subido" /></label>
+                <label>Subir QR (PNG/JPG)<input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" disabled={uploadingQrId === account.id} onChange={(event) => {
+                  const input = event.currentTarget;
+                  const file = input.files?.[0];
+                  if (file) void uploadYapeQr(account.id, file);
+                  input.value = '';
+                }} /><small className="muted">Máximo 2 MB</small></label>
               </div>
               <div className="yape-account-actions"><label className="module-option"><input type="checkbox" checked={account.enabled} onChange={(event) => updateYapeAccount(account.id, { enabled: event.target.checked })} />Disponible al cobrar</label><button type="button" className="btn-quiet danger-action" onClick={() => setYapeAccounts(yapeAccounts.filter((item) => item.id !== account.id))}>Eliminar cuenta</button></div>
-              {account.qrImageUrl && <img className="configured-yape-qr" src={account.qrImageUrl} alt={`QR de ${account.label || account.provider}`} />}
+              {account.qrImageUrl && <img className="configured-yape-qr" src={apiAssetUrl(account.qrImageUrl)} alt={`QR de ${account.label || account.provider}`} />}
             </fieldset>)}
             {!yapeAccounts.length && <p className="muted">Aún no hay cuentas Yape o Plin. Agrega un número para mostrarlo al cobrar.</p>}
           </section>

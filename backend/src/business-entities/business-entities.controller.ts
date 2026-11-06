@@ -14,9 +14,12 @@ import { CreateBusinessEntityDto, UpdateBusinessEntityDto, EntityType } from './
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
+import { RequiredModules } from '../auth/decorators/required-modules.decorator';
+import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 
 @Controller('business-entities')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, ModuleAccessGuard)
+@RequiredModules('ventas', 'compras')
 export class BusinessEntitiesController {
   constructor(private readonly businessEntitiesService: BusinessEntitiesService) {}
 

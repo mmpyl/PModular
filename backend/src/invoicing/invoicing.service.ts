@@ -34,6 +34,11 @@ type NubefactResponse = {
   sunat_description?: string;
   sunat_note?: string;
   sunat_responsecode?: string | number;
+  error?: string;
+  error_description?: string;
+  errors?: string | string[];
+  message?: string;
+  mensaje?: string;
   enlace?: string;
   enlace_del_pdf?: string;
   enlace_del_xml?: string;
@@ -174,7 +179,7 @@ export class InvoicingService {
       }
       const result = await response.json() as NubefactResponse;
       if (!response.ok) {
-        const message = this.safeProviderMessage(result.sunat_description) || `Nubefact devolvió HTTP ${response.status}`;
+        const message = this.providerErrorMessage(result) || `Nubefact devolvió HTTP ${response.status}`;
         return this.prisma.electronicDocument.update({
           where: { id: document.id },
           data: { status: ElectronicDocumentStatus.RECHAZADO, providerCode: String(response.status), message },
@@ -319,8 +324,10 @@ export class InvoicingService {
 
   private getSeries(settings: PublicSettings, type: ElectronicDocumentType) {
     const key = type.toLowerCase() as 'ticket' | 'boleta' | 'factura';
-    const series = settings.billing?.series?.[key]?.trim().toUpperCase();
-    if (!series || !/^[A-Z0-9]{1,4}$/.test(series)) {
+    const defaults = { ticket: 'T001', boleta: 'B001', factura: 'F001' };
+    const configuredSeries = settings.billing?.series?.[key];
+    const series = (configuredSeries ?? defaults[key]).trim().toUpperCase();
+    if (!/^[A-Z0-9]{1,4}$/.test(series)) {
       throw new BadRequestException(`Configura una serie válida para ${key} en Configuración`);
     }
     return series;
@@ -357,6 +364,20 @@ export class InvoicingService {
 
   private safeProviderMessage(value?: string) {
     return value?.replace(/[\r\n\t]/g, ' ').slice(0, 500) ?? null;
+  }
+
+  private providerErrorMessage(result: NubefactResponse) {
+    const errors = Array.isArray(result.errors) ? result.errors.join('; ') : result.errors;
+    const message = [
+      result.sunat_description,
+      result.sunat_note,
+      result.error_description,
+      result.mensaje,
+      result.message,
+      result.error,
+      errors,
+    ].find((candidate) => typeof candidate === 'string' && candidate.trim());
+    return this.safeProviderMessage(message);
   }
 
   private safeProviderUrl(value?: string) {

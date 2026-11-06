@@ -1061,6 +1061,18 @@ form {
   overflow-x: auto;
 }
 
+.platform-directory-tools {
+  align-items: end;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: minmax(14rem, 1fr) minmax(12rem, 0.65fr) auto;
+  margin-bottom: 1rem;
+}
+
+.platform-directory-tools .role-badge {
+  justify-self: end;
+}
+
 .platform-table {
   border-collapse: collapse;
   min-width: 720px;
@@ -1697,6 +1709,7 @@ form {
   }
 
   .sales-filters,
+  .platform-directory-tools,
   .sales-form-grid,
   .sale-line-grid,
   .sale-summary-grid {
@@ -1722,6 +1735,10 @@ form {
   }
 
   .sales-filters .role-badge {
+    justify-self: start;
+  }
+
+  .platform-directory-tools .role-badge {
     justify-self: start;
   }
 

@@ -58,10 +58,11 @@ export type AuthResponse = {
 
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const { token, organizationId, headers, ...init } = options;
+  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(organizationId ? { 'X-Org-Id': organizationId } : {}),
       ...headers,
@@ -92,4 +93,8 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+export function apiAssetUrl(value: string) {
+  return value.startsWith('/uploads/') ? `${API_URL.replace(/\/$/, '')}${value}` : value;
 }
