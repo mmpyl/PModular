@@ -32,7 +32,7 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post()
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
   create(
     @Body() dto: CreateSaleDto,
     @CurrentOrg() orgId: string,
@@ -42,7 +42,7 @@ export class SalesController {
   }
 
   @Get()
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO', 'CAJA')
   findAll(
     @CurrentOrg() orgId: string,
     @Query('status') status?: SaleStatus,
@@ -52,7 +52,7 @@ export class SalesController {
   }
 
   @Get(':id')
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'INVENTARIO', 'CAJA')
   findOne(@Param('id') id: string, @CurrentOrg() orgId: string) {
     return this.salesService.findOne(orgId, id);
   }
@@ -68,7 +68,7 @@ export class SalesController {
   }
 
   @Post(':id/complete')
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
   complete(
     @Param('id') id: string,
     @CurrentOrg() orgId: string,
@@ -78,7 +78,7 @@ export class SalesController {
   }
 
   @Post(':id/payment')
-  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
+  @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR', 'CAJA')
   processPayment(
     @Param('id') id: string,
     @Body() dto: ProcessPaymentDto,

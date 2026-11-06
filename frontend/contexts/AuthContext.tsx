@@ -2,13 +2,12 @@
 
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch, AuthResponse, Membership, ApiError } from '@/lib/api';
+import { apiFetch, Membership, ApiError, type SessionResponse } from '@/lib/api';
 
 type Credentials = { email: string; password: string };
 type RegisterPayload = Credentials & { name?: string };
 
 type AuthContextValue = {
-  token: string | null;
   user: AuthUser | null;
   organizationId: string | null;
   orgRole: string | null;
@@ -21,8 +20,10 @@ type AuthContextValue = {
   selectOrganization: (organizationId: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   createOrganization: (payload: { name: string; businessTypeId: string }) => Promise<void>;
+  platformLogin: (credentials: Credentials) => Promise<void>;
   logout: () => void;
   hasOrgRole: (roles: string[]) => boolean;
+  refreshMemberships: () => Promise<void>;
 };
 
 type AuthUser = {
@@ -30,63 +31,50 @@ type AuthUser = {
   email: string;
   name?: string | null;
   platformRole?: string | null;
+  imageUrl?: string | null;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-const STORAGE_KEY = 'pymen.auth';
 
+/**
+ * AuthProvider (Fase 2 - BFF).
+ *
+ * El estado en memoria NO contiene ningún JWT: solo datos seguros de sesión
+ * (user, rol, memberships) que vienen de /api/auth/session y /api/auth/login.
+ * La autenticación real vive en la cookie httpOnly; el navegador jamás ve el token.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [orgRole, setOrgRole] = useState<string | null>(null);
   const [platformRole, setPlatformRole] = useState<string | null>(null);
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  // La cookie httpOnly existe y su firma valida => hay sesión
+  const [hasSession, setHasSession] = useState(false);
 
-  // Cargar sesión almacenada al iniciar
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const session = JSON.parse(stored) as AuthResponse;
-        setToken(session.accessToken);
-        setUser(session.user);
-        setOrganizationId(session.organizationId ?? null);
-        setOrgRole(session.orgRole ?? null);
-        setPlatformRole(session.platformRole ?? null);
-        setMemberships(session.memberships ?? []);
-      } catch {
-        // Sesión inválida, limpiar
-        window.localStorage.removeItem(STORAGE_KEY);
-      }
-    }
-    setIsHydrated(true);
+  const applySession = useCallback((data: Partial<SessionResponse> & { authenticated?: boolean }) => {
+    setHasSession(data.authenticated !== false && Boolean(data.user));
+    setUser((data.user as AuthUser) ?? null);
+    setOrganizationId(data.organizationId ?? null);
+    setOrgRole((data.orgRole as string) ?? null);
+    setPlatformRole(data.platformRole ?? null);
+    setMemberships(Array.isArray(data.memberships) ? data.memberships : []);
   }, []);
 
-  const persistSession = useCallback((session: AuthResponse) => {
-    setToken(session.accessToken);
-    setUser(session.user);
-    setOrganizationId(session.organizationId ?? null);
-    setOrgRole(session.orgRole ?? null);
-    setPlatformRole(session.platformRole ?? null);
-    setMemberships(session.memberships ?? []);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-  }, []);
-
-  const clearSession = useCallback(() => {
-    setToken(null);
+  const clearLocal = useCallback(() => {
+    setHasSession(false);
     setUser(null);
     setOrganizationId(null);
     setOrgRole(null);
     setPlatformRole(null);
     setMemberships([]);
-    window.localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  // Escuchar evento de sesión expirada
+  // Hidratar desde el BFF: GET /api/auth/session (devuelve la sesión SIN el token)
   useEffect(() => {
+<<<<<<< HEAD
     const handleExpired = () => {
       clearSession();
       router.replace(platformRole === 'PLATFORM_ADMIN' ? '/platform/login' : '/login');
@@ -94,21 +82,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('pymodular:session-expired', handleExpired);
     return () => window.removeEventListener('pymodular:session-expired', handleExpired);
   }, [clearSession, platformRole, router]);
+=======
+    const loadSession = async () => {
+      try {
+        const response = await fetch('/api/auth/session', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (response.ok) {
+          const data = (await response.json()) as SessionResponse & { authenticated?: boolean };
+          applySession(data);
+        } else if (response.status === 401) {
+          clearLocal();
+          // Limpieza defensiva del localStorage legado (tarea 2.5):
+          // antes la sesión (con token) se guardaba ahí; ya no se usa nunca más.
+          try {
+            window.localStorage.removeItem('pymen.auth');
+          } catch {
+            /* almacenamiento no disponible */
+          }
+        }
+      } catch {
+        clearLocal();
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    loadSession();
+  }, [applySession, clearLocal]);
+
+  // Escuchar evento de sesión expirada (los usuarios de plataforma van a /platform/login)
+  useEffect(() => {
+    const handleExpired = (event: Event) => {
+      const detail = (event as CustomEvent<{ platformRole?: string | null }>).detail;
+      const isPlatformUser = Boolean(detail?.platformRole);
+      clearLocal();
+      void fetch('/api/auth/logout', { method: 'DELETE', credentials: 'include' }).catch(() => {});
+      router.replace(isPlatformUser ? '/platform/login' : '/login');
+    };
+    window.addEventListener('pymodular:session-expired', handleExpired);
+    return () => window.removeEventListener('pymodular:session-expired', handleExpired);
+  }, [clearLocal, router]);
+
+  // Miembros del equipo/invitaciones pueden cambiar: revalidar membresías bajo demanda
+  const refreshMemberships = useCallback(async () => {
+    if (!hasSession) return;
+    try {
+      const fresh = await apiFetch<Membership[]>('/auth/memberships');
+      if (Array.isArray(fresh)) setMemberships(fresh);
+    } catch {
+      // Si falla, mantener las memberships actuales (posible fallo de red transitorio)
+    }
+  }, [hasSession]);
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   const value = useMemo<AuthContextValue>(() => ({
-    token,
     user,
     organizationId,
     orgRole,
     platformRole,
     memberships,
     isHydrated,
-    isAuthenticated: Boolean(token),
+    isAuthenticated: hasSession,
     login: async (credentials) => {
-      const session = await apiFetch<AuthResponse>('/auth/login', {
+      // POST /api/auth/login (BFF): guarda el JWT en cookie httpOnly y devuelve
+      // solo user, rol y memberships — nunca el token.
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(credentials),
       });
+<<<<<<< HEAD
       persistSession(session);
       return session;
     },
@@ -119,43 +165,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       persistSession(session);
       return session;
+=======
+      const session = (await res.json().catch(() => ({}))) as SessionResponse & { message?: string };
+      if (!res.ok) {
+        throw new ApiError(session?.message ?? 'No se pudo iniciar sesión', res.status, session);
+      }
+      applySession(session);
+
+      // Si el login devuelve múltiples membresías sin organización seleccionada, redirigir a selector
+      if (session.memberships && session.memberships.length > 1 && !session.organizationId) {
+        router.push('/select-organization');
+      }
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     },
     selectOrganization: async (orgId: string) => {
-      if (!token) throw new ApiError('La sesión ha expirado', 401);
-      const session = await apiFetch<AuthResponse>('/auth/select-organization', {
+      if (!hasSession) throw new ApiError('La sesión ha expirado', 401);
+      const res = await fetch('/api/auth/select-organization', {
         method: 'POST',
-        token,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ organizationId: orgId }),
       });
-      persistSession(session);
+      const session = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new ApiError(session?.message ?? 'No se pudo seleccionar la organización', res.status, session);
+      }
+      applySession(session);
+    },
+    platformLogin: async (credentials) => {
+      // Un solo paso visible para el cliente: el BFF hace login + intercambio a token de plataforma
+      const res = await fetch('/api/auth/platform-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(credentials),
+      });
+      const session = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new ApiError(session?.message ?? 'Acceso de plataforma denegado', res.status, session);
+      }
+      applySession(session);
     },
     register: async (payload) => {
-      const session = await apiFetch<AuthResponse>('/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
-      persistSession(session);
+      const session = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new ApiError(session?.message ?? 'No se pudo registrar', res.status, session);
+      }
+      applySession(session);
     },
     createOrganization: async (payload) => {
-      if (!token) throw new ApiError('La sesión ha expirado', 401);
+      if (!hasSession) throw new ApiError('La sesión ha expirado', 401);
       const organization = await apiFetch<{ id: string }>('/organizations', {
         method: 'POST',
-        token,
         body: JSON.stringify(payload),
       });
-      const session = await apiFetch<AuthResponse>('/auth/select-organization', {
-        method: 'POST',
-        token,
-        body: JSON.stringify({ organizationId: organization.id }),
-      });
-      persistSession(session);
+      await value.selectOrganization(organization.id);
     },
-    logout: clearSession,
+    logout: () => {
+      clearLocal();
+      void fetch('/api/auth/logout', { method: 'DELETE', credentials: 'include' }).catch(() => {});
+    },
     hasOrgRole: (roles: string[]) => {
       if (!orgRole) return false;
       return roles.includes(orgRole);
     },
-  }), [token, user, organizationId, orgRole, platformRole, memberships, isHydrated, persistSession, clearSession, router]);
+    refreshMemberships,
+  }), [user, organizationId, orgRole, platformRole, memberships, isHydrated, hasSession, applySession, clearLocal, refreshMemberships, router]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

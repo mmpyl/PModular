@@ -29,6 +29,7 @@ model User {
   // El rol global ha sido eliminado. 
   // La pertenencia y roles ahora viven en Membership.
   memberships Membership[]
+  auditLogs   AuditLog[]
 
   @@map("users")
 }
@@ -48,11 +49,19 @@ enum PlatformRole {
   SUPPORT
 }
 
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model Organization {
   id             String       @id @default(uuid())
   name           String
   businessTypeId String
   businessType   BusinessType @relation(fields: [businessTypeId], references: [id])
+
+  // Módulo de suspensión de organizaciones (Fase 4)
+  status OrganizationStatus @default(ACTIVE)
 
   // Módulos activados para esta organización específica
   // Si está vacío, se usan los defaultModules del BusinessType
@@ -60,6 +69,11 @@ model Organization {
 
   // Configuraciones específicas (moneda, zona horaria, impuestos por defecto, etc.)
   settings Json @default("{}")
+
+  // Relaciones - Fase E: Multi-almacén
+  warehouses           Warehouse[]
+  warehouseInventories WarehouseInventory[]
+  stockTransfers       StockTransfer[]
 
   memberships       Membership[]
   products          Product[]
@@ -71,10 +85,28 @@ model Organization {
   businessEntities  BusinessEntity[]
   purchaseOrders    PurchaseOrder[]
   sales             Sale[]
+  invoices          Invoice[]
   payments          Payment[]
+  accountEntries    CustomerAccountEntry[]
   cashRegisters     CashRegister[]
+<<<<<<< HEAD
   electronicDocuments ElectronicDocument[]
   integrations     OrganizationIntegration[]
+=======
+  auditLogs         AuditLog[]
+  
+  // FE2: Configuración fiscal por organización
+  fiscalSettings OrganizationFiscalSettings?
+
+  // FASE B2: Mermas y vencimientos
+  shrinkageRecords    ShrinkageRecord[]
+
+  // FE7: Archivo de comprobantes electrónicos
+  voucherArchives     VoucherArchive[]
+
+  // FASE B3: Promociones
+  promotions          Promotion[]
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,6 +168,9 @@ model Category {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   products     Product[]
 
+  // FASE B3: promociones con alcance por categoría
+  promotions   Promotion[]
+
   @@unique([organizationId, name]) // Nombres únicos dentro de la misma organización
   @@index([organizationId])
   @@map("categories")
@@ -162,9 +197,13 @@ model Product {
 
   name        String
   sku         String?
+  barcode     String? // FASE B4: código de barras (EAN/UPC interno) para escaneo en POS
   description String?
   price       Decimal  @db.Decimal(10, 2)
   cost        Decimal? @db.Decimal(10, 2) // Costo promedio o último costo
+
+  // FASE B4: marcar productos de alta rotura para mostrarlos en la grilla de venta rápida
+  isFastSale Boolean @default(false)
 
   categoryId String?
   unitId     String?
@@ -173,6 +212,9 @@ model Product {
   // Ej Farmacia: { "requiresRecipe": true, "laboratory": "Bayer" }
   // Ej Ferretería: { "isBulk": true, "material": "Acero" }
   attributes Json @default("{}")
+
+  // Fase E: Umbral de stock bajo configurable por producto
+  lowStockThreshold Decimal @default(10) @db.Decimal(10, 2)
 
   isActive Boolean @default(true)
 
@@ -187,10 +229,24 @@ model Product {
   purchaseOrderItems PurchaseOrderItem[]
   saleItems         SaleItem[]
 
+  // FASE E: Inventario por almacén
+  warehouseInventory WarehouseInventory[]
+  transferItems      StockTransferItem[]
+
+  // FASE B2: Mermas y vencimientos
+  shrinkageRecords ShrinkageRecord[]
+
+  // FASE B3: Promociones que aplican a este producto
+  promotions Promotion[]
+
+  // FASE B3: ítems de promociones tipo COMBO que incluyen este producto
+  promotionItems PromotionItem[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([organizationId, sku]) // SKU único por organización
+  @@unique([organizationId, barcode]) // FASE B4: código de barras único por organización (para escaneo POS)
   @@index([organizationId])
   @@index([categoryId])
   @@map("products")
@@ -285,6 +341,9 @@ model StockMovement {
   purchaseOrder   PurchaseOrder? @relation(fields: [referenceId], references: [id], map: "stock_movements_purchase_order_fkey")
   sale            Sale? @relation(fields: [referenceId], references: [id], map: "stock_movements_sale_fkey")
 
+  // FASE B2: Registro de merma vinculado a este movimiento (1:1)
+  shrinkageRecord ShrinkageRecord?
+
   @@index([organizationId])
   @@index([productId])
   @@index([type])
@@ -324,6 +383,9 @@ model Batch {
   movements     StockMovement[]
   saleItems     SaleItem[]
 
+  // FASE B2: Mermas registradas sobre este lote
+  shrinkageRecords ShrinkageRecord[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -340,6 +402,187 @@ enum BatchStatus {
   RETENIDO // En cuarentena, esperando aprobación de calidad
   VENCIDO
   AGOTADO
+}
+
+// ==========================================
+// FASE B2: Control de mermas y vencimientos
+// (productos perecibles: lácteos, pan, embutidos)
+// ==========================================
+
+model ShrinkageRecord {
+  id             String @id @default(uuid())
+  organizationId String
+
+  recordNumber String // Ej: MER-2025-0001 (correlativo por organización)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  // Lote afectado (recomendado para productos con trazabilidad por lote)
+  batchId   String?
+  batch     Batch?  @relation(fields: [batchId], references: [id])
+
+  // Motivo de la pérdida (subclasifica el MovementReason MERMA/ROBO/OBSOLETO)
+  reason ShrinkageReason
+
+  quantity    Decimal         @db.Decimal(15, 4) // Cantidad perdida (> 0)
+  unitCost    Decimal         @db.Decimal(12, 4) // Costo unitario al momento de la merma
+  totalLoss   Decimal         @db.Decimal(12, 2) // Valor económico perdido = quantity * unitCost
+  lossPercent Decimal?        @db.Decimal(5, 2)  // % respecto a la cantidad inicial del lote (si aplica)
+  occurredAt  DateTime        @default(now())    // Fecha en que ocurrió la pérdida
+  notes       String?
+
+  // Movimiento de stock SALIDA generado automáticamente (trazabilidad contable)
+  stockMovementId String?  @unique
+
+  recordedBy String // userId que registró la merma
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stockMovement StockMovement? @relation(fields: [stockMovementId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([batchId])
+  @@index([reason])
+  @@index([occurredAt])
+  @@map("shrinkage_records")
+}
+
+enum ShrinkageReason {
+  VENCIMIENTO    // Producto vencido retirado de venta
+  DANIO          // Rotura, aplastamiento, fuga de envase
+  DESCOMPOSICION // Pudrición, corte incorrecto, pérdida de cadena de frío
+  ROBO           // Faltante atribuido a robo/hurto
+  OTROS
+}
+
+// ==========================================
+// FASE E: Gestión de Inventario Avanzada - Multi-almacén
+// ==========================================
+
+model Warehouse {
+  id             String @id @default(uuid())
+  organizationId String
+
+  name           String // Ej: "Almacén Principal", "Sucursal Centro"
+  code           String // Código único para referencia
+  address        String?
+  city           String?
+  isActive       Boolean @default(true)
+
+  // Configuraciones específicas
+  settings       Json @default("{}")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inventory      WarehouseInventory[]
+  transfersFrom  StockTransfer[] @relation("TransferFrom")
+  transfersTo    StockTransfer[] @relation("TransferTo")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@map("warehouses")
+}
+
+model WarehouseInventory {
+  id             String @id @default(uuid())
+  warehouseId    String
+  productId      String
+  organizationId String
+
+  // Cantidad total disponible en este almacén
+  quantity Decimal @default(0) @db.Decimal(15, 4)
+  reserved Decimal @default(0) @db.Decimal(15, 4)
+
+  // Última fecha de actualización
+  lastCountedAt DateTime?
+
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([warehouseId, productId])
+  @@index([warehouseId])
+  @@index([productId])
+  @@index([organizationId])
+  @@map("warehouse_inventory")
+}
+
+enum StockTransferStatus {
+  PENDIENTE
+  EN_TRANSITO
+  RECIBIDA_PARCIALMENTE
+  COMPLETADA
+  CANCELADA
+}
+
+model StockTransfer {
+  id             String @id @default(uuid())
+  organizationId String
+
+  transferNumber String // Número único de transferencia
+  fromWarehouseId String // Almacén de origen
+  toWarehouseId   String // Almacén de destino
+
+  status         StockTransferStatus @default(PENDIENTE)
+
+  // Fechas
+  transferDate   DateTime @default(now())
+  shippedDate    DateTime?
+  receivedDate   DateTime?
+
+  // Responsables
+  shippedBy      String?
+  receivedBy     String?
+
+  // Notas
+  notes          String?
+  internalNotes  String?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fromWarehouse  Warehouse @relation("TransferFrom", fields: [fromWarehouseId], references: [id])
+  toWarehouse    Warehouse @relation("TransferTo", fields: [toWarehouseId], references: [id])
+  items          StockTransferItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, transferNumber])
+  @@index([organizationId])
+  @@index([fromWarehouseId])
+  @@index([toWarehouseId])
+  @@index([status])
+  @@map("stock_transfers")
+}
+
+model StockTransferItem {
+  id            String @id @default(uuid())
+  transferId    String
+  productId     String
+
+  // Cantidad
+  quantityShipped   Decimal @db.Decimal(15, 4)
+  quantityReceived  Decimal @default(0) @db.Decimal(15, 4)
+
+  // Costo unitario (para valorización)
+  unitCost      Decimal @db.Decimal(12, 4)
+
+  // Trazabilidad de lote (opcional)
+  batchNumber   String?
+  expirationDate DateTime?
+
+  notes         String?
+
+  transfer      StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  product       Product @relation(fields: [productId], references: [id])
+
+  @@index([transferId])
+  @@index([productId])
+  @@map("stock_transfer_items")
 }
 
 // ==========================================
@@ -382,12 +625,20 @@ model BusinessEntity {
   notes          String?
   attributes     Json @default("{}") // Atributos dinámicos específicos
   
+  // Fase 5: Gestión financiera básica
+  creditLimit    Decimal? @db.Decimal(12, 2) // Límite de crédito (null = sin límite)
+  currentBalance Decimal  @default(0) @db.Decimal(12, 2) // Saldo pendiente (positivo = debe, negativo = haber)
+
+  // Fase B1: Cuenta corriente / fiado formal
+  creditDays     Int? // Plazo de crédito en días para vencimientos automáticos del fiado (null = sin plazo)
+  
   isActive       Boolean @default(true)
   
   // Relaciones
   organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   purchaseOrders PurchaseOrder[]
   sales          Sale[]
+  accountEntries CustomerAccountEntry[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -559,12 +810,22 @@ model Sale {
   
   // Usuario que realizó la venta
   soldBy         String
+
+  // FASE B3: detalle de promociones aplicadas por el motor (JSON)
+  promotionsApplied Json?
+
+  // FASE B4: origen del ticket (venta rápida POS vs formulario completo)
+  isQuickSale Boolean @default(false)
   
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items          SaleItem[]
   stockMovements StockMovement[]
   payments       Payment[]
+<<<<<<< HEAD
   electronicDocuments ElectronicDocument[]
+=======
+  invoice        Invoice?
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -797,4 +1058,410 @@ model CashRegisterMovement {
   @@index([organizationId])
   @@index([performedBy])
   @@map("cash_register_movements")
+}
+
+// ==========================================
+// FASE A: AuditLog - Trazabilidad de plataforma
+// ==========================================
+
+// ==========================================
+// FASE B1 - Cuenta corriente / fiado formal
+// ==========================================
+
+enum AccountEntryType {
+  CREDITO // Aumenta la deuda del cliente (venta fiada, ajuste)
+  DEBITO // Reduce la deuda (abono, nota de crédito por devolución)
+}
+
+enum AccountEntryStatus {
+  VIGENTE
+  ANULADO
+}
+
+model CustomerAccountEntry {
+  id             String @id @default(uuid())
+  organizationId String
+
+  entryNumber    String // Identificador humano correlativo por organización (CC-000001)
+
+  customerId     String
+  customer       BusinessEntity @relation(fields: [customerId], references: [id])
+
+  type           AccountEntryType
+  status         AccountEntryStatus @default(VIGENTE)
+
+  amount         Decimal @db.Decimal(12, 2) // Siempre positivo; el signo lo define `type`
+
+  // Referencia al documento origen (venta o pago)
+  referenceType  String? // "SALE" | "PAYMENT"
+  referenceId    String?
+
+  // Vencimiento para alertas de mora (null = sin vencimiento, p.ej. abonos)
+  dueDate        DateTime?
+
+  description    String?
+  notes          String?
+
+  createdBy      String // Usuario que registró el asiento
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, entryNumber])
+  @@index([organizationId, customerId, createdAt])
+  @@index([organizationId, referenceType, referenceId])
+  @@index([dueDate, status])
+  @@map("customer_account_entries")
+}
+
+enum AuditActionType {
+  ORGANIZATION_SUSPENDED
+  ORGANIZATION_REACTIVATED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  MEMBER_ROLE_CHANGED
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  PRODUCT_CREATED
+  PRODUCT_UPDATED
+  PRODUCT_DELETED
+  INVENTORY_ADJUSTED
+  PURCHASE_ORDER_CREATED
+  PURCHASE_ORDER_UPDATED
+  PURCHASE_ORDER_COMPLETED
+  SALE_CREATED
+  SALE_CANCELLED
+  SALE_RETURNED
+  BATCH_CREATED
+  BATCH_RETAINED
+  BATCH_EXPIRED
+  CASH_REGISTER_OPENED
+  CASH_REGISTER_CLOSED
+  CASH_REGISTER_ADJUSTMENT
+  OTHER
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  
+  // Quién realizó la acción
+  userId         String?  // Puede ser null si es acción automática del sistema
+  userPlatformRole PlatformRole? // Rol de plataforma en el momento de la acción
+  
+  // Qué acción se realizó
+  action         AuditActionType
+  
+  // Sobre qué entidad/organización
+  entityType     String   // Ej: "Organization", "User", "Membership", "Product"
+  entityId       String   // ID de la entidad afectada
+  organizationId String?  // Contexto organizacional (si aplica)
+  
+  // Metadata específica de cada acción (JSON flexible)
+  metadata       Json     @default("{}")
+  
+  // Cuándo ocurrió
+  createdAt      DateTime @default(now())
+  
+  // Relaciones opcionales para facilitar consultas
+  user           User?    @relation(fields: [userId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  
+  @@index([userId])
+  @@index([organizationId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ==========================================
+// FE1: Modelo de datos - Comprobantes Electrónicos (Invoice/ElectronicVoucher)
+// ==========================================
+
+enum InvoiceType {
+  FACTURA
+  BOLETA
+  NOTA_CREDITO
+  NOTA_DEBITO
+}
+
+enum InvoiceStatus {
+  PENDIENTE
+  ENVIADO
+  ACEPTADO
+  RECHAZADO
+  ANULADO
+}
+
+model Invoice {
+  id             String @id @default(uuid())
+  organizationId String
+  
+  // Tipo de comprobante electrónico
+  type           InvoiceType
+  
+  // Serie y correlativo (ej: F001-00000123)
+  series         String
+  correlation    String
+  
+  // Estado del comprobante electrónico
+  status         InvoiceStatus @default(PENDIENTE)
+  
+  // Fecha de emisión
+  issueDate      DateTime @default(now())
+  
+  // Totales (información duplicada desde Sale para referencia)
+  subtotal       Decimal @db.Decimal(12, 2)
+  taxRate        Decimal @db.Decimal(5, 4)
+  taxAmount      Decimal @db.Decimal(12, 2)
+  discount       Decimal @db.Decimal(12, 2)
+  total          Decimal @db.Decimal(12, 2)
+  
+  currency       String @default("PEN")
+  
+  // Datos del cliente (información fiscal al momento de la emisión)
+  customerName   String?
+  customerTaxId  String? // RUC/DNI
+  customerAddress String?
+  
+  // Respuesta de SUNAT / OSE
+  sunatResponseCode String?
+  sunatResponseMessage String?
+  cdrHash        String? // Hash del Constancia de Recepción
+  cdrXml         String? // XML de la constancia (o ruta de almacenamiento)
+  ubige          String? // Código de ubige
+  
+  // UUID del comprobante (para identificación única)
+  uuid           String?
+  
+  // Notas
+  notes          String?
+  internalNotes  String?
+  
+  // Usuario que generó el comprobante
+  issuedBy       String
+  
+  // Relación con Sale
+  saleId         String? @unique
+  sale           Sale? @relation(fields: [saleId], references: [id])
+  
+  // Relación con VoucherArchive (FE7)
+  archive        VoucherArchive?
+  
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([type])
+  @@index([status])
+  @@index([saleId])
+  @@index([series, correlation])
+  @@map("invoices")
+}
+
+// ==========================================
+// FE7: Archivo y Auditoría de Comprobantes (Retención 5 años)
+// ==========================================
+
+model VoucherArchive {
+  id             String @id @default(uuid())
+  invoiceId      String @unique
+  organizationId String
+  
+  // Contenido del XML firmado enviado a SUNAT
+  xmlContent     String @db.Text
+  
+  // Contenido del CDR (Constancia de Recepción)
+  cdrContent     String @db.Text
+  
+  // Hash SHA-256 del XML para verificación de integridad
+  xmlHash        String
+  
+  // Ruta de almacenamiento externo (S3, GCS) si aplica
+  storagePath    String?
+  
+  // Fecha hasta la cual se debe retener el documento (5 años desde emisión)
+  retentionUntil DateTime
+  
+  // Usuario que archivó el comprobante
+  archivedBy     String
+  
+  // Notas internas
+  notes          String?
+  
+  invoice        Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([retentionUntil])
+  @@map("voucher_archives")
+}
+
+// ==========================================
+// FE2: Configuración Fiscal por Organización (Multi-tenant)
+// ==========================================
+
+model OrganizationFiscalSettings {
+  id             String @id @default(uuid())
+  organizationId String @unique
+  
+  // Datos fiscales de la organización
+  ruc            String // RUC único de la organización
+  razonSocial    String // Razón social registrada
+  nombreComercial String? // Nombre comercial (opcional)
+  
+  // Dirección fiscal
+  direccion      String
+  ubige          String // Código de ubige del distrito
+  departamento   String
+  provincia      String
+  distrito       String
+  
+  // Teléfono y contacto
+  telefono       String?
+  email          String?
+  
+  // Configuración de series autorizadas por tipo de comprobante
+  // Ej: { "FACTURA": ["F001", "F002"], "BOLETA": ["B001"], "NOTA_CREDITO": ["FC01"], "NOTA_DEBITO": ["FD01"] }
+  seriesAutorizadas Json @default("{}")
+  
+  // Serie actual por tipo de comprobante (para correlativo automático)
+  serieActualFactura String @default("F001")
+  serieActualBoleta String @default("B001")
+  serieActualNotaCredito String @default("FC01")
+  serieActualNotaDebito String @default("FD01")
+  
+  // Último correlativo usado por serie
+  // Ej: { "F001": 1234, "B001": 5678 }
+  ultimosCorrelativos Json @default("{}")
+  
+  // Credenciales del PSE (Proveedor de Servicios Electrónicos)
+  pseProvider    String? // Nombre del proveedor PSE (ej: "NUBEFACT", "SOLUTEC", etc.)
+  pseUsername    String? // Usuario/API key del PSE
+  psePassword    String? // Contraseña/secret del PSE (encriptada)
+  pseEnvironment String @default("BETA") // BETA o PRODUCCION
+  
+  // Certificado digital (opcional, para firmado de XML)
+  certificadoDigital String? // Ruta o contenido del certificado .pfx/.p12
+  certificadoPassword String? // Contraseña del certificado
+  
+  // Configuración de impuestos
+  igvRate        Decimal @default(18.00) @db.Decimal(5, 2) // IGV por defecto
+  icbperRate     Decimal? @db.Decimal(5, 2) // ICBPER si aplica
+  
+  // Configuración de moneda
+  moneda         String @default("PEN") // PEN o USD
+  
+  // Estado de la configuración fiscal
+  isActive       Boolean @default(true)
+  isConfigured   Boolean @default(false) // true cuando todos los datos requeridos están completos
+  
+  // Fecha de última sincronización con SUNAT
+  lastSunatSync DateTime?
+  
+  // Notas internas
+  notasInternas  String?
+  
+  // Relación con Organization
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([ruc])
+  @@map("organization_fiscal_settings")
+}
+
+// ==========================================
+// FASE B3: Promociones y precios por volumen
+// ==========================================
+
+enum PromotionType {
+  DESCUENTO_VOLUMEN   // % o monto fijo al alcanzar N unidades de un producto
+  PRECIO_POR_VOLUMEN  // precio escalonado: desde N unidades, el unitario cambia
+  DOS_POR_UNO         // "lleva X, paga Y" sobre un mismo producto
+  COMBO               // grupo de productos con precio cerrado o descuento de conjunto
+}
+
+enum PromotionScope {
+  PRODUCTO   // aplica a un producto específico (promotionItems vacío)
+  CATEGORIA  // aplica a todos los productos de la categoría indicada
+  COMBO      // aplica según los ítems definidos en promotionItems
+}
+
+model Promotion {
+  id             String        @id @default(uuid())
+  organizationId String
+
+  code           String        // código corto único por organización (ej. "2X1-LECHE")
+  name           String        // ej. "2x1 en leche Gloria 900ml"
+  type           PromotionType
+  scope          PromotionScope @default(PRODUCTO)
+
+  // Producto objetivo (para DESCUENTO_VOLUMEN, PRECIO_POR_VOLUMEN, DOS_POR_UNO)
+  productId      String?
+  product        Product?      @relation(fields: [productId], references: [id])
+  categoryId     String?
+  category       Category?     @relation(fields: [categoryId], references: [id])
+
+  // Parámetros de activación
+  minQuantity    Int           @default(1)   // cantidad mínima para activar (escalón)
+  payQuantity    Int?                        // DOS_POR_UNO: unidades pagadas por bloque (ej. 2x1 -> 1; 3x2 -> 2)
+
+  // Beneficio
+  discountPercent Decimal?      @db.Decimal(5, 2) // 0..100
+  discountAmount  Decimal?      @db.Decimal(12, 2) // descuento fijo por aplicación
+  fixedPrice      Decimal?      @db.Decimal(12, 2) // PRECIO_POR_VOLUMEN/COMBO: nuevo unitario / precio total del combo
+
+  // Prioridad cuando varias promociones aplican (mayor gana)
+  priority       Int           @default(0)
+  stackable      Boolean       @default(false) // si puede combinarse con otras
+
+  // Vigencia
+  startDate      DateTime      @default(now())
+  endDate        DateTime?
+  active         Boolean       @default(true)
+
+  // Límites de uso
+  maxUsesTotal   Int?          // tope global de aplicaciones
+  usedCount      Int           @default(0)
+
+  notes          String?
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items          PromotionItem[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId, active])
+  @@index([productId])
+  @@map("promotions")
+}
+
+model PromotionItem {
+  id          String    @id @default(uuid())
+  promotionId String
+
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+
+  // Cantidad requerida de este producto para armar 1 bloque de la promoción
+  quantity    Int       @default(1)
+
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId])
+  @@index([productId])
+  @@map("promotion_items")
 }

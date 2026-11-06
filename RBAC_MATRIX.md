@@ -28,12 +28,12 @@
 ### 🛒 VENTAS (`/sales`)
 | Endpoint | OWNER | ADMIN | INVENTARIO | VENDEDOR | CAJA |
 |----------|-------|-------|------------|----------|------|
-| POST / (crear) | ✅ | ✅ | ❌ | ✅ | ❌ |
-| GET / (listar) | ✅ | ✅ | ✅ | ✅ | ❌ |
-| GET /:id | ✅ | ✅ | ✅ | ✅ | ❌ |
+| POST / (crear) | ✅ | ✅ | ❌ | ✅ | ✅ |
+| GET / (listar) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GET /:id | ✅ | ✅ | ✅ | ✅ | ✅ |
 | PATCH /:id | ✅ | ✅ | ❌ | ✅ | ❌ |
-| POST /:id/complete | ✅ | ✅ | ❌ | ✅ | ❌ |
-| POST /:id/payment | ✅ | ✅ | ❌ | ✅ | ❌ |
+| POST /:id/complete | ✅ | ✅ | ❌ | ✅ | ✅ |
+| POST /:id/payment | ✅ | ✅ | ❌ | ✅ | ✅ |
 | POST /:id/cancel | ✅ | ✅ | ❌ | ❌ | ❌ |
 | DELETE /:id | ✅ | ✅ | ❌ | ❌ | ❌ |
 
@@ -86,13 +86,13 @@
 | Endpoint | OWNER | ADMIN | INVENTARIO | VENDEDOR | CAJA |
 |----------|-------|-------|------------|----------|------|
 | POST / (crear) | ✅ | ✅ | ❌ | ❌ | ❌ |
-| GET / (listar) | ✅ | ✅ | ❌ | ✅ | ❌ |
-| GET /:id | ✅ | ✅ | ❌ | ✅ | ❌ |
-| GET /:id/movements | ✅ | ✅ | ❌ | ✅ | ❌ |
+| GET / (listar) | ✅ | ✅ | ❌ | ✅ | ✅ |
+| GET /:id | ✅ | ✅ | ❌ | ✅ | ✅ |
+| GET /:id/movements | ✅ | ✅ | ❌ | ✅ | ✅ |
 | PATCH /:id | ✅ | ✅ | ❌ | ❌ | ❌ |
-| POST /:id/open | ✅ | ✅ | ❌ | ✅ | ❌ |
-| POST /:id/close | ✅ | ✅ | ❌ | ✅ | ❌ |
-| POST /:id/movements | ✅ | ✅ | ❌ | ✅ | ❌ |
+| POST /:id/open | ✅ | ✅ | ❌ | ❌ | ✅ |
+| POST /:id/close | ✅ | ✅ | ❌ | ❌ | ✅ |
+| POST /:id/movements | ✅ | ✅ | ❌ | ❌ | ✅ |
 | DELETE /:id | ✅ | ✅ | ❌ | ❌ | ❌ |
 
 ### 👥 MEMBRESÍAS (`/memberships`)

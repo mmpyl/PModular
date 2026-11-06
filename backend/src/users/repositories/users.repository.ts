@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
+<<<<<<< HEAD
 import { OrgRole, Prisma, User } from '@prisma/client';
+=======
+import { Prisma, User, PlatformRole } from '@prisma/client';
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 import { PrismaService } from '../../prisma.service';
 
 @Injectable()
@@ -18,6 +22,7 @@ export class UsersRepository {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
+<<<<<<< HEAD
   findAllBusinessUsers() {
     return this.prisma.user.findMany({
       where: { platformRole: null },
@@ -111,6 +116,24 @@ export class UsersRepository {
   countOtherOwners(userId: string, organizationId: string) {
     return this.prisma.membership.count({
       where: { organizationId, role: OrgRole.OWNER, userId: { not: userId } },
+=======
+  /**
+   * Actualiza el rol de plataforma de un usuario
+   */
+  updatePlatformRole(userId: string, role: PlatformRole | null): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { platformRole: role },
+    });
+  }
+
+  /**
+   * Cuenta cuántos usuarios tienen rol PLATFORM_ADMIN
+   */
+  async countPlatformAdmins(): Promise<number> {
+    return this.prisma.user.count({
+      where: { platformRole: PlatformRole.PLATFORM_ADMIN },
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     });
   }
 }

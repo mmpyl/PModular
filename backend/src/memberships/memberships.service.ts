@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+=======
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 import { PrismaService } from '../prisma.service';
 import { OrgRole } from '@prisma/client';
 import { UsersService } from '../users/users.service';
@@ -107,9 +111,27 @@ export class MembershipsService {
       throw new NotFoundException('Membresía no encontrada');
     }
 
+<<<<<<< HEAD
     if (existing.role === OrgRole.OWNER && role !== OrgRole.OWNER) {
       const owners = await this.prisma.membership.count({ where: { organizationId, role: OrgRole.OWNER } });
       if (owners <= 1) throw new ForbiddenException('No se puede quitar el último owner del negocio');
+=======
+    // PREVENIR: No permitir degradar al último OWNER de una organización
+    // Si el miembro actual es OWNER y se quiere cambiar su rol a algo inferior,
+    // verificar que haya más owners en la organización
+    if (existing.role === 'OWNER' && role !== 'OWNER') {
+      // Contar cuántos OWNERS hay en esta organización
+      const ownerCount = await this.prisma.membership.count({
+        where: {
+          organizationId,
+          role: 'OWNER',
+        },
+      });
+
+      if (ownerCount <= 1) {
+        throw new ForbiddenException('No se puede degradar al último OWNER de la organización. Debe haber al menos un OWNER.');
+      }
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     }
 
     return this.prisma.membership.update({
@@ -148,7 +170,11 @@ export class MembershipsService {
       });
 
       if (ownerCount <= 1) {
+<<<<<<< HEAD
         throw new ForbiddenException('No se puede eliminar al último OWNER de la organización');
+=======
+        throw new ForbiddenException('No se puede eliminar al último OWNER de la organización. Debe haber al menos un OWNER.');
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
       }
     }
 

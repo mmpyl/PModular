@@ -1,8 +1,8 @@
-```
-# Dependencies
+# Dependencias
 node_modules/
 **/node_modules/
 
+<<<<<<< HEAD
 # Build outputs
 dist/
 **/dist/
@@ -21,10 +21,19 @@ coverage/
 **/.vercel/
 *.tsbuildinfo
 **/*.tsbuildinfo
+=======
+# Artefactos de build
+backend/dist/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+*.tsbuildinfo
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
-# Environment variables
+# Entornos / secretos — NUNCA versionar (solo *.example)
 .env
 .env.*
+<<<<<<< HEAD
 **/.env
 **/.env.*
 !.env.example
@@ -51,3 +60,10 @@ __pycache__/
 *.pyd
 .Python
 ```
+=======
+!.env.example
+
+# Logs y temporales
+*.log
+.DS_Store
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540

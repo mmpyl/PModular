@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { OrgRole, Prisma, User } from '@prisma/client';
+=======
+import { ConflictException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { User, PlatformRole } from '@prisma/client';
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersRepository } from './repositories/users.repository';
@@ -30,6 +35,7 @@ export class UsersService {
     return this.usersRepository.findById(id);
   }
 
+<<<<<<< HEAD
   listBusinessUsers() {
     return this.usersRepository.findAllBusinessUsers();
   }
@@ -131,5 +137,48 @@ export class UsersService {
         throw new ForbiddenException('No se puede quitar o eliminar al último owner de un negocio');
       }
     }
+=======
+  /**
+   * Asigna un rol de plataforma a un usuario.
+   * Solo PLATFORM_ADMIN puede ejecutar esta acción.
+   * Valida que no se quite el rol al último PLATFORM_ADMIN.
+   */
+  async assignPlatformRole(
+    userId: string,
+    role: PlatformRole | null,
+    currentAdminId: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado`);
+    }
+
+    // Si estamos quitando el rol PLATFORM_ADMIN del último admin, bloquear
+    if (
+      user.platformRole === PlatformRole.PLATFORM_ADMIN &&
+      (role === null || role === PlatformRole.SUPPORT)
+    ) {
+      const adminCount = await this.usersRepository.countPlatformAdmins();
+      if (adminCount <= 1 && user.id === currentAdminId) {
+        throw new ForbiddenException(
+          'No es posible remover el rol PLATFORM_ADMIN del último administrador de plataforma',
+        );
+      }
+      if (adminCount <= 1 && user.id !== currentAdminId) {
+        throw new ForbiddenException(
+          'No es posible remover el rol PLATFORM_ADMIN porque quedaría la plataforma sin administradores',
+        );
+      }
+    }
+
+    return this.usersRepository.updatePlatformRole(userId, role);
+  }
+
+  /**
+   * Obtiene el conteo de administradores de plataforma
+   */
+  async getPlatformAdminCount(): Promise<number> {
+    return this.usersRepository.countPlatformAdmins();
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   }
 }
