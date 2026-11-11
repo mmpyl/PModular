@@ -11,7 +11,6 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SaleStatus as PrismaSaleStatus } from '@prisma/client';
-import { PaymentMethod } from '@prisma/client';
 
 export enum SaleStatus {
   BORRADOR = 'BORRADOR',
@@ -45,7 +44,7 @@ export class SaleItemDto {
   productId!: string;
 
   @IsNumber()
-  @Min(0.0001)
+  @Min(0)
   quantity!: number;
 
   @IsNumber()
@@ -79,6 +78,10 @@ export class CreateSaleDto {
   @IsEnum(SaleType)
   @IsOptional()
   type?: SaleType;
+
+  @IsEnum(SaleStatus)
+  @IsOptional()
+  status?: SaleStatus;
 
   @IsDateString()
   @IsOptional()
@@ -170,10 +173,10 @@ export class UpdateSaleDto {
 
 export class ProcessPaymentDto {
   @IsNumber()
-  @Min(0.01)
+  @Min(0)
   amount!: number;
 
-  @IsEnum(PaymentMethod)
+  @IsString()
   method!: string;
 
   @IsString()

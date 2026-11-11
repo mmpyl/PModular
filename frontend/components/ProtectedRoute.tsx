@@ -5,7 +5,7 @@ import { ReactNode, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function ProtectedRoute({ children, requireOrganization = true }: { children: ReactNode; requireOrganization?: boolean }) {
-  const { isAuthenticated, isHydrated, organizationId, platformRole } = useAuth();
+  const { isAuthenticated, isHydrated, organizationId } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -16,19 +16,14 @@ export function ProtectedRoute({ children, requireOrganization = true }: { child
       router.replace('/login');
       return;
     }
-
-    if (platformRole === 'PLATFORM_ADMIN') {
-      router.replace('/platform');
-      return;
-    }
     
     if (requireOrganization && !organizationId && pathname !== '/select-organization') {
       router.replace('/select-organization');
       return;
     }
-  }, [isAuthenticated, isHydrated, organizationId, pathname, platformRole, requireOrganization, router]);
+  }, [isAuthenticated, isHydrated, organizationId, pathname, requireOrganization, router]);
 
-  if (!isHydrated || !isAuthenticated || platformRole === 'PLATFORM_ADMIN' || (requireOrganization && !organizationId)) {
+  if (!isHydrated || !isAuthenticated || (requireOrganization && !organizationId)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-muted-foreground">Redirigiendo a inicio de sesión...</p>

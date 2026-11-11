@@ -20,14 +20,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
-import { RequiredModules } from '../auth/decorators/required-modules.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 
 @Controller('purchase-orders')
-@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard)
-@RequiredModules('compras')
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class PurchaseOrdersController {
   constructor(private readonly purchaseOrdersService: PurchaseOrdersService) {}
 

@@ -23,8 +23,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
-import { RequiredModules } from '../auth/decorators/required-modules.decorator';
-import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 
 interface AuthRequest extends Request {
   user: {
@@ -36,8 +34,7 @@ interface AuthRequest extends Request {
 }
 
 @Controller('cash-registers')
-@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard)
-@RequiredModules('caja')
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class CashRegistersController {
   constructor(private readonly cashRegistersService: CashRegistersService) {}
 

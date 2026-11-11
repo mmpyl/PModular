@@ -11,15 +11,12 @@ import {
 import { InventoryService } from './inventory.service';
 import { StockMovementService } from '../stock-movements/stock-movements.service';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
-import { RequiredModules } from '../auth/decorators/required-modules.decorator';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 
 @Controller('inventory')
-@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard)
-@RequiredModules('inventario')
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class InventoryController {
   constructor(
     private readonly inventoryService: InventoryService,

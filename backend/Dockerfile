@@ -21,15 +21,11 @@ RUN npm run build -w backend
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV UPLOADS_DIR=/app/uploads
 
 COPY --from=builder /workspace/backend/package.json ./package.json
 COPY --from=builder /workspace/backend/prisma ./prisma
 COPY --from=builder /workspace/backend/dist ./dist
 COPY --from=builder /workspace/node_modules ./node_modules
 
-RUN mkdir -p /app/uploads
-VOLUME ["/app/uploads"]
-
 EXPOSE 3001
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
