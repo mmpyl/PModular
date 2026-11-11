@@ -19,6 +19,12 @@ async function main() {
     process.exit(1);
   }
 
+  const membershipCount = await prisma.membership.count({ where: { userId: user.id } });
+  if (membershipCount > 0) {
+    console.error('Platform admins must use a separate account without business memberships.');
+    process.exit(1);
+  }
+
   if (user.platformRole === PlatformRole.PLATFORM_ADMIN) {
     console.log(`User "${email}" is already a Platform Admin.`);
     return;
