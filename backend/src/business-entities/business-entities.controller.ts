@@ -16,16 +16,9 @@ import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
-import { RequiredModules } from '../auth/decorators/required-modules.decorator';
-import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 
 @Controller('business-entities')
-<<<<<<< HEAD
-@UseGuards(JwtAuthGuard, TenantGuard, ModuleAccessGuard)
-@RequiredModules('ventas', 'compras')
-=======
 @UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 export class BusinessEntitiesController {
   constructor(private readonly businessEntitiesService: BusinessEntitiesService) {}
   

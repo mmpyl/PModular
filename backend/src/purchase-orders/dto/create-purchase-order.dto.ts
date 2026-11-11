@@ -167,12 +167,6 @@ export class UpdatePurchaseOrderDto {
   @IsString()
   @IsOptional()
   externalReference?: string;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => PurchaseOrderItemDto)
-  @IsOptional()
-  items?: PurchaseOrderItemDto[];
 }
 
 export class ReceivePurchaseOrderDto {

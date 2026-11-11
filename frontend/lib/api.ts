@@ -69,25 +69,14 @@ export type SessionResponse = {
 export type AuthResponse = SessionResponse;
 
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
-<<<<<<< HEAD
-  const { token, organizationId, headers, ...init } = options;
-  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
-  const response = await fetch(`${API_URL}${path}`, {
-=======
   const { organizationId, headers, ...init } = options;
 
   // El navegador llama SIEMPRE al proxy del BFF; el token se añade allí desde la cookie httpOnly
   const response = await fetch(`/api/proxy${path}`, {
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     ...init,
     credentials: 'include',
     headers: {
-<<<<<<< HEAD
-      ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-=======
       'Content-Type': 'application/json',
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
       ...(organizationId ? { 'X-Org-Id': organizationId } : {}),
       ...headers,
     },
@@ -132,8 +121,4 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
-}
-
-export function apiAssetUrl(value: string) {
-  return value.startsWith('/uploads/') ? `${API_URL.replace(/\/$/, '')}${value}` : value;
 }

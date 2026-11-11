@@ -5,7 +5,6 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { OrgRolesGuard } from './guards/org-roles.guard';
 import { TenantGuard } from './guards/tenant.guard';
-import { ModuleAccessGuard } from './guards/module-access.guard';
 import { JwtStrategy } from './jwt.strategy';
 
 @Global()
@@ -20,7 +19,7 @@ import { JwtStrategy } from './jwt.strategy';
       }),
     }),
   ],
-  providers: [JwtStrategy, JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard],
-  exports: [JwtModule, JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard],
+  providers: [JwtStrategy, JwtAuthGuard, TenantGuard, OrgRolesGuard],
+  exports: [JwtModule, JwtAuthGuard, TenantGuard, OrgRolesGuard],
 })
 export class AuthSharedModule {}

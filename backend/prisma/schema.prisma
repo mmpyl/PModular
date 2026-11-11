@@ -89,10 +89,6 @@ model Organization {
   payments          Payment[]
   accountEntries    CustomerAccountEntry[]
   cashRegisters     CashRegister[]
-<<<<<<< HEAD
-  electronicDocuments ElectronicDocument[]
-  integrations     OrganizationIntegration[]
-=======
   auditLogs         AuditLog[]
   
   // FE2: Configuración fiscal por organización
@@ -106,7 +102,6 @@ model Organization {
 
   // FASE B3: Promociones
   promotions          Promotion[]
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -143,7 +138,6 @@ model BusinessType {
   // Define qué módulos vienen activos por defecto al crear una org de este tipo
   // Ej: ["inventario", "ventas", "lotes"]
   defaultModules Json @default("[]")
-  availableModules Json @default("[]")
 
   // Schema JSON que define los atributos dinámicos válidos para Products en este rubro
   // Ej: { "requiresRecipe": {"type": "boolean"}, "batchNumber": {"type": "string"} }
@@ -821,11 +815,7 @@ model Sale {
   items          SaleItem[]
   stockMovements StockMovement[]
   payments       Payment[]
-<<<<<<< HEAD
-  electronicDocuments ElectronicDocument[]
-=======
   invoice        Invoice?
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -836,64 +826,6 @@ model Sale {
   @@index([status])
   @@index([saleDate])
   @@map("sales")
-}
-
-enum ElectronicDocumentType {
-  TICKET
-  BOLETA
-  FACTURA
-}
-
-enum ElectronicDocumentStatus {
-  LOCAL
-  PENDIENTE
-  ACEPTADO
-  RECHAZADO
-  ERROR
-}
-
-model ElectronicDocument {
-  id             String @id @default(uuid())
-  organizationId String
-  saleId         String
-  type           ElectronicDocumentType
-  series         String
-  number         Int
-  status         ElectronicDocumentStatus
-  provider       String @default("INTERNAL")
-  providerCode   String?
-  message        String?
-  pdfUrl         String?
-  xmlUrl         String?
-  cdrUrl         String?
-  qrData         String?
-  issuedAt       DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  sale         Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, type, series, number])
-  @@unique([saleId, type])
-  @@index([organizationId, createdAt])
-  @@index([status])
-  @@map("electronic_documents")
-}
-
-model OrganizationIntegration {
-  id               String @id @default(uuid())
-  organizationId   String
-  provider         String
-  endpointUrl      String
-  encryptedToken   String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, provider])
-  @@map("organization_integrations")
 }
 
 model SaleItem {

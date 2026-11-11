@@ -11,16 +11,13 @@ import {
 } from '@nestjs/common';
 import { BatchesService } from './batches.service';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
-import { RequiredModules } from '../auth/decorators/required-modules.decorator';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 import { BatchStatus } from '@prisma/client';
 
 @Controller('batches')
-@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard)
-@RequiredModules('inventario')
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
 export class BatchesController {
   constructor(private readonly batchesService: BatchesService) {}
 

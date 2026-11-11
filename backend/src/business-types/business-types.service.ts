@@ -12,7 +12,6 @@ export class BusinessTypesService {
         name: 'Bodega / Tienda de Conveniencia',
         description: 'Tienda de productos básicos y abarrotes',
         defaultModules: ['inventario', 'ventas', 'caja'],
-        availableModules: ['inventario', 'ventas', 'compras', 'caja'],
         productSchema: {},
       },
       {
@@ -20,7 +19,6 @@ export class BusinessTypesService {
         name: 'Ferretería',
         description: 'Venta de herramientas, materiales y suministros',
         defaultModules: ['inventario', 'ventas', 'caja', 'fraccionamiento'],
-        availableModules: ['inventario', 'ventas', 'compras', 'caja', 'fraccionamiento'],
         productSchema: {
           unidadFraccionable: { type: 'boolean' },
           equivalencia: { type: 'string' },
@@ -32,7 +30,6 @@ export class BusinessTypesService {
         name: 'Farmacia',
         description: 'Establecimiento de venta de medicamentos',
         defaultModules: ['inventario', 'ventas', 'caja', 'lotes'],
-        availableModules: ['inventario', 'ventas', 'compras', 'caja', 'lotes', 'recetas'],
         productSchema: {
           requiereReceta: { type: 'boolean' },
           laboratorio: { type: 'string' },

@@ -5,9 +5,6 @@ import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiFetch, ApiError, Membership } from '@/lib/api';
-<<<<<<< HEAD
-import { formatMoney } from '@/lib/format';
-=======
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +12,6 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Menu, LogOut, LayoutDashboard, Package, Tags, ClipboardList, ShoppingCart, Building2, Users, FileBarChart, Settings, Box } from 'lucide-react';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
 type DashboardMetrics = {
   sales: { today: number; thisMonth: number };
@@ -26,13 +22,12 @@ type DashboardMetrics = {
 };
 
 type InventorySummary = { totalProducts: number; totalValue: number; lowStockItems: number; expiringSoonItems: number };
-type OrganizationSettings = { settings?: { currency?: string | null } };
+const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'USD' });
 
 export default function DashboardPage() {
   const { token, organizationId, orgRole, user, logout, memberships } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [inventory, setInventory] = useState<InventorySummary | null>(null);
-  const [currency, setCurrency] = useState('PEN');
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -41,27 +36,15 @@ export default function DashboardPage() {
   const enabledModules = (() => {
     const configured = activeMembership?.organization?.enabledModules;
     const defaults = activeMembership?.organization?.businessType?.defaultModules;
-    const modules = Array.isArray(configured) ? configured : defaults;
+    const modules = Array.isArray(configured) && configured.length ? configured : defaults;
     return Array.isArray(modules) ? modules.filter((m): m is string => typeof m === 'string') : [];
   })();
-  const canManageBusiness = orgRole === 'OWNER' || orgRole === 'ADMIN';
-  const hasDashboardModule = orgRole === 'INVENTARIO'
-    ? enabledModules.includes('inventario')
-    : enabledModules.length > 0;
 
   useEffect(() => {
     if (!token || !organizationId) return;
-    if (!hasDashboardModule) {
-      setMetrics(null);
-      setInventory(null);
-      setError('');
-      return;
-    }
     const load = async () => {
       try {
         setError('');
-        const organization = await apiFetch<OrganizationSettings>(`/organizations/${organizationId}`, { token, organizationId });
-        setCurrency(organization.settings?.currency || 'PEN');
         if (orgRole === 'INVENTARIO') {
           setInventory(await apiFetch<InventorySummary>('/reports/inventory/summary', { token, organizationId }));
         } else {
@@ -72,7 +55,7 @@ export default function DashboardPage() {
       }
     };
     void load();
-  }, [organizationId, orgRole, token, hasDashboardModule]);
+  }, [organizationId, orgRole, token]);
 
   const navigationItems = [
     { href: '/dashboard', label: 'Resumen', icon: LayoutDashboard, active: true },
@@ -129,125 +112,6 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-<<<<<<< HEAD
-      <div className="app-shell">
-        <aside className="sidebar">
-          <div><strong>PModular</strong><span>Gestión empresarial</span></div>
-          <nav>
-            <Link className="active" href="/dashboard">Resumen</Link>
-            {orgRole !== 'OWNER' && enabledModules.includes('inventario') && (
-              <>
-                <Link href="/products">Productos</Link>
-                <Link href="/categories">Categorías</Link>
-                <Link href="/inventory">Inventario</Link>
-              </>
-            )}
-            {orgRole !== 'OWNER' && enabledModules.includes('ventas') && (
-              <Link href="/sales">Ventas</Link>
-            )}
-            {orgRole !== 'OWNER' && enabledModules.includes('caja') && (
-              <Link href="/cash-registers">Caja</Link>
-            )}
-            {(orgRole === 'OWNER' || orgRole === 'ADMIN') && (
-              <>
-                <Link href="/team">Equipo</Link>
-                <Link href="/reports">Reportes</Link>
-              </>
-            )}
-            {canManageBusiness && (
-              <Link href="/business-settings">Configuración</Link>
-            )}
-          </nav>
-          <button type="button" className="quiet-button" onClick={logout}>Cerrar sesión</button>
-        </aside>
-        <main className="workspace">
-          <header className="topbar">
-            <div>
-              <span className="eyebrow">{activeMembership?.organization?.businessType?.name || 'Negocio'} · Panel de control</span>
-              <h1>Buenos días, {user?.name || user?.email}</h1>
-              <p className="muted">{activeMembership?.organization?.name}</p>
-            </div>
-            <span className="role-badge">{orgRole === 'OWNER' ? 'Propietario' : orgRole}</span>
-          </header>
-          {error && <p className="error-message" role="alert">{error}</p>}
-          {!hasDashboardModule && <p className="muted">No hay módulos activos para este negocio o perfil. Solicita a Plataforma que los habilite.</p>}
-          {hasDashboardModule && !metrics && !inventory && !error && <p className="loading-message">Cargando actividad...</p>}
-          {metrics && (
-            <>
-              <section className="metric-grid">
-                <article className="metric-card">
-                  <span>Ventas de hoy</span>
-                  <strong>{metrics.sales.today}</strong>
-                  <small>{formatMoney(metrics.revenue.today, currency)}</small>
-                </article>
-                <article className="metric-card">
-                  <span>Ventas del mes</span>
-                  <strong>{metrics.sales.thisMonth}</strong>
-                  <small>{formatMoney(metrics.revenue.thisMonth, currency)}</small>
-                </article>
-                <article className="metric-card">
-                  <span>Valor del inventario</span>
-                  <strong>{formatMoney(metrics.inventory.totalValue, currency)}</strong>
-                  <small>{metrics.inventory.lowStockAlerts} alertas de stock</small>
-                </article>
-                <article className="metric-card">
-                  <span>Clientes activos</span>
-                  <strong>{metrics.customers.activeThisMonth}</strong>
-                  <small>{metrics.customers.total} registrados</small>
-                </article>
-              </section>
-              <section className="content-grid">
-                <article className="panel">
-                  <div className="panel-heading">
-                    <div>
-                      <span className="eyebrow">Rendimiento</span>
-                      <h2>Productos más vendidos</h2>
-                    </div>
-                    {orgRole !== 'OWNER' && <Link href="/products">Ver catálogo</Link>}
-                  </div>
-                  {metrics.topProducts.length ? (
-                    metrics.topProducts.map((product) => (
-                      <div className="list-row" key={product.productName}>
-                        <span>{product.productName}</span>
-                        <strong>{product.totalQuantity} uds. · {formatMoney(product.totalRevenue, currency)}</strong>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="muted">Todavía no hay ventas registradas.</p>
-                  )}
-                </article>
-                <article className="panel accent-panel">
-                  <span className="eyebrow">Administración</span>
-                  <h2>Control del negocio</h2>
-                  <p>Consulta resultados, permisos y configuración de tu organización.</p>
-                  <Link className="primary-link" href="/reports">Abrir reportes</Link>
-                </article>
-              </section>
-            </>
-          )}
-          {inventory && (
-            <section className="metric-grid">
-              <article className="metric-card"><span>Productos</span><strong>{inventory.totalProducts}</strong></article>
-              <article className="metric-card"><span>Valor total</span><strong>{formatMoney(inventory.totalValue, currency)}</strong></article>
-              <article className="metric-card"><span>Stock bajo</span><strong>{inventory.lowStockItems}</strong></article>
-              <article className="metric-card"><span>Próximos a vencer</span><strong>{inventory.expiringSoonItems}</strong></article>
-            </section>
-          )}
-          <section className="panel module-strip">
-            <span className="eyebrow">Configuración del negocio</span>
-            <h2>Módulos activos</h2>
-            <div className="module-list">
-              {enabledModules.map((module) => (
-                <span className="module-chip" key={module}>{module}</span>
-              ))}
-            </div>
-            <p className="muted">
-              {canManageBusiness
-                ? 'Los módulos se administran desde Plataforma; aquí puedes consultar los que están activos.'
-                : 'Aquí puedes consultar los módulos activos para este negocio.'}
-            </p>
-          </section>
-=======
       <div className="min-h-screen bg-card">
         {/* Desktop Sidebar */}
         <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r bg-muted/50">
@@ -485,7 +349,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </div>
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
         </main>
       </div>
     </ProtectedRoute>

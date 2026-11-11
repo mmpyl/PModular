@@ -18,7 +18,7 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
   const enabledModules = (() => {
     const configured = activeMembership?.organization?.enabledModules;
     const defaults = activeMembership?.organization?.businessType?.defaultModules;
-    const modules = Array.isArray(configured) ? configured : defaults;
+    const modules = Array.isArray(configured) && configured.length ? configured : defaults;
     return Array.isArray(modules) ? modules.filter((m): m is string => typeof m === 'string') : [];
   })();
   
@@ -26,15 +26,6 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
   const isCaja = orgRole === 'CAJA';
   const links = [
     { key: 'dashboard', label: 'Resumen', href: '/dashboard', visible: true },
-<<<<<<< HEAD
-    { key: 'products', label: 'Productos', href: '/products', module: 'inventario', visible: enabledModules.includes('inventario') },
-    { key: 'categories', label: 'Categorías', href: '/categories', module: 'inventario', visible: enabledModules.includes('inventario') },
-    { key: 'units', label: 'Unidades', href: '/units', module: 'inventario', visible: enabledModules.includes('inventario') },
-    { key: 'inventory', label: 'Inventario', href: '/inventory', module: 'inventario', visible: enabledModules.includes('inventario') },
-    { key: 'sales', label: 'Ventas', href: '/sales', module: 'ventas', visible: enabledModules.includes('ventas') },
-    { key: 'purchases', label: 'Compras', href: '/purchase-orders', module: 'compras', visible: enabledModules.includes('compras') },
-    { key: 'cash', label: 'Caja', href: '/cash-registers', module: 'caja', visible: enabledModules.includes('caja') },
-=======
     { key: 'products', label: 'Productos', href: '/products', visible: enabledModules.includes('inventario') },
     { key: 'categories', label: 'Categorías', href: '/categories', visible: enabledModules.includes('inventario') },
     { key: 'units', label: 'Unidades', href: '/units', visible: enabledModules.includes('inventario') },
@@ -42,23 +33,10 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
     { key: 'sales', label: 'Ventas', href: '/sales', visible: enabledModules.includes('ventas') },
     { key: 'purchases', label: 'Compras', href: '/purchase-orders', visible: enabledModules.includes('compras') },
     { key: 'cash', label: 'Caja', href: '/cash-registers', visible: enabledModules.includes('caja') || isCaja },
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     { key: 'team', label: 'Equipo', href: '/team', visible: canManage },
     { key: 'reports', label: 'Reportes', href: '/reports', visible: canManage },
-    { key: 'settings', label: 'Configuración', href: '/business-settings', visible: canManage },
+    { key: 'settings', label: 'Configuración', href: '/business-settings', visible: orgRole === 'OWNER' },
   ];
-  const activeModule = links.find((link) => link.key === active)?.module;
-
-  if (activeModule && !enabledModules.includes(activeModule)) {
-    return (
-      <ProtectedRoute>
-        <div className="app-shell"><main className="workspace">
-          <p className="error-message" role="alert">Este módulo está desactivado para el negocio.</p>
-          <Link href="/dashboard">Volver al resumen</Link>
-        </main></div>
-      </ProtectedRoute>
-    );
-  }
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -104,28 +82,10 @@ export function OwnerShell({ children, active }: { children: ReactNode; active: 
 
   return (
     <ProtectedRoute>
-<<<<<<< HEAD
-      <div className="app-shell">
-        <aside className="sidebar">
-          <div>
-            <strong>PModular</strong>
-            <span>{activeMembership?.organization?.name || 'Organización'}</span>
-            <span className="role-badge">{orgRole === 'OWNER' ? 'Propietario' : orgRole}</span>
-          </div>
-          <nav aria-label="Navegación principal">
-            {links.filter((link) => link.visible).map((link) => (
-              <Link key={link.key} className={active === link.key ? 'active' : ''} href={link.href}>
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <button type="button" className="quiet-button" onClick={logout}>Cerrar sesión</button>
-=======
       <div className="min-h-screen bg-background flex">
         {/* Desktop Sidebar */}
         <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-card">
           <SidebarContent />
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
         </aside>
 
         {/* Mobile Header */}

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Patch, ForbiddenException } from '@nestjs/common';
-=======
 import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, ForbiddenException, Patch, UseInterceptors } from '@nestjs/common';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 import { MembershipsService } from './memberships.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -11,40 +7,13 @@ import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { OrgRole } from '@prisma/client';
-<<<<<<< HEAD
-import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
-=======
 import { AuditLogInterceptor, AuditAction, AuditEntityType } from '../audit-log/audit-log.interceptor';
 import { AuditActionType } from '@prisma/client';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
 export interface CreateMembershipDto {
   userId: string;
   organizationId: string;
   role?: OrgRole;
-}
-
-export class AddTeamMemberDto {
-  @IsEmail()
-  email!: string;
-
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(8)
-  password?: string;
-
-  @IsOptional()
-  @IsEnum(OrgRole)
-  role?: OrgRole;
-}
-
-export class UpdateTeamMemberRoleDto {
-  @IsEnum(OrgRole)
-  role!: OrgRole;
 }
 
 @Controller('memberships')
@@ -64,24 +33,6 @@ export class MembershipsController {
       throw new ForbiddenException('No puedes crear membresías para otra organización');
     }
     return this.membershipsService.create(createMembershipDto);
-  }
-
-  @Post('team')
-  @OrgRoles('OWNER')
-  addTeamMember(@Body() dto: AddTeamMemberDto, @CurrentOrg() organizationId: string) {
-    return this.membershipsService.addOrganizationMember({ ...dto, organizationId });
-  }
-
-  @Patch(':userId/:organizationId/role')
-  @OrgRoles('OWNER')
-  updateRole(
-    @Param('userId') userId: string,
-    @Param('organizationId') organizationId: string,
-    @Body() dto: UpdateTeamMemberRoleDto,
-    @CurrentOrg() currentOrgId: string,
-  ) {
-    if (organizationId !== currentOrgId) throw new ForbiddenException('No puedes cambiar roles de otro negocio');
-    return this.membershipsService.updateRole(userId, organizationId, dto.role);
   }
 
   @Get('user/:userId')

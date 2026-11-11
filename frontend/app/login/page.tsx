@@ -1,13 +1,8 @@
 'use client';
 
-<<<<<<< HEAD
-import { FormEvent, useState } from 'react';
-import Link from 'next/link';
-=======
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ApiError } from '@/lib/api';
@@ -42,14 +37,9 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-<<<<<<< HEAD
-      const session = await login({ email, password });
-      router.replace(session.organizationId ? '/dashboard' : '/select-organization');
-=======
       // Un solo flujo: login() del contexto ya espera a persistSession antes de resolver
       await login(data);
       router.push('/dashboard');
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     } catch (caughtError) {
       if (caughtError instanceof ApiError) {
         setSubmitError(caughtError.message || 'No se pudo iniciar sesión. Verifica tus credenciales.');
@@ -60,40 +50,6 @@ export default function LoginPage() {
   };
 
   return (
-<<<<<<< HEAD
-    <main className="auth-page">
-      <span className="eyebrow">PModular</span>
-      <h1>Iniciar sesión</h1>
-      <p>Bienvenido de nuevo. Ingresa tus credenciales para continuar.</p>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="email@empresa.com"
-          />
-        </label>
-        <label>
-          Contraseña
-          <input
-            required
-            minLength={8}
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Contraseña"
-          />
-        </label>
-        {error && <p className="error-message" role="alert">{error}</p>}
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Validando...' : 'Entrar'}
-        </button>
-        <Link href="/platform/login">Acceso de propietario global</Link>
-      </form>
-=======
     <main className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -150,7 +106,6 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     </main>
   );
 }
