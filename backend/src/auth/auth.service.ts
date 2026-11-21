@@ -1,4 +1,4 @@
-import { UnauthorizedException, Injectable, ForbiddenException } from '@nestjs/common';
+import { UnauthorizedException, Injectable, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User, Membership, OrgRole, PlatformRole } from '@prisma/client';
@@ -39,7 +39,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(dto.email);
     const isPasswordValid = user ? await bcrypt.compare(dto.password, user.password) : false;
 
-    if (!user || !isPasswordValid) {
+    if (!user || !isPasswordValid || user.platformRole) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -72,7 +72,30 @@ export class AuthService {
     };
   }
 
-  async selectOrganization(userId: string, organizationId: string): Promise<LoginResponse> {
+  async platformLogin(dto: LoginDto): Promise<LoginResponse> {
+    const user = await this.usersService.findByEmail(dto.email);
+    const isPasswordValid = user ? await bcrypt.compare(dto.password, user.password) : false;
+
+    if (!user || !isPasswordValid || user.platformRole !== PlatformRole.PLATFORM_ADMIN) {
+      throw new UnauthorizedException('Invalid credentials for platform access');
+    }
+
+    const memberships = await this.membershipsService.findByUser(user.id);
+    if (memberships.length > 0) {
+      throw new UnauthorizedException('Platform accounts cannot belong to a business');
+    }
+
+    return {
+      ...(await this.buildAuthResponse(user)),
+      memberships: [],
+    };
+  }
+
+  async selectOrganization(userId: string, organizationId?: string): Promise<LoginResponse> {
+    if (!organizationId) {
+      throw new BadRequestException('OrganizationId is required');
+    }
+
     const membership = await this.membershipsService.findOne(userId, organizationId);
     
     if (!membership) {

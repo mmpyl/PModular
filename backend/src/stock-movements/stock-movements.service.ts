@@ -75,6 +75,14 @@ export class StockMovementService {
     performedBy: string,
     options?: AdjustStockOptions,
   ): Promise<StockAdjustmentResult> {
+    const product = await tx.product.findFirst({
+      where: { id: productId, organizationId, isActive: true },
+      select: { id: true },
+    });
+    if (!product) {
+      throw new NotFoundException('Product not found, inactive, or outside the current organization');
+    }
+
     const isPositive = quantityDelta > 0;
     const quantity = Math.abs(quantityDelta);
     const {

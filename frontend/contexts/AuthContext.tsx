@@ -15,7 +15,8 @@ type AuthContextValue = {
   memberships: Membership[];
   isHydrated: boolean;
   isAuthenticated: boolean;
-  login: (credentials: Credentials) => Promise<void>;
+  login: (credentials: Credentials) => Promise<AuthResponse>;
+  platformLogin: (credentials: Credentials) => Promise<AuthResponse>;
   selectOrganization: (organizationId: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   createOrganization: (payload: { name: string; businessTypeId: string }) => Promise<void>;
@@ -73,6 +74,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Hidratar desde el BFF: GET /api/auth/session (devuelve la sesión SIN el token)
   useEffect(() => {
+<<<<<<< HEAD
+    const handleExpired = () => {
+      clearSession();
+      router.replace(platformRole === 'PLATFORM_ADMIN' ? '/platform/login' : '/login');
+    };
+    window.addEventListener('pymodular:session-expired', handleExpired);
+    return () => window.removeEventListener('pymodular:session-expired', handleExpired);
+  }, [clearSession, platformRole, router]);
+=======
     const loadSession = async () => {
       try {
         const response = await fetch('/api/auth/session', {
@@ -125,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Si falla, mantener las memberships actuales (posible fallo de red transitorio)
     }
   }, [hasSession]);
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
@@ -143,6 +154,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
         body: JSON.stringify(credentials),
       });
+<<<<<<< HEAD
+      persistSession(session);
+      return session;
+    },
+    platformLogin: async (credentials) => {
+      const session = await apiFetch<AuthResponse>('/auth/platform/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
+      persistSession(session);
+      return session;
+=======
       const session = (await res.json().catch(() => ({}))) as SessionResponse & { message?: string };
       if (!res.ok) {
         throw new ApiError(session?.message ?? 'No se pudo iniciar sesión', res.status, session);
@@ -153,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session.memberships && session.memberships.length > 1 && !session.organizationId) {
         router.push('/select-organization');
       }
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     },
     selectOrganization: async (orgId: string) => {
       if (!hasSession) throw new ApiError('La sesión ha expirado', 401);

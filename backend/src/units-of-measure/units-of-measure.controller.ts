@@ -4,7 +4,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
+import { RequiredModules } from '../auth/decorators/required-modules.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
+import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 
 export interface CreateUnitOfMeasureDto {
   name: string;
@@ -13,7 +15,8 @@ export interface CreateUnitOfMeasureDto {
 }
 
 @Controller('units-of-measure')
-@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard)
+@RequiredModules('inventario')
 export class UnitsOfMeasureController {
   constructor(private readonly unitsOfMeasureService: UnitsOfMeasureService) {}
 

@@ -21,12 +21,23 @@ const WRITE_ROLES = ['OWNER', 'ADMIN', 'INVENTARIO'];
 const DELETE_ROLES = ['OWNER', 'ADMIN'];
 
 export default function CategoriesPage() {
+<<<<<<< HEAD
+  const { token, organizationId } = useAuth();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [name, setName] = useState('');
+  const [parentId, setParentId] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+=======
   const { token, organizationId, orgRole } = useAuth();
   const orgId = organizationId ?? undefined;
   const { data: categories = [], isLoading } = useCategories(orgId);
   const createMutation = useCreateCategory(orgId);
   const updateMutation = useUpdateCategory(orgId);
   const deleteMutation = useDeleteCategory(orgId);
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   const form = useForm<CategoryFormData & { id?: string }>({
     resolver: zodResolver(categorySchema),
@@ -50,6 +61,19 @@ export default function CategoriesPage() {
     if (!token || !organizationId) return;
     const { id, ...submitData } = data as CategoryFormData & { id?: string };
     try {
+<<<<<<< HEAD
+      let successMessage: string;
+      if (editingId) {
+        await apiFetch(`/categories/${editingId}`, { method: 'PATCH', token, organizationId, body });
+        successMessage = 'Categoría actualizada correctamente';
+      } else {
+        await apiFetch('/categories', { method: 'POST', token, organizationId, body });
+        successMessage = 'Categoría creada correctamente';
+      }
+      setError(''); resetForm(); setMessage(successMessage); await loadCategories();
+    } catch (caughtError) {
+      setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudo guardar la categoría');
+=======
       if (id) {
         await updateMutation.mutateAsync({ id, data: submitData as CategoryFormData });
       } else {
@@ -58,6 +82,7 @@ export default function CategoriesPage() {
       resetForm();
     } catch {
       // Error manejado por el hook
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     }
   }
 
@@ -69,6 +94,10 @@ export default function CategoriesPage() {
 
   const roots = categories.filter((c) => !c.parentId);
   const childrenOf = (id: string) => categories.filter((c) => c.parentId === id);
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()) ||
+    category.parent?.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
+  );
 
   return (
     <OwnerShell active="categories">
@@ -94,7 +123,56 @@ export default function CategoriesPage() {
         </Alert>
       )}
 
+      <div className="catalog-layout">
       <RequireRole roles={WRITE_ROLES}>
+<<<<<<< HEAD
+        <section className="panel catalog-editor">
+          <span className="eyebrow">{editingId ? 'Edición' : 'Alta'}</span>
+          <h2>{editingId ? 'Editar categoría' : 'Nueva categoría'}</h2>
+          <form className="compact-form" onSubmit={saveCategory}>
+            <label>Nombre<input required value={name} onChange={(e) => setName(e.target.value)} /></label>
+            <label>
+              Categoría padre
+              <select value={parentId} onChange={(e) => setParentId(e.target.value)}>
+                <option value="">Sin padre (nivel superior)</option>
+                {categories.filter((c) => c.id !== editingId).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+              </select>
+            </label>
+            {editingId && <button type="button" className="quiet-link" onClick={resetForm}>Cancelar edición</button>}
+            <button type="submit">{editingId ? 'Guardar cambios' : 'Agregar categoría'}</button>
+          </form>
+        </section>
+      </RequireRole>
+
+      <section className="panel">
+        <div className="panel-heading">
+          <div><span className="eyebrow">Estructura</span><h2>Categorías activas</h2></div>
+          <span className="role-badge">{categories.length} categorías</span>
+        </div>
+        <div className="catalog-search-row">
+          <input aria-label="Buscar categorías" placeholder="Buscar categoría..." value={search} onChange={(event) => setSearch(event.target.value)} />
+        </div>
+        {search ? filteredCategories.map((category) => (
+          <div className="list-row" key={category.id}>
+            <span><strong>{category.name}</strong><small>{category.parent ? `Subcategoría de ${category.parent.name}` : 'Nivel superior'} · {category._count?.products ?? 0} productos</small></span>
+            <RequireRole roles={WRITE_ROLES}><button type="button" className="quiet-link" onClick={() => startEdit(category)}>Editar</button></RequireRole>
+            <RequireRole roles={DELETE_ROLES}><button type="button" className="danger" onClick={() => void deleteCategory(category)}>Eliminar</button></RequireRole>
+          </div>
+        )) : roots.map((category) => (
+          <div key={category.id}>
+            <div className="list-row">
+              <span><strong>{category.name}</strong><small>{category._count?.products ?? 0} productos</small></span>
+              <RequireRole roles={WRITE_ROLES}>
+                <div className="row-actions">
+                  <button type="button" className="quiet-link" onClick={() => startEdit(category)}>Editar</button>
+                </div>
+              </RequireRole>
+              <RequireRole roles={DELETE_ROLES}>
+                <div className="row-actions">
+                  <button type="button" className="danger" onClick={() => void deleteCategory(category)}>Eliminar</button>
+                </div>
+              </RequireRole>
+=======
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">{editingId ? 'Editar categoría' : 'Nueva categoría'}</CardTitle>
@@ -164,9 +242,17 @@ export default function CategoriesPage() {
             <div>
               <div className="text-sm text-muted-foreground mb-1">Estructura</div>
               <CardTitle>Categorías activas</CardTitle>
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
             </div>
             <Badge variant="secondary">{categories.length} categorías</Badge>
           </div>
+<<<<<<< HEAD
+        ))}
+        {search && !filteredCategories.length && <p className="muted">No hay categorías que coincidan con la búsqueda.</p>}
+        {!search && !roots.length && !error && <p className="muted">No hay categorías para mostrar.</p>}
+      </section>
+      </div>
+=======
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -239,6 +325,7 @@ export default function CategoriesPage() {
           )}
         </CardContent>
       </Card>
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     </OwnerShell>
   );
 }

@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+export function formatMoney(value: number | string, currency: string) {
+  const amount = Number(value) || 0;
+  try {
+    return new Intl.NumberFormat('es-PE', { style: 'currency', currency }).format(amount);
+  } catch {
+    return `${currency} ${amount.toFixed(2)}`;
+  }
+}
+=======
 /**
  * Fase 3 - tarea 3.3: formateo centralizado.
  *
@@ -66,3 +76,4 @@ export function formatNumber(value: number | string | null | undefined, locale?:
   if (!Number.isFinite(n as number)) return '0';
   return new Intl.NumberFormat(locale || DEFAULT_LOCALE).format(n as number);
 }
+>>>>>>> e206d198e942f03be69312c7a5e9542c210e8540

@@ -11,12 +11,15 @@ import {
 } from '@nestjs/common';
 import { StockMovementService } from './stock-movements.service';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
+import { RequiredModules } from '../auth/decorators/required-modules.decorator';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 
 @Controller('stock-movements')
-@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard)
+@RequiredModules('inventario')
 export class StockMovementsController {
   constructor(private readonly stockMovementService: StockMovementService) {}
 

@@ -15,10 +15,12 @@ import { TenantGuard } from '../auth/guards/tenant.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
 import { OrgRoles } from '../auth/decorators/org-roles.decorator';
+import { RequiredModules } from '../auth/decorators/required-modules.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
+import { ModuleAccessGuard } from '../auth/guards/module-access.guard';
 
 @Controller('reports')
-@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, OrgRolesGuard, ModuleAccessGuard)
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
@@ -26,6 +28,7 @@ export class ReportsController {
    * Resumen de ventas - Solo OWNER/ADMIN
    */
   @Get('sales/summary')
+  @RequiredModules('ventas')
   @OrgRoles('OWNER', 'ADMIN')
   async getSalesSummary(
     @CurrentOrg() organizationId: string,
@@ -38,6 +41,7 @@ export class ReportsController {
    * Ventas por categoría - Solo OWNER/ADMIN
    */
   @Get('sales/by-category')
+  @RequiredModules('ventas')
   @OrgRoles('OWNER', 'ADMIN')
   async getSalesByCategory(
     @CurrentOrg() organizationId: string,
@@ -50,6 +54,7 @@ export class ReportsController {
    * Top productos más vendidos - Solo OWNER/ADMIN
    */
   @Get('sales/top-products')
+  @RequiredModules('ventas')
   @OrgRoles('OWNER', 'ADMIN')
   async getTopProducts(
     @CurrentOrg() organizationId: string,
@@ -67,6 +72,7 @@ export class ReportsController {
    * Resumen de inventario - OWNER/ADMIN/INVENTARIO
    */
   @Get('inventory/summary')
+  @RequiredModules('inventario')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getInventorySummary(
     @CurrentOrg() organizationId: string,
@@ -79,6 +85,7 @@ export class ReportsController {
    * Inventario por categoría - OWNER/ADMIN/INVENTARIO
    */
   @Get('inventory/by-category')
+  @RequiredModules('inventario')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getInventoryByCategory(
     @CurrentOrg() organizationId: string,
@@ -91,6 +98,7 @@ export class ReportsController {
    * Resumen de movimientos de stock - OWNER/ADMIN/INVENTARIO
    */
   @Get('stock-movements/summary')
+  @RequiredModules('inventario')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getStockMovementSummary(
     @CurrentOrg() organizationId: string,
@@ -103,6 +111,7 @@ export class ReportsController {
    * Resumen de compras - OWNER/ADMIN/INVENTARIO
    */
   @Get('purchases/summary')
+  @RequiredModules('compras')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getPurchaseSummary(
     @CurrentOrg() organizationId: string,
@@ -115,6 +124,7 @@ export class ReportsController {
    * Compras por proveedor - OWNER/ADMIN/INVENTARIO
    */
   @Get('purchases/by-supplier')
+  @RequiredModules('compras')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getPurchasesBySupplier(
     @CurrentOrg() organizationId: string,
@@ -127,6 +137,7 @@ export class ReportsController {
    * Resumen de caja - OWNER/ADMIN
    */
   @Get('cash-register/summary')
+  @RequiredModules('caja')
   @OrgRoles('OWNER', 'ADMIN')
   async getCashRegisterSummary(
     @CurrentOrg() organizationId: string,
@@ -139,6 +150,7 @@ export class ReportsController {
    * Métricas principales para dashboard - OWNER/ADMIN/VENDEDOR
    */
   @Get('dashboard/metrics')
+  @RequiredModules('inventario', 'ventas', 'compras', 'caja')
   @OrgRoles('OWNER', 'ADMIN', 'VENDEDOR')
   async getDashboardMetrics(@CurrentOrg() organizationId: string) {
     return this.reportsService.getDashboardMetrics(organizationId);
@@ -148,6 +160,7 @@ export class ReportsController {
    * Lotes próximos a vencer - OWNER/ADMIN/INVENTARIO
    */
   @Get('inventory/expiring-batches')
+  @RequiredModules('inventario')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getExpiringBatches(
     @CurrentOrg() organizationId: string,
@@ -163,6 +176,7 @@ export class ReportsController {
    * Productos con stock bajo - OWNER/ADMIN/INVENTARIO
    */
   @Get('inventory/low-stock')
+  @RequiredModules('inventario')
   @OrgRoles('OWNER', 'ADMIN', 'INVENTARIO')
   async getLowStockProducts(
     @CurrentOrg() organizationId: string,
