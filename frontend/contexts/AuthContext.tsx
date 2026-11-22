@@ -74,7 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Hidratar desde el BFF: GET /api/auth/session (devuelve la sesión SIN el token)
   useEffect(() => {
-<<<<<<< HEAD
     const handleExpired = () => {
       clearSession();
       router.replace(platformRole === 'PLATFORM_ADMIN' ? '/platform/login' : '/login');
@@ -82,60 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('pymodular:session-expired', handleExpired);
     return () => window.removeEventListener('pymodular:session-expired', handleExpired);
   }, [clearSession, platformRole, router]);
-=======
-    const loadSession = async () => {
-      try {
-        const response = await fetch('/api/auth/session', {
-          credentials: 'include',
-          cache: 'no-store',
-        });
-        if (response.ok) {
-          const data = (await response.json()) as SessionResponse & { authenticated?: boolean };
-          applySession(data);
-        } else if (response.status === 401) {
-          clearLocal();
-          // Limpieza defensiva del localStorage legado (tarea 2.5):
-          // antes la sesión (con token) se guardaba ahí; ya no se usa nunca más.
-          try {
-            window.localStorage.removeItem('pymen.auth');
-          } catch {
-            /* almacenamiento no disponible */
-          }
-        }
-      } catch {
-        clearLocal();
-      } finally {
-        setIsHydrated(true);
-      }
-    };
-
-    loadSession();
-  }, [applySession, clearLocal]);
-
-  // Escuchar evento de sesión expirada (los usuarios de plataforma van a /platform/login)
-  useEffect(() => {
-    const handleExpired = (event: Event) => {
-      const detail = (event as CustomEvent<{ platformRole?: string | null }>).detail;
-      const isPlatformUser = Boolean(detail?.platformRole);
-      clearLocal();
-      void fetch('/api/auth/logout', { method: 'DELETE', credentials: 'include' }).catch(() => {});
-      router.replace(isPlatformUser ? '/platform/login' : '/login');
-    };
-    window.addEventListener('pymodular:session-expired', handleExpired);
-    return () => window.removeEventListener('pymodular:session-expired', handleExpired);
-  }, [clearLocal, router]);
-
-  // Miembros del equipo/invitaciones pueden cambiar: revalidar membresías bajo demanda
-  const refreshMemberships = useCallback(async () => {
-    if (!hasSession) return;
-    try {
-      const fresh = await apiFetch<Membership[]>('/auth/memberships');
-      if (Array.isArray(fresh)) setMemberships(fresh);
-    } catch {
-      // Si falla, mantener las memberships actuales (posible fallo de red transitorio)
-    }
-  }, [hasSession]);
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
@@ -154,7 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
         body: JSON.stringify(credentials),
       });
-<<<<<<< HEAD
       persistSession(session);
       return session;
     },
@@ -165,18 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       persistSession(session);
       return session;
-=======
-      const session = (await res.json().catch(() => ({}))) as SessionResponse & { message?: string };
-      if (!res.ok) {
-        throw new ApiError(session?.message ?? 'No se pudo iniciar sesión', res.status, session);
-      }
-      applySession(session);
-
-      // Si el login devuelve múltiples membresías sin organización seleccionada, redirigir a selector
-      if (session.memberships && session.memberships.length > 1 && !session.organizationId) {
-        router.push('/select-organization');
-      }
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     },
     selectOrganization: async (orgId: string) => {
       if (!hasSession) throw new ApiError('La sesión ha expirado', 401);

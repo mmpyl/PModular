@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { OwnerHeader, OwnerShell } from '@/components/OwnerShell';
 import { RequireRole } from '@/components/RequireRole';
 import { useAuth } from '@/contexts/AuthContext';
-<<<<<<< HEAD
 import { apiFetch, ApiError } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 
@@ -24,18 +23,6 @@ type Product = {
 type Category = { id: string; name: string };
 type Unit = { id: string; name: string; symbol?: string | null; isFractionable: boolean };
 type OrganizationSettings = { settings?: { currency?: string | null } };
-=======
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useProducts, useCategories, useUnits, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product as ProductType } from '@/features/catalog/hooks';
-import { productSchema, type ProductFormData } from '@/features/catalog/schemas';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
 type SchemaField = { type?: string; default?: unknown; options?: unknown[]; label?: string };
 
@@ -46,7 +33,6 @@ const DELETE_ROLES = ['OWNER', 'ADMIN'];
 
 export default function ProductsPage() {
   const { token, organizationId, orgRole, memberships } = useAuth();
-<<<<<<< HEAD
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -63,14 +49,6 @@ export default function ProductsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-=======
-  const { data: products = [], isLoading: loadingProducts } = useProducts(organizationId ?? undefined);
-  const { data: categories = [] } = useCategories(organizationId ?? undefined);
-  const { data: units = [] } = useUnits(organizationId ?? undefined);
-  const createMutation = useCreateProduct(organizationId ?? undefined);
-  const updateMutation = useUpdateProduct(organizationId ?? undefined);
-  const deleteMutation = useDeleteProduct(organizationId ?? undefined);
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   // productSchema del BusinessType de la membresía activa
   const activeMembership = memberships.find((m) => m.organizationId === organizationId) ?? null;
@@ -100,7 +78,6 @@ export default function ProductsPage() {
   const canWrite = orgRole !== null && WRITE_ROLES.includes(orgRole);
   const canDelete = orgRole !== null && DELETE_ROLES.includes(orgRole);
 
-<<<<<<< HEAD
   const loadProducts = useCallback(async () => {
     if (!token || !organizationId) return;
     try {
@@ -133,8 +110,6 @@ export default function ProductsPage() {
   useEffect(() => { void loadProducts(); }, [loadProducts]);
   useEffect(() => { void loadReferences(); }, [loadReferences]);
 
-=======
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   function resetForm() {
     form.reset({
       id: undefined,
@@ -167,7 +142,6 @@ export default function ProductsPage() {
     if (!token || !organizationId) return;
     const { id, ...submitData } = data;
     try {
-<<<<<<< HEAD
       let successMessage: string;
       if (editingId) {
         await apiFetch(`/products/${editingId}`, { method: 'PATCH', token, organizationId, body: JSON.stringify(payload) });
@@ -179,16 +153,6 @@ export default function ProductsPage() {
       setError(''); resetForm(); setMessage(successMessage); await loadProducts();
     } catch (caughtError) {
       setError(caughtError instanceof ApiError ? caughtError.message : 'No se pudo guardar el producto');
-=======
-      if (id) {
-        await updateMutation.mutateAsync({ id, data: submitData });
-      } else {
-        await createMutation.mutateAsync(submitData);
-      }
-      resetForm();
-    } catch {
-      // Error manejado por el hook
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     }
   }
 
@@ -417,7 +381,6 @@ export default function ProductsPage() {
         </Card>
       </RequireRole>
 
-<<<<<<< HEAD
       <section className="panel">
         <div className="panel-heading">
           <div><span className="eyebrow">Catálogo</span><h2>Catálogo actual</h2></div>
@@ -450,82 +413,6 @@ export default function ProductsPage() {
           </table>
         </div> : <p className="muted">No hay productos para mostrar.</p>}
       </section>
-=======
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm text-muted-foreground mb-1 block">Catálogo</span>
-              <h2 className="text-lg font-semibold">Catálogo actual</h2>
-            </div>
-            <Badge variant="secondary">{filteredProducts.length} productos</Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 mb-4">
-            <Input
-              aria-label="Buscar productos"
-              placeholder="Buscar por nombre o SKU..."
-              value={search ?? ''}
-              onChange={(e) => form.setValue('search', e.target.value)}
-              className="flex-1"
-            />
-            <Select value={filterCategory ?? ''} onValueChange={(v) => form.setValue('filterCategory', v)}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Todas las categorías" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todas las categorías</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {loadingProducts ? (
-            <p className="text-muted-foreground text-sm">Cargando...</p>
-          ) : (
-            <>
-              <div className="space-y-2">
-                {filteredProducts.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-muted">
-                    <div>
-                      <strong className="block">{product.name}</strong>
-                      <small className="text-muted-foreground">{product.sku || 'Sin SKU'} · {product.category?.name || 'Sin categoría'} · {product.unit?.name || 'Sin unidad'}</small>
-                      <div className="text-xs text-muted-foreground mt-1">Umbral stock bajo: {product.lowStockThreshold ?? 10}</div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <strong>{Number(product.price).toFixed(2)}</strong>
-                      <RequireRole roles={WRITE_ROLES}>
-                        <Button type="button" variant="ghost" size="sm" onClick={() => startEdit(product)}>
-                          Editar
-                        </Button>
-                      </RequireRole>
-                      {canDelete && (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => void deleteProduct(product)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          Eliminar
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {!filteredProducts.length && (
-                <p className="text-muted-foreground text-sm">No hay productos para mostrar.</p>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     </OwnerShell>
   );
 }

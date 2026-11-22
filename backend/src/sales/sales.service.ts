@@ -323,25 +323,17 @@ export class SalesService {
       throw new BadRequestException('Payment cannot exceed the outstanding balance');
     }
 
-<<<<<<< HEAD
-    return this.prisma.$transaction(async (tx) => {
-=======
     const paymentAmount = Math.min(dto.amount, Number(sale.amountPending));
 
     // Fase B1 — el pago debe ser transaccional: asiento DEBITO (abono) + saldo
     // actualizados de forma atómica junto con el registro del pago.
     const { payment, sale: updatedSale } = await this.prisma.$transaction(async (tx) => {
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
       const payment = await tx.payment.create({
         data: {
           organizationId,
           referenceType: 'SALE',
           referenceId: saleId,
-<<<<<<< HEAD
-          amount: dto.amount,
-=======
           amount: paymentAmount,
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
           method: dto.method as PaymentMethod,
           status: PaymentStatus.PAGADO,
           transactionId: dto.transactionId,
@@ -351,8 +343,6 @@ export class SalesService {
           processedBy: userId,
         },
       });
-<<<<<<< HEAD
-=======
 
       // Actualizar montos de la venta
       const newAmountPaid = Number(sale.amountPaid) + paymentAmount;
@@ -392,7 +382,6 @@ export class SalesService {
 
       return { payment, sale: updatedSale };
     });
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
       const updated = await tx.sale.updateMany({
         where: { id: saleId, organizationId, amountPending: { gte: dto.amount } },

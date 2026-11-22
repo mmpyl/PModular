@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Patch, ForbiddenException } from '@nestjs/common';
-=======
 import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query, ForbiddenException, Patch, UseInterceptors } from '@nestjs/common';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 import { MembershipsService } from './memberships.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
@@ -11,12 +7,8 @@ import { OrgRoles } from '../auth/decorators/org-roles.decorator';
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { OrgRole } from '@prisma/client';
-<<<<<<< HEAD
-import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
-=======
 import { AuditLogInterceptor, AuditAction, AuditEntityType } from '../audit-log/audit-log.interceptor';
 import { AuditActionType } from '@prisma/client';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
 export interface CreateMembershipDto {
   userId: string;

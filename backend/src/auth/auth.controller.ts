@@ -36,11 +36,6 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
-<<<<<<< HEAD
-  @Post('platform/login')
-  platformLogin(@Body() dto: LoginDto) {
-    return this.authService.platformLogin(dto);
-=======
   /**
    * Endpoint específico para login de usuarios de plataforma (Owen).
    * Valida que el usuario tenga rol de plataforma (PLATFORM_ADMIN o SUPPORT).
@@ -51,7 +46,6 @@ export class AuthController {
   platformLogin(@Req() req: Request) {
     const user = req.user as { sub: string };
     return this.authService.platformLogin(user.sub);
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   }
 
   @Post('select-organization')

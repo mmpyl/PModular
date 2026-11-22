@@ -1,13 +1,5 @@
-<<<<<<< HEAD
-import { BadRequestException, Controller, ForbiddenException, Get, Post, Body, Param, Delete, Patch, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { PlatformRole } from '@prisma/client';
-import { IsArray, IsEmail, IsObject, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
-import { OrganizationsService } from './organizations.service';
-=======
 import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, ForbiddenException, UseInterceptors } from '@nestjs/common';
 import { OrganizationsService, BusinessSettingsDto } from './organizations.service';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { OrgRolesGuard } from '../auth/guards/org-roles.guard';
@@ -15,13 +7,9 @@ import { OrgRoles, PlatformRoles } from '../auth/decorators/org-roles.decorator'
 import { CurrentOrg } from '../auth/decorators/current-org.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PlatformRolesGuard } from '../auth/guards/platform-roles.guard';
-<<<<<<< HEAD
-import { YapeQrService } from './yape-qr.service';
-=======
 import { Reflector } from '@nestjs/core';
 import { AuditLogInterceptor, AuditAction, AuditEntityType } from '../audit-log/audit-log.interceptor';
 import { AuditActionType } from '@prisma/client';
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
 export interface CreateOrganizationDto {
   name: string;
@@ -142,7 +130,6 @@ export class OrganizationsController {
     return this.organizationsService.findOne(id);
   }
 
-<<<<<<< HEAD
   @Post(':id/yape-qr')
   @UseGuards(TenantGuard, OrgRolesGuard)
   @OrgRoles('OWNER', 'ADMIN')
@@ -160,18 +147,6 @@ export class OrganizationsController {
     if (id !== organizationId) throw new ForbiddenException('No puedes cambiar la configuración de otra organización');
     if (!file) throw new BadRequestException('Selecciona una imagen PNG o JPG de hasta 2 MB');
     return this.yapeQrService.save(organizationId, file.buffer);
-=======
-  @Get(':id/settings')
-  @UseGuards(TenantGuard)
-  async getBusinessSettings(
-    @Param('id') id: string,
-    @CurrentOrg() organizationId: string,
-  ): Promise<BusinessSettingsDto> {
-    if (id !== organizationId) {
-      throw new ForbiddenException('No tienes acceso a esta organización');
-    }
-    return this.organizationsService.getBusinessSettings(id);
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   }
 
   @Patch(':id')
