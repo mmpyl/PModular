@@ -89,10 +89,6 @@ model Organization {
   payments          Payment[]
   accountEntries    CustomerAccountEntry[]
   cashRegisters     CashRegister[]
-<<<<<<< HEAD
-  electronicDocuments ElectronicDocument[]
-  integrations     OrganizationIntegration[]
-=======
   auditLogs         AuditLog[]
   
   // FE2: Configuración fiscal por organización
@@ -106,7 +102,6 @@ model Organization {
 
   // FASE B3: Promociones
   promotions          Promotion[]
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -821,11 +816,7 @@ model Sale {
   items          SaleItem[]
   stockMovements StockMovement[]
   payments       Payment[]
-<<<<<<< HEAD
-  electronicDocuments ElectronicDocument[]
-=======
   invoice        Invoice?
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

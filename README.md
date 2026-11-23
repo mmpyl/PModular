@@ -55,7 +55,6 @@ npm run dev:frontend
 
 La API queda disponible en `http://localhost:3001` y la aplicación web en `http://localhost:3000`.
 
-<<<<<<< HEAD
 ### Accesos de negocio y plataforma
 
 - Usuarios de negocio inician sesión en `http://localhost:3000/login` y acceden a las organizaciones donde tienen membresía.
@@ -71,9 +70,6 @@ La API queda disponible en `http://localhost:3001` y la aplicación web en `http
 - Los documentos guardan su serie/correlativo y estado. PDF/XML/CDR aparecen cuando Nubefact los devuelve; un error de red queda en estado incierto y bloquea el reenvío automático para no duplicar la emisión.
 
 Para actualizar el esquema durante desarrollo, crea una migración con `npm run prisma:migrate -w backend`; para aplicar migraciones existentes usa `npm run prisma:migrate:deploy`.
-=======
-> **Nota:** Para producción usa `npm run start:backend` y `npm run start:frontend`.
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
 ### Migraciones de base de datos
 

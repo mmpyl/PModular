@@ -21,7 +21,6 @@ const WRITE_ROLES = ['OWNER', 'ADMIN', 'INVENTARIO'];
 const DELETE_ROLES = ['OWNER', 'ADMIN'];
 
 export default function UnitsPage() {
-<<<<<<< HEAD
   const { token, organizationId } = useAuth();
   const [units, setUnits] = useState<Unit[]>([]);
   const [name, setName] = useState('');
@@ -31,13 +30,6 @@ export default function UnitsPage() {
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-=======
-  const { token, organizationId, orgRole } = useAuth();
-  const { data: units = [], isLoading } = useUnits(organizationId ?? undefined);
-  const createMutation = useCreateUnit(organizationId ?? undefined);
-  const updateMutation = useUpdateUnit(organizationId ?? undefined);
-  const deleteMutation = useDeleteUnit(organizationId ?? undefined);
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
   const form = useForm<UnitFormData & { id?: string }>({
     resolver: zodResolver(unitSchema) as any,
@@ -61,7 +53,6 @@ export default function UnitsPage() {
     if (!token || !organizationId) return;
     const { id, ...submitData } = data;
     try {
-<<<<<<< HEAD
       let successMessage: string;
       if (editingId) {
         await apiFetch(`/units-of-measure/${editingId}`, { method: 'PATCH', token, organizationId, body });
@@ -73,16 +64,6 @@ export default function UnitsPage() {
       setError(''); resetForm(); setMessage(successMessage); await load();
     } catch (e: unknown) {
       setError(e instanceof ApiError ? e.message : 'No se pudo guardar la unidad');
-=======
-      if (id) {
-        await updateMutation.mutateAsync({ id, data: submitData });
-      } else {
-        await createMutation.mutateAsync(submitData);
-      }
-      resetForm();
-    } catch {
-      // Error manejado por el hook
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     }
   }
 
@@ -92,12 +73,9 @@ export default function UnitsPage() {
     await deleteMutation.mutateAsync(unit.id);
   }
 
-<<<<<<< HEAD
   useEffect(() => { void load(); }, [token, organizationId]);
   const filteredUnits = units.filter((unit) => `${unit.name} ${unit.symbol ?? ''}`.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
 
-=======
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   return (
     <OwnerShell active="units">
       <OwnerHeader eyebrow="Catálogo" title="Unidades de medida" />
@@ -188,7 +166,6 @@ export default function UnitsPage() {
         </Card>
       </RequireRole>
 
-<<<<<<< HEAD
       <section className="panel">
         <div className="panel-heading">
           <div><span className="eyebrow">Catálogo</span><h2>Unidades disponibles</h2></div>
@@ -216,59 +193,6 @@ export default function UnitsPage() {
         {!filteredUnits.length && <p className="muted">{units.length ? 'No hay unidades que coincidan con la búsqueda.' : 'No hay unidades registradas.'}</p>}
       </section>
       </div>
-=======
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-muted-foreground mb-1">Catálogo</div>
-              <CardTitle>Unidades disponibles</CardTitle>
-            </div>
-            <Badge variant="secondary">{units.length} unidades</Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Cargando...</p>
-          ) : (
-            <>
-              {units.map((unit) => (
-                <div className="flex items-center justify-between py-3 border-b last:border-0" key={unit.id}>
-                  <div>
-                    <div className="font-medium">{unit.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {unit.symbol || 'Sin símbolo'}
-                      {unit.isFractionable ? ' · Fraccionable' : ''}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RequireRole roles={WRITE_ROLES}>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => startEdit(unit)}>
-                        Editar
-                      </Button>
-                    </RequireRole>
-                    <RequireRole roles={DELETE_ROLES}>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => void remove(unit)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        Eliminar
-                      </Button>
-                    </RequireRole>
-                  </div>
-                </div>
-              ))}
-              {!units.length && (
-                <p className="text-sm text-muted-foreground">No hay unidades registradas.</p>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
     </OwnerShell>
   );
 }

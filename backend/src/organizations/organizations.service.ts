@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
-=======
 import {
   BadRequestException,
   Injectable,
@@ -9,7 +5,6 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../prisma.service";
 import { ModuleCatalogService } from "../module-catalog/module-catalog.service";
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
 export interface CreateOrganizationDto {
   name: string;
@@ -17,20 +12,10 @@ export interface CreateOrganizationDto {
   settings?: Record<string, any>;
 }
 
-<<<<<<< HEAD
-export interface CreatePlatformOrganizationData extends CreateOrganizationDto {
-  ownerEmail: string;
-  enabledModules?: string[];
-}
-
-export interface UpdatePlatformOrganizationData extends Partial<CreatePlatformOrganizationData> {
-  ownerEmail?: string;
-=======
 export interface BusinessSettingsDto {
   currency: string;
   timezone: string;
   defaultTaxRate: number;
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 }
 
 @Injectable()
@@ -52,13 +37,9 @@ export class OrganizationsService {
       );
     }
 
-<<<<<<< HEAD
-    const enabledModules = (businessType.defaultModules as string[]) || [];
-=======
     const enabledModules =
       data.enabledModules || (businessType.defaultModules as string[]) || [];
     this.assertValidModules(enabledModules);
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
 
     return this.prisma.$transaction(async (tx) => {
       const organization = await tx.organization.create({
@@ -271,16 +252,6 @@ export class OrganizationsService {
     });
   }
 
-<<<<<<< HEAD
-  private validateEnabledModules(enabledModules: string[], businessType: { name: string; availableModules: unknown }) {
-    const availableModules = Array.isArray(businessType.availableModules)
-      ? businessType.availableModules.filter((module): module is string => typeof module === 'string')
-      : [];
-    const invalidModules = enabledModules.filter((module) => !availableModules.includes(module));
-    if (invalidModules.length) {
-      throw new BadRequestException(`Estos módulos no están disponibles para ${businessType.name}: ${invalidModules.join(', ')}`);
-    }
-=======
   // ==========================================
   // FASE 4: Suspensión de organizaciones (moderación de plataforma)
   // ==========================================
@@ -320,6 +291,5 @@ export class OrganizationsService {
       data: { status: "ACTIVE" },
       include: { businessType: true },
     });
->>>>>>> e206d198e942f03be69312c7a5e9542c210e8540
   }
 }
